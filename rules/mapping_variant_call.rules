@@ -1,0 +1,174 @@
+#ruleorder: mapping_varcall_ref > mapping_varcall_denovo
+rule mapping_varcall_ref:
+	input:
+		R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Read2.fq.gz"),
+		R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Read1.watson.fq.gz"),
+		ref=expand("{path}{file}", path= config['mode']["reference"]["ref_dir"], file=config['mode']["reference"]["genome"]),
+	output:
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.dedup.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.dedup.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.dedup.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.dedup.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/methylation.bed"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/header.sam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/heatmap.igv"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/snp.vcf.gz.tbi"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/snp.vcf.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/merged.tsv.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.vcf.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.vcf.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/mapping_variantcalling.log"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/log_map.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/None.joined.crick.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/SAindex"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/None.merged.watson.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/SAindex"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/None.merged.crick.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/SAindex"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/None.joined.watson.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/SAindex")
+		
+		
+	params:
+		barcodes=config["mode"]["reference"]["barcodes"],
+		log=expand("{path}{file}", path=config["output_dir"], file="/mapping/log_map.txt"),
+		out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+		tmp=config["tmpdir"],
+		depth=config["max-depth"],
+		mq=config["min-MQ"],
+		bq=config["min-BQ"]
+	threads: 40
+	conda:"/home/aktpq/snakemake/epigbs/environment.yaml"
+	shell:
+		"python mapping_varcall/mapping_variant_calling.py "
+		"--tmpdir {params.tmp} "
+		"--reads_R1 {input.R1} "
+		"--reads_R2 {input.R2} "
+		"--reference {input.ref} "
+		"--log {params.log} "
+		"--threads 10 "
+		"--output_dir {params.out_dir} "
+		"--max_depth {params.depth} "
+		"--min_MQ {params.mq} "
+		"--min_BQ {params.bq}"
+"""	
+rule mapping_varcall_denovo:
+	input:
+		merge=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
+		R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+		R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
+		ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+		barcodes=expand("{path}/{bar}", path=config["input_dir"], bar=config["mode"]["denovo"]["barcodes"])
+	output:
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.dedup.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.dedup.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.dedup.bam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.dedup.bam.bai"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/methylation.bed"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/header.sam"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/heatmap.igv"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/snp.vcf.gz.tbi"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/snp.vcf.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/merged.tsv.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/crick.vcf.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/watson.vcf.gz"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/mapping_variantcalling.log"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/log_map.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/None.joined.crick.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_crick/SAindex"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/None.merged.watson.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_watson/SAindex"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/None.merged.crick.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_merged_crick/SAindex"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrName.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrNameLength.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/chrStart.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/Genome"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/genomeParameters.txt"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/None.joined.watson.fa"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/SA"),
+		expand("{path}{file}", path=config["output_dir"], file="/mapping/STAR_joined_watson/SAindex")
+		
+		
+	params:
+		log=expand("{path}{file}", path=config["output_dir"], file="/mapping/log_map.txt"),
+		out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+		tmp=config["tmpdir"],
+		depth=config["max-depth"],
+		mq=config["min-MQ"],
+		bq=config["min-BQ"]
+	conda:"/home/aktpq/snakemake/epigbs/environment.yaml"
+	threads: 40
+	shell:
+		"python mapping_varcall/mapping_variant_calling.py "
+		"--tmpdir {params.tmp} "
+		"--reads_R1 {input.R1} "
+		"--reads_R2 {input.R2} "
+		"--merged {input.merge} "
+		"--reference {input.ref} "
+		"--barcodes {input.barcodes} "
+		"--log {params.log} "
+		"--threads 10 "
+		"--output_dir {params.out_dir} "
+		"--max_depth {params.depth} "
+		"--min_MQ {params.mq} "
+		"--min_BQ {params.bq}"
+"""

@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.6.3=0
+  - sqlite=3.13.0=1
+  - stacks=2.0Beta8=pl5.22.0_0
+

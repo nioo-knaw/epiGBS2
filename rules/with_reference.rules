@@ -1,0 +1,91 @@
+rule trim:
+    input:
+        R1_1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+        R1_2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"]),
+        R2_1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+        R2_2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"])
+    output:
+        expand("{path}/trimmed/Watson_R1_val_1.fq.gz", path=config["output_dir"]),
+        expand("{path}/trimmed/Watson_R1_val_1_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R1_val_1_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R1_val_1.fq.gz", path=config["output_dir"]),
+        expand("{path}/trimmed/Watson_R2_val_2.fq.gz", path=config["output_dir"]),
+        expand("{path}/trimmed/Watson_R2_val_2_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R2_val_2_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R2_val_2.fq.gz", path=config["output_dir"])
+    params:
+        dir=expand("{path}/trimmed/", path=config["output_dir"])
+    conda:
+        "../env/trim_galore.yaml"
+    threads: 12
+
+    log: expand("{path}/log/trim.log", path=config["output_dir"])
+
+    shell:
+        "trim_galore --paired -q 0 --fastqc {input.R1_1} {input.R1_2} {input.R2_1} {input.R2_2} -o {params.dir} > {log}"
+
+param_mq=config["param_SNPcalling"]["min-MQ"]
+param_bq=config["param_SNPcalling"]["min-BQ"]
+param_depth=config["param_SNPcalling"]["max-depth"]
+
+def getParam_mq(param_mq):
+    if param_mq == "default" or param_mq == "":
+        print(param_mq)
+        mq = 0
+    else:
+        mq = param_mq
+    return mq
+def getParam_bq(param_bq):
+    if param_bq=="default" or param_bq == "":
+        bq = 15
+    else:
+        bq = param_bq
+    return bq
+def getParam_dp(param_depth):
+    if param_depth=="default" or param_depth == "":
+        dep = 10000000
+    else:
+        dep = param_depth
+    return dep
+
+rule mapping_ref:
+    input:
+        ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"]),
+        c_R1=expand("{path}/trimmed/Crick_R1_val_1.fq.gz", path=config["output_dir"]),
+        c_R2=expand("{path}/trimmed/Crick_R2_val_2.fq.gz", path=config["output_dir"]),
+        w_R1=expand("{path}/trimmed/Watson_R1_val_1.fq.gz", path=config["output_dir"]),
+        w_R2=expand("{path}/trimmed/Watson_R2_val_2.fq.gz", path=config["output_dir"]),
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
+
+    output:
+        expand("{path}/output_mapping/snp.vcf.gz", path=config["output_dir"]),
+        expand("{path}/output_mapping/methylation.bed", path=config["output_dir"])
+
+    params:
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/output_mapping"),
+        tmp=expand("{tmp}", tmp=config["tmpdir"]),
+        depth=getParam_dp(param_depth),
+        mq=getParam_mq(param_mq),
+        bq=getParam_bq(param_bq)
+    log: expand("{path}{file}", path=config["output_dir"], file="/log/mapping.log"),
+    threads: 40
+	conda:
+		"../env/environment.yaml"
+	shell:
+		"python3 mapping_varcall/mapping_variant_calling_ref.py "
+		"--tmpdir {params.tmp} "
+		"--watson_val_r1 {input.w_R1} "
+		"--watson_val_r2 {input.w_R2} "
+                "--crick_val_r1 {input.c_R1} "
+                "--crick_val_r2 {input.c_R2} "
+		"--refgenome {input.ref} "
+		"--barcodes {input.bar} "
+		"--log {log} "
+		"--threads {threads} "
+		"--output_dir {params.out_dir} "
+		"--max_depth {params.depth} "
+		"--min_MQ {params.mq} "
+		"--min_BQ {params.bq} "
+
+onerror:
+    print("An error occurred, look into log files")

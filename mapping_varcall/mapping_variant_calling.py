@@ -176,7 +176,7 @@ def run_bwameth(in_files,args):
            os.path.join(args.output_dir, 'pe.bam'), in_files['header'],os.path.join(args.output_dir, 'merged.bam'))]
 
     run_subprocess(cmd,args,log)
-    
+
     log = "index combined bam file"
     cmd = ["samtools index %s"%(os.path.join(args.output_dir,'combined.bam'))]
     run_subprocess(cmd, args, log)
@@ -224,13 +224,13 @@ def run_bwameth(in_files,args):
     return in_files
 
 def run_STAR(in_files, args):
-    "run bwa_meth for mapping"
+    "run STAR for mapping"
 
     in_files['bam_out'] = {}
-    in_files['bam_out']['watson'] = os.path.join(args.output_dir, 'watson.dedup.bam')
-    in_files['bam_out']['crick'] = os.path.join(args.output_dir, 'crick.dedup.bam')
+    in_files['bam_out']['watson'] = os.path.join(args.output_dir, 'watson.bam')
+    in_files['bam_out']['crick'] = os.path.join(args.output_dir, 'crick.bam')
     in_files['header'] = os.path.join(args.output_dir, 'header.sam')
-    cmd = ["map_STAR.py",
+    cmd = ["python mapping_varcall/map_STAR.py",
            '--reads_R1 %s' % args.reads_R1,
            '--reads_R2 %s' % args.reads_R2,
            '--merged %s' % args.merged,
@@ -569,7 +569,7 @@ def merge_watson_crick(in_files, args):
         in_files['vcf_out']['watson'] = os.path.join(args.output_dir, 'watson.vcf.gz')
         in_files['vcf_out']['crick'] = os.path.join(args.output_dir, 'crick.vcf.gz')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir,'merged.tsv')
-    cmd = ["merge_watson_crick.py",
+    cmd = ["python mapping_varcall/merge_watson_crick.py",
            "-w %s" % in_files['vcf_out']['watson'],
            "-c %s" % in_files['vcf_out']['crick'],
            "-o %s" % in_files['vcf_out']['merged']]
@@ -585,7 +585,7 @@ def SNP_calling(in_files, args):
         in_files['vcf_out'] = {}
     in_files['vcf_out']['SNP'] = os.path.join(args.output_dir, 'snp.vcf')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
-    cmd = ["SNP_calling.py",
+    cmd = ["python mapping_varcall/variant_calling/SNP_calling.py",
            "-m %s" % in_files['vcf_out']['merged'],
            "-s %s" % in_files['vcf_out']['SNP'],
            "-w %s" % os.path.join(args.output_dir, 'watson.vcf.gz')]
@@ -600,7 +600,7 @@ def methylation_calling(in_files,args):
     log = ["Run methylation calling script"]
     in_files['vcf_out']['SNP'] = os.path.join(args.output_dir, 'snp.vcf.gz')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
-    cmd = ["methylation_calling.py",
+    cmd = ["python mapping_varcall/variant_calling/methylation_calling.py",
            " -r %s"%(args.reference),
            " -m %s"%(in_files['vcf_out']['merged']),
            " -s %s"%(in_files['vcf_out']['SNP']),

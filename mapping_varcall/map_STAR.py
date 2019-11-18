@@ -611,15 +611,8 @@ def main():
     args = map_STAR(args)
     args = make_header(args)
     args = bam_output(args)
-    args = remove_PCR_duplicates(args)
+    #args = remove_PCR_duplicates(args)
     clean(args)
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-

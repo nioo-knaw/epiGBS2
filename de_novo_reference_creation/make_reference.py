@@ -33,7 +33,7 @@ usearch = "usearch"#_8.0.1409_i86osx32"
 vsearch = "vsearch"
 seqtk = "seqtk"
 pear = "pear"
-create_consensus = "create_consensus.py"
+#create_consensus = "de_novo_reference_creation/create_consensus.py"
 vcfutils = "vcfutils.pl"
 
 def parse_args():
@@ -42,10 +42,12 @@ def parse_args():
     #input files
     parser.add_argument('-s','--sequences',
                         help='number of sequences to take for testing, useful for debugging')
-    parser.add_argument('--forward',required=True,
-                        help='forward reads fastq')
-    parser.add_argument('--reverse',required=True,
-                    help='reverse reads fastq')
+#    parser.add_argument('--forward',required=True,
+#                        help='forward reads fastq')
+#    parser.add_argument('--reverse',required=True,
+#                    help='reverse reads fastq')
+    parser.add_argument('--inputdir',required=True,
+                        help='input directory')
     parser.add_argument('--barcodes',
                         help='max barcode length used to trim joined reads')
     parser.add_argument('--cycles',required=True,
@@ -81,13 +83,9 @@ def parse_args():
         args.consensus_cluster = os.path.join(args.outputdir,'consensus_cluster.fa')
     assert os.path.exists(args.barcodes)
     try:
-        assert os.path.exists(args.forward)
+        assert os.path.exists(args.inputdir)
     except AssertionError:
-        raise AssertionError("%s does not exist" % args.forward)
-    try:
-        assert os.path.exists(args.reverse)
-    except AssertionError:
-        raise AssertionError("%s does not exist" % args.reverse)
+        raise AssertionError("%s does not exist" % args.inputdir)
     return args
 
 def run_subprocess(cmd,args,log_message):
@@ -119,22 +117,25 @@ def merge_reads(args):
         rev_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir)
         join_out = tempfile.NamedTemporaryFile(prefix="join_%s"%strand,dir=args.tmpdir)
         if args.sequences:
-            head = '|head -n %s'%(int(args.sequences)*4)
+            head = '| head -n %s'%(int(args.sequences)*4)
+            if strand == 'watson':
+                cmd1 = ['zcat ' + args.inputdir + '/Watson_R1.fq.gz ' +
+                        head + "| pigz -p %s -c >" % (args.threads) + fwd_out.name]
+                cmd2 = ['zcat ' + args.inputdir + '/Watson_R2.fq.gz  ' +
+                        head + "| pigz -p %s -c >" % (args.threads) + rev_out.name]
+            else:
+                cmd1 = ['zcat ' + args.inputdir + '/Crick_R1.fq.gz ' +
+                        head + "| pigz -p %s -c >" % (args.threads) + fwd_out.name]
+                cmd2 = ['zcat ' + args.inputdir + '/Crick_R2.fq.gz ' +
+                        head + "| pigz -p %s -c >" % (args.threads) + rev_out.name]
         else:
-            head = ''
-        if args.forward.endswith('.gz'):
-            cat = 'pigz -p %s -cd '%args.threads
-        else:
-            cat = 'cat '
-        if strand == 'watson':
-            grep_watson = "|grep 'Watson\|watson' -A 3 |sed '/^--$/d'"
-            cmd1 = [ cat + args.forward + head + grep_watson + '|pigz -p %s -c >'%(args.threads)+fwd_out.name]
-            cmd2 = [ cat  + args.reverse + head + grep_watson + '|pigz -p %s -c >'%(args.threads)+rev_out.name]
-        else:
-            grep_crick = "|grep 'Crick\|crick' -A 3 |sed '/^--$/d'"
-            cmd1 = [cat + args.forward + head + grep_crick + '|pigz -p %s -c  >'%(args.threads)+fwd_out.name]
-            cmd2 = [cat + args.reverse + head + grep_crick + '|pigz -p %s -c  >'%(args.threads)+rev_out.name]
-        log = "Write input files to tmpdir using gzcat"
+            if strand == 'watson':
+                cmd1 = ['cat ' + args.inputdir + '/Watson_R1.fq.gz >' + fwd_out.name]
+                cmd2 = ['cat ' + args.inputdir + '/Watson_R2.fq.gz >' + rev_out.name]
+            else:
+                cmd1 = ['cat ' + args.inputdir + '/Crick_R1.fq.gz >' + fwd_out.name]
+                cmd2 = ['cat ' + args.inputdir + '/Crick_R2.fq.gz >' + rev_out.name]
+            log = "Write input files to tmpdir using gzcat"
         run_subprocess(cmd1,args,log)
         run_subprocess(cmd2,args,log)
         #todo: check if pear is on path
@@ -515,7 +516,7 @@ def cluster_consensus(in_files,args):
     # in_files['consensus']['consensus_clustered'] = args.consensus_cluster
     log = "rename cluster_cons for bwa_meth compatibility"
     cluster_renamed = args.consensus_cluster.replace('.fa','.renamed.fa')
-    cmd = ['cat %s | rename_fast.py -n > %s'%(args.consensus_cluster, cluster_renamed)]
+    cmd = ['cat %s | de_novo_reference_creation/rename_fast.py -n > %s'%(args.consensus_cluster, cluster_renamed)]
     run_subprocess(cmd,args,log)
     log = "faidx index %s" % cluster_renamed
     cmd = ["samtools faidx %s" % cluster_renamed]

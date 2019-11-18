@@ -1,0 +1,33 @@
+#path to output directory
+output_dir: "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epigbs-snakemake-3.0/output"
+#input directory where raw reads are
+input_dir       : "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epiGBS/data"
+barcodes: "barcodes.tsv"
+#barcode file(barcode file should be kept inside input directory) and enzymes will be included in barcode file
+tmpdir        : "/tmp"
+#Projectname to ensure there is no overlap between tmpfiles in the demultiplexing step
+#number of sequencing cycles
+cycles        : 150
+#Sequence Reads
+Read1 : "RRBS_KD17072296_H53KHCCXY_L5_1.fq.gz"
+Read2 : "RRBS_KD17072296_H53KHCCXY_L5_2.fq.gz"
+#genome directory (leaave it blank in denovo mode)
+ref_dir: ""
+#genome name (leaave it blank in denovo mode)
+genome: ""
+
+#mode of running pipeline (set denovo or reference)
+mode: "denovo"
+#set parameters or write default
+#identity in decimal number e.g. for 90% identity write 0.90
+param_denovo:
+  identity: ""
+  min-depth: ""
+  max-depth: ""
+
+
+#SNP calling parameters
+param_SNPcalling:
+  max-depth: ""
+  min-MQ: ""
+  min-BQ: ""
