@@ -585,7 +585,7 @@ def SNP_calling(in_files, args):
         in_files['vcf_out'] = {}
     in_files['vcf_out']['SNP'] = os.path.join(args.output_dir, 'snp.vcf')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
-    cmd = ["python mapping_varcall/variant_calling/SNP_calling.py",
+    cmd = ["python2 mapping_varcall/variant_calling/SNP_calling.py",
            "-m %s" % in_files['vcf_out']['merged'],
            "-s %s" % in_files['vcf_out']['SNP'],
            "-w %s" % os.path.join(args.output_dir, 'watson.vcf.gz')]
@@ -600,7 +600,7 @@ def methylation_calling(in_files,args):
     log = ["Run methylation calling script"]
     in_files['vcf_out']['SNP'] = os.path.join(args.output_dir, 'snp.vcf.gz')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
-    cmd = ["python mapping_varcall/variant_calling/methylation_calling.py",
+    cmd = ["python2 mapping_varcall/variant_calling/methylation_calling.py",
            " -r %s"%(args.reference),
            " -m %s"%(in_files['vcf_out']['merged']),
            " -s %s"%(in_files['vcf_out']['SNP']),

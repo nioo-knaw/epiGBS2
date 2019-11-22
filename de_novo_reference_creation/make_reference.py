@@ -516,7 +516,7 @@ def cluster_consensus(in_files,args):
     # in_files['consensus']['consensus_clustered'] = args.consensus_cluster
     log = "rename cluster_cons for bwa_meth compatibility"
     cluster_renamed = args.consensus_cluster.replace('.fa','.renamed.fa')
-    cmd = ['cat %s | de_novo_reference_creation/rename_fast.py -n > %s'%(args.consensus_cluster, cluster_renamed)]
+    cmd = ['cat %s | python2 de_novo_reference_creation/rename_fast.py -n > %s'%(args.consensus_cluster, cluster_renamed)]
     run_subprocess(cmd,args,log)
     log = "faidx index %s" % cluster_renamed
     cmd = ["samtools faidx %s" % cluster_renamed]

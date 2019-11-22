@@ -1,7 +1,7 @@
 #path to output directory
 output_dir: "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epigbs-snakemake-3.0/output"
 #input directory where raw reads are
-input_dir       : "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epiGBS/data"
+input_dir       : "/mnt/nfs/bioinfdata/home/NIOO/fleurg/epiGBS/data"
 barcodes: "barcodes.tsv"
 #barcode file(barcode file should be kept inside input directory) and enzymes will be included in barcode file
 tmpdir        : "/tmp"

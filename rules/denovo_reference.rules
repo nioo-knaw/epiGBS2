@@ -36,17 +36,24 @@ rule denovo_reference:
         consensus_cluster=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa"),
         consensus=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus.fa"),
         assemble=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
-        unass_R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.crick.R2.fq.gz"),
-        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.watson.R1.fq.gz"),
+        unass_R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
         index_ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai")
+
+#    params:
+#        cycles=config["cycles"],
+#        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+#        tmp=expand("{tmp}", tmp=config["tmpdir"]),
+#        identity=getParam_id(param_id),
+#        min_depth=getParam_mind(param_mind),
+#        max_depth=getParam_maxd(param_maxd),
+#        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+#        outdir= expand("{path}{dir}", path=config["output_dir"], dir="/output_denovo")
 
     params:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
         tmp=expand("{tmp}", tmp=config["tmpdir"]),
-        identity=getParam_id(param_id),
-        min_depth=getParam_mind(param_mind),
-        max_depth=getParam_maxd(param_maxd),
         indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
         outdir= expand("{path}{dir}", path=config["output_dir"], dir="/output_denovo")
 
@@ -61,7 +68,6 @@ rule denovo_reference:
         "--threads {threads} "
         "--outputdir {params.outdir} "
         "--cycles {params.cycles} "
-        "--clustering_treshold {params.identity} "
         "--tmpdir {params.tmp} "
         "--log {log} "
 
@@ -106,8 +112,8 @@ rule denovo_reference:
 rule denovo_mapping:
     input:
         merge=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
-        R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.crick.R2.fq.gz"),
-        R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.watson.R1.fq.gz"),
+        R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+        R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
         ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
         bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
     output:
