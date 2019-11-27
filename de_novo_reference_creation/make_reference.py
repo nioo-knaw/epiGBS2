@@ -33,7 +33,7 @@ usearch = "usearch"#_8.0.1409_i86osx32"
 vsearch = "vsearch"
 seqtk = "seqtk"
 pear = "pear"
-#create_consensus = "de_novo_reference_creation/create_consensus.py"
+create_consensus = "de_novo_reference_creation/create_consensus.py"
 vcfutils = "vcfutils.pl"
 
 def parse_args():
@@ -42,18 +42,16 @@ def parse_args():
     #input files
     parser.add_argument('-s','--sequences',
                         help='number of sequences to take for testing, useful for debugging')
-#    parser.add_argument('--forward',required=True,
-#                        help='forward reads fastq')
-#    parser.add_argument('--reverse',required=True,
-#                    help='reverse reads fastq')
     parser.add_argument('--inputdir',required=True,
                         help='input directory')
     parser.add_argument('--barcodes',
                         help='max barcode length used to trim joined reads')
     parser.add_argument('--cycles',required=True,
                         help='Number of sequencing cycles / read length')
-    parser.add_argument('--min_unique_size',default="2",
+    parser.add_argument('--min_unique_size',default="0",
                     help='Minimum unique cluster size')
+    parser.add_argument('--max_unique_size',default="0",
+                    help='Maximum unique cluster size')
     parser.add_argument('--clustering_treshold',default="0.95",
                     help='Clustering treshold for final clustering step')
     parser.add_argument('-t','--tmpdir',
@@ -112,7 +110,7 @@ def merge_reads(args):
     "Unzip / Merge Watson and crick reads using pear"
     #TODO: run only once for both watson and crick at same time
     out_files = {}
-    for strand in ['watson','crick']:
+    for strand in ['crick','watson']:
         fwd_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir)
         rev_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir)
         join_out = tempfile.NamedTemporaryFile(prefix="join_%s"%strand,dir=args.tmpdir)
@@ -328,7 +326,11 @@ def dereplicate_reads(in_files,args):
             file_in = in_files[strand][name]
             file_out = '.'.join(file_in.split('.')[:-2]) + '.derep.' + file_in.split('.')[-2]
             in_files[strand][name] = [file_in]
-            cmd = [vsearch +' -derep_fulllength %s -sizeout -output %s'%(file_in,file_out)]
+            """ for min and max depth """
+            if args.max_unique_size == '0' and args.min_unique_size == '0':
+                cmd = [vsearch +' -derep_fulllength %s -sizeout -output %s'%(file_in,file_out)]
+            else:
+                cmd = [vsearch +' -derep_fulllength %s -maxuniquesize %s -minuniquesize %s -sizeout -output %s'%(file_in,args.max_unique_size,args.min_unique_size,file_out)]
             log = "Dereplicate full_length of %s using vsearch"%(strand)
             run_subprocess(cmd,args,log)
             name_out = name + "_derep"
@@ -508,10 +510,10 @@ def make_ref_from_uc(in_files,args):
 def cluster_consensus(in_files,args):
     "Cluster concensus with preset id"
     #TODO: vsearch ignores joined sequences, temporarily revert back to vsearch to prevent this from happening.
-    cmd = [vsearch + " -qmask none -cluster_smallmem %s -id 0.95 -centroids %s -sizeout -strand both"%
-           (args.consensus,
+    cmd = [vsearch + " -qmask none -cluster_smallmem %s -id %s -centroids %s -sizeout -strand both"%
+           (args.consensus,args.clustering_treshold,
             args.consensus_cluster)]
-    log = "Clustering consensus with 95% identity"
+    log = "Clustering consensus with specified identity"
     run_subprocess(cmd,args,log)
     # in_files['consensus']['consensus_clustered'] = args.consensus_cluster
     log = "rename cluster_cons for bwa_meth compatibility"
