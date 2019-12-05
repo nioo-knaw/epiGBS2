@@ -83,18 +83,6 @@ def get_version():
 
 
 
-def remove_PCR_duplicates(args):
-    """us subprocess to run external remove_PCR_duplicates routine"""
-    cmd =  "mark_PCR_duplicates.py --input_dir %s" % args.output_dir
-    cmd += " -b %s" % args.barcodes
-    if not args.refgenome:
-        cmd += " -r %s" % args.reference
-    else:
-        cmd += " -r %s" % args.refgenome
-    log = "Removal of PCR duplicates"
-    run_subprocess([cmd], args, log)
-    return args
-
 def run_subprocess(cmd,args,log_message):
     "Run subprocess under standardized settings"
     #force the cmds to be a string.
