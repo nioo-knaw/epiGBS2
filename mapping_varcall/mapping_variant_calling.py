@@ -13,9 +13,10 @@ import tempfile
 import os
 import shutil
 import sys
+import time
 from Bio import SeqIO
 from Bio import Restriction
-
+from os import system
 
 
 def getScriptPath():
@@ -29,6 +30,12 @@ def parse_args():
     #input files
     parser.add_argument('-s','--sequences',
                         help='number of sequences to take for testing')
+    parser.add_argument('--max_depth',default=999999999,
+                        help='maximum depth for SNP calling')
+    parser.add_argument('--min_MQ',default=0,
+                        help='minimum mapQ')
+    parser.add_argument('--min_BQ',default=15,
+                        help='minimum baseQ/BAQ')
     parser.add_argument('--subsample_treshold',
                         help='Subsample treshold',default='100000')
     parser.add_argument('--tmpdir',
@@ -122,107 +129,6 @@ def make_header(in_files,args):
     in_files['header'] = 'location of header'
     return in_files
 
-def run_bwameth(in_files,args):
-    "run bwa_meth for mapping"
-
-    in_files['bam_out'] = {}
-    in_files['bam_out']['watson'] = os.path.join(args.output_dir,'watson.bam')
-    in_files['bam_out']['crick'] = os.path.join(args.output_dir,'crick.bam')
-    in_files['header'] = os.path.join(args.output_dir,'header.sam')
-
-    log = "index renamed reference using bwameth"
-    ref = args.reference
-    if not os.path.exists('%s.bwameth.c2t'%ref):
-        cmd = ['bwameth.py index %s'%ref]
-        run_subprocess(cmd,args,log)
-
-    log = "run bwameth for merged reads"
-    if args.sequences:
-        add = '|head -n %s'%(4*int(args.sequences))
-    else:
-        add = ''
-    if args.merged:
-        cmd = ['bwameth.py -t %s -p %s --reference %s <(pigz -cd %s %s) NA'%
-               (args.threads,
-                os.path.join(args.output_dir,'merged'),
-                ref,
-                args.merged,add
-                )]
-        run_subprocess(cmd,args,log)
-
-    log = "run bwameth for non-merged reads"
-    cmd = ['bwameth.py -t %s -p %s --reference %s <(pigz -cd %s %s) <(pigz -cd %s %s)'%
-           (args.threads,
-            os.path.join(args.output_dir,'pe'),
-            ref,
-            args.reads_R1,add,
-            args.reads_R2,add
-            )]
-    run_subprocess(cmd,args,log)
-
-    log = "get start of header from pe.bam, add RG information using addRG function"
-    cmd = ["samtools view -H %s > %s"%
-           ((os.path.join(args.output_dir,'pe.bam')),
-            (os.path.join(args.output_dir,'header.sam')))]
-    run_subprocess(cmd,args,log)
-
-
-    log = "Append RG to header"
-    in_files = addRG(in_files,args)
-
-    log = "merge bam files"
-    cmd = ["samtools merge -h %s -fcp -@ %s %s <(samtools reheader %s %s) <(samtools reheader %s %s)"%
-           (in_files['header'], args.threads, os.path.join(args.output_dir,'combined.bam'), in_files['header'],
-           os.path.join(args.output_dir, 'pe.bam'), in_files['header'],os.path.join(args.output_dir, 'merged.bam'))]
-
-    run_subprocess(cmd,args,log)
-
-    log = "index combined bam file"
-    cmd = ["samtools index %s"%(os.path.join(args.output_dir,'combined.bam'))]
-    run_subprocess(cmd, args, log)
-
-
-
-    log = "split in watson and crick bam file"
-    bam_input = pysam.AlignmentFile(os.path.join(args.output_dir,'combined.bam'),'rb')
-    watson_output = pysam.AlignmentFile(os.path.join(args.output_dir,'watson.bam'),'wb', template=bam_input)
-    crick_output = pysam.AlignmentFile(os.path.join(args.output_dir,'crick.bam'),'wb', template=bam_input)
-    for record in bam_input:
-        tag_dict = dict(record.tags)
-        #remove reads with alternate mapping positions
-        # if 'XA' in tag_dict:
-        #     continue
-        try:
-            if (record.is_reverse and record.is_paired == False) or \
-                (record.is_paired and record.is_read1 and record.is_reverse == True) or \
-                (record.is_paired and record.is_read2 and record.is_reverse == False):
-                    if tag_dict['ST'].lower() == 'crick':
-                        watson_output.write(record)
-                    elif tag_dict['ST'].lower() == 'watson':
-                        crick_output.write(record)
-            else:
-                if tag_dict['ST'].lower() == 'watson':
-                    watson_output.write(record)
-                elif tag_dict['ST'].lower() == 'crick':
-                    crick_output.write(record)
-        except KeyError:
-            continue
-    watson_output.close()
-    crick_output.close()
-
-    in_files['bam_out'] = {}
-    in_files['bam_out']['watson'] = os.path.join(args.output_dir,'watson.bam')
-    in_files['bam_out']['crick'] = os.path.join(args.output_dir,'crick.bam')
-
-
-    log = "index watson bam file"
-    cmd = ["samtools index %s"%in_files['bam_out']['watson']]
-    run_subprocess(cmd,args,log)
-    log = "index crick bam file"
-    cmd = ["samtools index %s"%in_files['bam_out']['crick']]
-    run_subprocess(cmd,args,log)
-    return in_files
-
 def run_STAR(in_files, args):
     "run STAR for mapping"
 
@@ -230,7 +136,7 @@ def run_STAR(in_files, args):
     in_files['bam_out']['watson'] = os.path.join(args.output_dir, 'watson.bam')
     in_files['bam_out']['crick'] = os.path.join(args.output_dir, 'crick.bam')
     in_files['header'] = os.path.join(args.output_dir, 'header.sam')
-    cmd = ["python mapping_varcall/map_STAR.py",
+    cmd = ["python2 mapping_varcall/map_STAR.py",
            '--reads_R1 %s' % args.reads_R1,
            '--reads_R2 %s' % args.reads_R2,
            '--merged %s' % args.merged,
@@ -538,9 +444,9 @@ def variant_calling_samtools(in_files,args):
     in_files['vcf_out']['crick'] = os.path.join(args.output_dir,'crick.vcf.gz')
 
     cmd = ["samtools mpileup --reference %s -gt DP,AD,INFO/AD" % (args.reference) +
-           " --max-depth  999999999 " +  # call at max-depth of 10.000.000
-           "-q 0 " +  # Do not skip alignments with low mapQ
-           "-Q 15 " +  # Skip bases with baseQ/BAQ smaller than 15
+           " --max-depth  %s " %(args.max_depth) +  # call at max-depth of 10.000.000
+           "-q %s " %(args.min_MQ) +  # Do not skip alignments with low mapQ
+           "-Q %s " %(args.min_BQ) +  # Skip bases with baseQ/BAQ smaller than 15
            "--skip-indels " +  # skip indels
            "-vu %s" % (
            in_files['bam_out']['watson']) +  # v = generate genotype likelihoods in VCF format u = uncompressed
@@ -551,9 +457,9 @@ def variant_calling_samtools(in_files,args):
 
 
     cmd = ["samtools mpileup --reference %s -gt DP,AD,INFO/AD" % (args.reference) +
-           " --max-depth  999999999 " + #call at max-depth of 10.000.000
-           "-q 0 " + #Do not skip alignments with low mapQ #TODO: investigate option
-           "-Q 15 " + #Skip bases with baseQ/BAQ smaller than 15
+           " --max-depth  %s " %(args.max_depth) + #call at max-depth of 10.000.000
+           "-q %s " %(args.min_MQ) + #Do not skip alignments with low mapQ #TODO: investigate option
+           "-Q %s " %(args.min_BQ) + #Skip bases with baseQ/BAQ smaller than 15
            "--skip-indels " + #skip indels
            "-vu %s" % (in_files['bam_out']['crick']) + #v = generate genotype likelihoods in VCF format u = uncompressed
            "|grep -v '^##contig='|bgzip -c > %s" % (in_files['vcf_out']['crick'])]
