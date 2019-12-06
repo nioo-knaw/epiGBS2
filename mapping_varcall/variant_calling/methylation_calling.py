@@ -147,8 +147,15 @@ def methylation_calling(split_line, context, SNP_nearby):
         out_line = [chrom, pos, context, '']
         #Note that nucleotides order of A and G are inverted (e.g. G/A) as obs is inverted
         #obs.split(',')[1] is for the Crick position
-        [[out_line.append(int(obs.split(',')[0])) for nt, obs in zip('TGCA', obs[::-1].split(':'))
-          if nt in 'GA'] for obs in split_line[5:]]
+        for obs in split_line[5:]:
+            print(obs)
+            for nt, obs in zip('TGCA',obs[::-1].split(':')):
+                print(nt,obs)
+                if nt in 'GA':
+                    out_line.append(int(obs.split(',')[0][::-1]))
+        #[[out_line.append(int(obs.split(',')[0])) for nt, obs in zip('TGCA', obs[::-1].split(':'))
+        #  if nt in 'GA'] for obs in split_line[5:]]
+
         for n in range(5, len(out_line), 2):
             out_line[n] += out_line[n - 1]
             if out_line[n] == 0:
@@ -158,8 +165,12 @@ def methylation_calling(split_line, context, SNP_nearby):
         return out_line
     elif ref_base.upper() == "C":
         out_line = [chrom, pos, context,'']
-        [[out_line.append(int(obs.split(',')[0])) for nt,obs in zip('ACGT',obs.split(':'))
-          if nt in 'CT'] for obs in split_line[5:]]
+        for obs in split_line[5:]:
+            for nt, obs in zip('ACGT',obs.split(':')):
+                if nt in "CT":
+                    out_line.append(int(obs.split(',')[0]))
+        #[[out_line.append(int(obs.split(',')[0])) for nt,obs in zip('ACGT',obs.split(':'))
+        #  if nt in 'CT'] for obs in split_line[5:]]
         for n in range(5,len(out_line),2):
             out_line[n] += out_line[n-1]
             if out_line[n] == 0:
