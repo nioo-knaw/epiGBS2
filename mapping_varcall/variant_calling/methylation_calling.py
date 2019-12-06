@@ -338,7 +338,7 @@ def main():
                     SNP_nearby.append(SNP)
                     break
             # for line in os.popen("pigz -cd %s " % args.mergedcalls):
-            for line in gzip.open(args.mergedcalls,'rb'):
+            for line in gzip.open(args.mergedcalls,'rt'):
                 split_line = line.rstrip('\n').split('\t')
                 if not count and line.startswith('#'):
                     header = make_header(args,handle,split_line)
