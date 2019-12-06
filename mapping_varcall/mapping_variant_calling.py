@@ -2,8 +2,8 @@
 __author__ = 'thomasvangurp'
 # Date created: 22/11/2014 (europe date)
 # Function: Pipeline for mapping reads to reference
-#Python version: 2.7.3
-#External dependencies: samtools,pysam,methylation_calling.py
+#Python version: 3.6.3
+#External dependencies: samtools,pysam,methylation_calling.py SNP_calling.py
 #Known bugs: None
 #Modifications: None
 import pysam
@@ -136,7 +136,7 @@ def run_STAR(in_files, args):
     in_files['bam_out']['watson'] = os.path.join(args.output_dir, 'watson.bam')
     in_files['bam_out']['crick'] = os.path.join(args.output_dir, 'crick.bam')
     in_files['header'] = os.path.join(args.output_dir, 'header.sam')
-    cmd = ["python2 mapping_varcall/map_STAR.py",
+    cmd = ["python mapping_varcall/map_STAR.py",
            '--reads_R1 %s' % args.reads_R1,
            '--reads_R2 %s' % args.reads_R2,
            '--merged %s' % args.merged,
@@ -491,7 +491,7 @@ def SNP_calling(in_files, args):
         in_files['vcf_out'] = {}
     in_files['vcf_out']['SNP'] = os.path.join(args.output_dir, 'snp.vcf')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
-    cmd = ["python2 mapping_varcall/variant_calling/SNP_calling.py",
+    cmd = ["python mapping_varcall/variant_calling/SNP_calling.py",
            "-m %s" % in_files['vcf_out']['merged'],
            "-s %s" % in_files['vcf_out']['SNP'],
            "-w %s" % os.path.join(args.output_dir, 'watson.vcf.gz')]
@@ -506,7 +506,7 @@ def methylation_calling(in_files,args):
     log = ["Run methylation calling script"]
     in_files['vcf_out']['SNP'] = os.path.join(args.output_dir, 'snp.vcf.gz')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
-    cmd = ["python2 mapping_varcall/variant_calling/methylation_calling.py",
+    cmd = ["python mapping_varcall/variant_calling/methylation_calling.py",
            " -r %s"%(args.reference),
            " -m %s"%(in_files['vcf_out']['merged']),
            " -s %s"%(in_files['vcf_out']['SNP']),
