@@ -29,7 +29,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='use bwameth for mapping reads')
     #input files
     parser.add_argument('-s','--sequences',
-                        help='number of sequences to take for testing')
+                        help='number of sequences to take for testing, subsamples the input read files')
     parser.add_argument('--max_depth',default=999999999,
                         help='maximum depth for SNP calling')
     parser.add_argument('--min_MQ',default=0,
@@ -41,15 +41,15 @@ def parse_args():
     parser.add_argument('--tmpdir',
                         help='tmp directory',default="/tmp/")
     parser.add_argument('--input_dir',
-                        help='optional: Choose input directory')
-    parser.add_argument('--reads_R1',
-                    help='Forward unmerged reads')
-    parser.add_argument('--reads_R2',
-                        help='Reverse unmerged reads')
-    parser.add_argument('--merged',
-                        help='merged watson and crick fastq')
-    parser.add_argument('--reference',
-                    help='reference clusters')
+                        help='optional: Choose input directory with trimmed files')
+    parser.add_argument('--crick_val_r1',
+                        help='Crick trimmed forward reads')
+    parser.add_argument('--crick_val_r2',
+                        help='Crick trimmed reverse reads')
+    parser.add_argument('--watson_val_r1',
+                        help='Watson trimmed forward reads')
+    parser.add_argument('--watson_val_r2',
+                        help='Watson trimmed reverse reads')
     parser.add_argument('--refgenome',
                         help='reference genome instead of clusters')
     parser.add_argument('-b','--barcodes',
@@ -76,16 +76,17 @@ def parse_args():
                         help='heatmap output methylation')
     args = parser.parse_args()
     if args.input_dir:
-        if not args.reads_R1:
-            args.reads_R1 = os.path.join(args.input_dir,'Unassembled.R1.watson.fq.gz')
-        if not args.reads_R2:
-            args.reads_R2 = os.path.join(args.input_dir,'Unassembled.R2.crick.fq.gz')
-        if not args.merged:
-            args.merged = os.path.join(args.input_dir,'Assembled.fq.gz')
-        if args.reference == None and args.refgenome == None:
+        if not args.crick_val_r1:
+            args.crick_val_r1 = os.path.join(args.input_dir,'Crick_R1_val_1.fq.gz')
+        if not args.crick_val_r2:
+            args.crick_val_r2 = os.path.join(args.input_dir,'Crick_R2_val_2.fq.gz')
+        if not args.watson_val_r1:
+            args.watson_val_r1 = os.path.join(args.input_dir,'Watson_R1_val_1.fq.gz')
+        if not args.watson_val_r2:
+            args.watson_val_r2 = os.path.join(args.input_dir,'Watson_R2_val_2.fq.gz')
+        if args.refgenome == None:
+            #change name of genome (to do)
             args.reference = os.path.join(args.input_dir,'consensus_cluster.renamed.fa')
-        if args.barcodes == None:
-            args.barcodes = os.path.join(args.input_dir,'barcodes.csv')
     if args.output_dir:
         if not os.path.exists(args.output_dir):
             os.mkdir(args.output_dir)
@@ -136,18 +137,16 @@ def run_STAR(in_files, args):
     in_files['bam_out']['watson'] = os.path.join(args.output_dir, 'watson.bam')
     in_files['bam_out']['crick'] = os.path.join(args.output_dir, 'crick.bam')
     in_files['header'] = os.path.join(args.output_dir, 'header.sam')
-    cmd = ["python mapping_varcall/map_STAR.py",
-           '--reads_R1 %s' % args.reads_R1,
-           '--reads_R2 %s' % args.reads_R2,
-           '--merged %s' % args.merged,
+    cmd = ["python mapping_varcall/map_STAR_ref.py",
+           '--crick_val_r1 %s' % args.crick_val_r1,
+           '--crick_val_r2 %s' % args.crick_val_r2,
+           '--watson_val_r1 %s' % args.watson_val_r1,
+           '--watson_val_r2 %s' % args.watson_val_r2,
            "--barcodes %s" % args.barcodes,
            "--tmpdir %s" % args.tmpdir,
            "--threads %s" % args.threads,
-           "--output_dir %s" % args.output_dir]
-    if not args.reference:
-        cmd += ['--refgenome %s' % args.refgenome]
-    else:
-        cmd += ['--reference %s' % args.reference]
+           "--output_dir %s" % args.output_dir,
+           "--refgenome %s" % args.refgenome]
     if args.sequences != None:
         cmd += ['--sequences %s' % args.sequences]
     log = "Map reads using STAR"
@@ -437,7 +436,7 @@ def run_Freebayes(in_files,args):
     return in_files
 
 def variant_calling_samtools(in_files,args):
-    """Do variant calling with freebayes"""
+    """Do variant calling with samtools and custom scripts"""
     #run mpileup on watson bam file
     in_files['vcf_out'] = {}
     in_files['vcf_out']['watson'] = os.path.join(args.output_dir,'watson.vcf.gz')
@@ -475,7 +474,7 @@ def merge_watson_crick(in_files, args, timeout=36000):
         in_files['vcf_out']['watson'] = os.path.join(args.output_dir, 'watson.vcf.gz')
         in_files['vcf_out']['crick'] = os.path.join(args.output_dir, 'crick.vcf.gz')
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir,'merged.tsv')
-    cmd = ["python mapping_varcall/merge_watson_crick.py",
+    cmd = ["python mapping_varcall/merge_watson_crick-old.py",
            "-w %s" % in_files['vcf_out']['watson'],
            "-c %s" % in_files['vcf_out']['crick'],
            "-o %s" % in_files['vcf_out']['merged']]
