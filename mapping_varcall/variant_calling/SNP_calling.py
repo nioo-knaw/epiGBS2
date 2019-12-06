@@ -29,7 +29,7 @@ def make_header(args,handle):
     except AssertionError:
         raise OSError('file %s does not exist, please provide the location of the watson.vcf.gz file')
     if args.watson.endswith('gz'):
-        watson_handle = gzip.open(args.watson)
+        watson_handle = gzip.open(args.watson,'rt')
     else:
         watson_handle = open(args.watson)
     for line in watson_handle:
@@ -233,7 +233,7 @@ def combine_counts(observations, convert_dict, ref_base):
                 nt_counts[nt] += watson_count[nt_search]
             continue
         else:
-            print ''
+            print ('')
     nt_out = {}
     # DP = float(sum(nt_counts.values()))
     for nt, count in nt_counts.items():
@@ -402,7 +402,7 @@ def main():
             snp_record = call_SNP(line)
             count += 1
             if not count % 1000000:
-                print 'processed %s lines ' % count
+                print ('processed %s lines ' % count)
             if snp_record:
                 handle.write(snp_record)
     handle.close()
