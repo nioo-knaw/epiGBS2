@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python3
 import sys
 import re
 import os
@@ -43,15 +43,15 @@ def parse_fastq(line, index, end):
                 if line.startswith('@'):
                     index += 1
                     file_out.write('@%s%s%s\n'%(genotype, index, end))
-                    file_out.write(file_in.next())
-                    line = file_in.next()
+                    file_out.write(next(file_in))
+                    line = next(file_in)
                 else:
                     pass
                     #raise ValueError
                 if line.startswith('+'):
                     file_out.write('+%s%s%s\n'%(genotype, index, end))
                     file_out.write(file_in.next())
-                    line = file_in.next()
+                    line = next(file_in)
                 else:
                     pass
                     #raise ValueError
@@ -63,15 +63,15 @@ def parse_fastq(line, index, end):
                 if line.startswith('@'):
                     index = ':'.join(line.split('#')[0].split(':')[1:-1])
                     file_out.write('@%s%s%s\n'%(genotype, index, end))
-                    file_out.write(file_in.next())
-                    line = file_in.next()
+                    file_out.write(next(file_in))
+                    line = next(file_in)
                 else:
                     pass
                     #raise ValueError
                 if line.startswith('+'):
                     file_out.write('+%s%s%s\n'%(genotype, index, end))
-                    file_out.write(file_in.next())
-                    line = file_in.next()
+                    file_out.write(next(file_in))
+                    line = next(file_in)
                 else:
                     pass
                     #raise ValueError
@@ -83,11 +83,11 @@ def parse_fasta(line, index):
             if line.startswith('>'):
                 index += 1
                 file_out.write('>%s%s\n'%(genotype, index))
-                file_out.write(file_in.next())
-                line = file_in.next()
+                file_out.write(next(file_in))
+                line = next(file_in)
             else:
                 file_out.write(line)
-                line = file_in.next()
+                line = next(file_in)
                 pass
                 #raise ValueError
         except StopIteration:
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     elif opts.id:
         index = 1
     try:
-        line = file_in.next()
+        line = next(file_in)
         if line.startswith('>'):
             index = 0 # For fasta no Illumina names are available
             parse_fasta(line, index)
@@ -126,9 +126,9 @@ if __name__ == "__main__":
             end = ''
             parse_fastq(line, index, end)
         else:
-            print "File not recognized, is it a value FASTA/Q file"
+            print ("File not recognized, is it a value FASTA/Q file")
             
     except StopIteration:
-        print "Please provide a non-empty file"
+        print ("Please provide a non-empty file")
   
 
