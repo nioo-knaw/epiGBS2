@@ -153,7 +153,7 @@ def process_reads_watson(args):
         convert_w_r1 = w_r1[1].upper().replace('C', 'T')
         convert_w_r2 = w_r2[1].upper().replace('G', 'A')
         c_pos_w = [str(n) for n, i in enumerate(w_r1[1]) if i.upper() == 'C']
-        g_pos_w = [str(n) for n, i in enumerate(w_r2[1].rstrip()[::-1]) if i.upper() == 'G']
+        g_pos_w = [str(n) for n, i in enumerate(w_r2[1].rstrip('\n')[::-1]) if i.upper() == 'G']
         header_w = '@%s' % (w_r1[0][1:-1].replace(' ', '|').replace('\t', '|'))
         header_w += '|%s\n' % (','.join(c_pos_w) + '|' + ','.join(g_pos_w))
         watson_r1_handle.write(header_w + convert_w_r1 + '+\n' + w_r1[3])
@@ -206,7 +206,7 @@ def process_reads_crick(args):
         convert_c_r1 = c_r1[1].upper().replace('G', 'A')
         convert_c_r2 = c_r2[1].upper().replace('C', 'T')
         g_pos_c = [str(n) for n, i in enumerate(c_r1[1]) if i.upper() == 'G']
-        c_pos_c = [str(n) for n, i in enumerate(c_r2[1].rstrip()[::-1]) if i.upper() == 'C']
+        c_pos_c = [str(n) for n, i in enumerate(c_r2[1].rstrip('\n')[::-1]) if i.upper() == 'C']
         header_c = '@%s' % (c_r1[0][1:-1].replace(' ', '|').replace('\t', '|'))
         header_c += '|%s\n' % (','.join(c_pos_c) + '|' + ','.join(g_pos_c))
         crick_r1_handle.write(header_c + convert_c_r1 + '+\n' + c_r1[3])
