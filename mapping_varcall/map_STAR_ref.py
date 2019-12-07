@@ -152,17 +152,13 @@ def process_reads_watson(args):
             break
         convert_w_r1 = w_r1[1].upper().replace('C', 'T')
         convert_w_r2 = w_r2[1].upper().replace('G', 'A')
-        c_pos_w = [str(n) for n, i in enumerate(w_r1[1]) if str(i).upper() == 'C']
-        g_pos_w = [str(n) for n, i in enumerate(str(w_r2[1]).rstrip()[::-1]) if str(i).upper() == 'G']
-        header_w = '@'+ str((w_r1[0][1:-1].replace(' ', '|').replace('\t', '|')))
+        c_pos_w = [str(n) for n, i in enumerate(w_r1[1]) if i.upper() == 'C']
+        g_pos_w = [str(n) for n, i in enumerate(w_r2[1].rstrip()[::-1]) if i.upper() == 'G']
+        header_w = '@%s' % (w_r1[0][1:-1].replace(' ', '|').replace('\t', '|'))
         header_w += '|%s\n' % (','.join(c_pos_w) + '|' + ','.join(g_pos_w))
-        w_r1[3] = str(w_r1[3]).lstrip("b'").rstrip("\\n'")
-        w_r2[3] = str(w_r2[3]).lstrip("b'").rstrip("\\n'")
-        watson_r1_handle.write(header_w + str(convert_w_r1) + '+\n' + str(w_r1[3]))
+        watson_r1_handle.write(header_w + convert_w_r1 + '+\n' + w_r1[3])
         #print(read_r1[3])
-        watson_r1_handle.write('\n')
-        watson_r2_handle.write(header_w + str(convert_w_r2) + '+\n' + str(w_r2[3]))
-        watson_r2_handle.write('\n')
+        watson_r2_handle.write(header_w + convert_w_r2 + '+\n' + w_r2[3])
     watson_r1_handle.close()
     watson_r2_handle.close()
     return args
@@ -209,17 +205,13 @@ def process_reads_crick(args):
             break
         convert_c_r1 = c_r1[1].upper().replace('G', 'A')
         convert_c_r2 = c_r2[1].upper().replace('C', 'T')
-        g_pos_c = [str(n) for n, i in enumerate(c_r1[1]) if str(i).upper() == 'G']
-        c_pos_c = [str(n) for n, i in enumerate(str(c_r2[1]).rstrip()[::-1]) if str(i).upper() == 'C']
-        header_c = '@' + str((c_r1[0][1:-1].replace(' ', '|').replace('\t', '|')))
+        g_pos_c = [str(n) for n, i in enumerate(c_r1[1]) if i.upper() == 'G']
+        c_pos_c = [str(n) for n, i in enumerate(c_r2[1].rstrip()[::-1]) if i.upper() == 'C']
+        header_c = '@%s' % (c_r1[0][1:-1].replace(' ', '|').replace('\t', '|'))
         header_c += '|%s\n' % (','.join(c_pos_c) + '|' + ','.join(g_pos_c))
-        c_r1[3] = str(c_r1[3]).lstrip("b'").rstrip("\\n'")
-        c_r2[3] = str(c_r2[3]).lstrip("b'").rstrip("\\n'")
-        crick_r1_handle.write(header_c + str(convert_c_r1) + '+\n' + str(c_r1[3]))
+        crick_r1_handle.write(header_c + convert_c_r1 + '+\n' + c_r1[3])
         #print(read_r1[3])
-        crick_r1_handle.write('\n')
-        crick_r2_handle.write(header_c + str(convert_c_r2) + '+\n' + str(c_r2[3]))
-        crick_r2_handle.write('\n')
+        crick_r2_handle.write(header_c + convert_c_r2 + '+\n' + c_r2[3])
     crick_r1_handle.close()
     crick_r2_handle.close()
     return args
