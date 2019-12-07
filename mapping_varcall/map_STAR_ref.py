@@ -316,7 +316,7 @@ def map_STAR(args):
                 " --outFilterMultimapNmax 1" \
                 " --scoreInsOpen -1" \
             #make sure we have a bam file sorted by name
-       if args.extraflags:
+        if args.extraflags:
             cmd += ' %s' % args.extraflags
         log = "run STAR for % strand"%(strand)
         run_subprocess([cmd],args, log)
