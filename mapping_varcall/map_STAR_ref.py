@@ -150,11 +150,11 @@ def process_reads_watson(args):
             print('Processed %s reads' % (j))
         if not w_r1:
             break
-        convert_w_r1 = w_r1[1].upper().decode().replace('C', 'T')
-        convert_w_r2 = w_r2[1].upper().decode().replace('G', 'A')
+        convert_w_r1 = w_r1[1].upper().replace('C', 'T')
+        convert_w_r2 = w_r2[1].upper().replace('G', 'A')
         c_pos_w = [str(n) for n, i in enumerate(w_r1[1]) if str(i).upper() == 'C']
         g_pos_w = [str(n) for n, i in enumerate(str(w_r2[1]).rstrip()[::-1]) if str(i).upper() == 'G']
-        header_w = '@'+ str((w_r1[0][1:-1].decode().replace(' ', '|').replace('\t', '|')))
+        header_w = '@'+ str((w_r1[0][1:-1].replace(' ', '|').replace('\t', '|')))
         header_w += '|%s\n' % (','.join(c_pos_w) + '|' + ','.join(g_pos_w))
         w_r1[3] = str(w_r1[3]).lstrip("b'").rstrip("\\n'")
         w_r2[3] = str(w_r2[3]).lstrip("b'").rstrip("\\n'")
@@ -207,11 +207,11 @@ def process_reads_crick(args):
             print('Processed %s reads' % (j))
         if not c_r1:
             break
-        convert_c_r1 = c_r1[1].upper().decode().replace('G', 'A')
-        convert_c_r2 = c_r2[1].upper().decode().replace('C', 'T')
+        convert_c_r1 = c_r1[1].upper().replace('G', 'A')
+        convert_c_r2 = c_r2[1].upper().replace('C', 'T')
         g_pos_c = [str(n) for n, i in enumerate(c_r1[1]) if str(i).upper() == 'G']
         c_pos_c = [str(n) for n, i in enumerate(str(c_r2[1]).rstrip()[::-1]) if str(i).upper() == 'C']
-        header_c = '@' + str((c_r1[0][1:-1].decode().replace(' ', '|').replace('\t', '|')))
+        header_c = '@' + str((c_r1[0][1:-1].replace(' ', '|').replace('\t', '|')))
         header_c += '|%s\n' % (','.join(c_pos_c) + '|' + ','.join(g_pos_c))
         c_r1[3] = str(c_r1[3]).lstrip("b'").rstrip("\\n'")
         c_r2[3] = str(c_r2[3]).lstrip("b'").rstrip("\\n'")
