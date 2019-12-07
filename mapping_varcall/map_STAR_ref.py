@@ -467,7 +467,7 @@ def bam_output(args):
         out_sam = tempfile.NamedTemporaryFile(prefix=strand, suffix='.sam', dir=args.output_dir)
         print(out_sam)
         #rewrite sam file merged and joined for watson and crick
-        parse_sam(read_sam, out_sam.name, strand
+        parse_sam(read_sam, out_sam.name, strand)
         #convert to sorted and indexed bam
         cmd = 'cat %s %s |samtools view -@ 4 -Shb |sambamba sort -m 4GB --tmpdir %s -t %s -o %s  /dev/stdin'%(args.header,
                                                                             out_sam.name,args.tmpdir, args.threads,
