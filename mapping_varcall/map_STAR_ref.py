@@ -189,8 +189,8 @@ def process_reads_crick(args):
         c_r2 = []
         for i in range(4):
             try:
-                read_r1.append(next(r1_handle))
-                read_r2.append(next(r2_handle))
+                c_r1.append(next(r1_handle))
+                c_r2.append(next(r2_handle))
             except StopIteration:
                 break
         j += 1
