@@ -1,0 +1,21 @@
+rule report:
+    input:
+      bed =expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
+      snp =expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"]),
+      multi =expand("{path}/multiQC_report.html", path=config["output_dir"])
+      #clonelog =expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
+      #stackslog = expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
+      #maplog = expand("{path}/mapping/mapping_variantcalling.log", path=config["output_dir"]),
+      #reflog =expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
+      #dir = config["output_dir"]
+    output:
+      expand("{path}/report.html", path=config["output_dir"])
+    conda: "../src/env/render.yaml"
+    params: 
+      dir=expand("{path}", path=config["output_dir"]),
+      bc=expand("{path}/{file}", path=config["input_dir"], file=config["barcodes"])
+    shell:
+      """
+      R -e "rmarkdown::render('src/report/report.Rmd',output_file='report.html', params=list(dir='{params.dir}', bc='{params.bc}'))"
+      mv report.html {params.dir}/report.html
+      """

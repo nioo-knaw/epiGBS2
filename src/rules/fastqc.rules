@@ -1,0 +1,26 @@
+rule fastqc:
+  input:
+      expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"])
+  output:
+      dir=directory(expand("{path}/fastqc/", path=config["output_dir"]))
+
+  conda:
+       "../src/env/fastqc.yaml"
+  params:
+       q="--quiet",
+       threads=config["threads"],
+       dir=expand("{path}/fastqc/", path=config["output_dir"]),
+       reads=expand("{path}/output_demultiplex/clone-stacks/*.fq.gz", path=config["output_dir"])
+  shell: "fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}"
+
+rule MultiqcFastqc:
+    input:
+      before=expand("{path}/fastqc/", path=config["output_dir"]),
+      map=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
+    output:
+      report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
+    params:
+        dir=expand("{path}/", path=config["output_dir"])
+    conda:
+      "../src/env/multiqc.yaml"
+    shell: "multiqc {params.dir} --interactive --filename {output.report1}"

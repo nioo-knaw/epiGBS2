@@ -1,0 +1,145 @@
+param_id=config["param_denovo"]["identity"]
+param_mind=config["param_denovo"]["min-depth"]
+param_maxd=config["param_denovo"]["max-depth"]
+
+def getParam_id(param_id):
+    if param_id == "default" or param_id == "":
+        id = 0.95
+    else:
+        id = param_id
+    return id
+def getParam_mind(param_mind):
+    if param_mind=="default" or param_mind == "":
+        mind = 0
+    else:
+        mind = param_mind
+    return mind
+def getParam_maxd(param_maxd):
+    if param_maxd=="default" or param_maxd == "":
+        dep = 0
+    else:
+        dep = param_maxd
+    return dep
+
+
+
+rule denovo_reference:
+    input:
+        #R1=config["output_dir"] + "/output_demultiplex/demultiplex_1_fastq.txt.gz",
+        #R2=config["output_dir"] + "/output_demultiplex/demultiplex_2_fastq.txt.gz",
+        #dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+        CrickR1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+        CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
+        WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+        WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
+
+    output:
+        #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa",
+        #config["output_dir"] + "/output_denovo/consensus_cluster.fa",
+        #config["output_dir"] + "/output_denovo/consensus.fa",
+        #config["output_dir"] + "/output_denovo/Assembled.fq.gz",
+        #config["output_dir"] + "/output_denovo/Unassembled.R2.fq.gz",
+        #config["output_dir"] + "/output_denovo/Unassembled.R1.fq.gz",
+        #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa.fai"
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        consensus_cluster=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa"),
+        consensus=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus.fa"),
+        assemble=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
+        unass_R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
+        index_ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai")
+
+
+    params:
+        cycles=config["cycles"],
+        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        tmp=expand("{tmp}", tmp=config["tmpdir"]),
+        identity=getParam_id(param_id),
+        min_depth=getParam_mind(param_mind),
+        max_depth=getParam_maxd(param_maxd),
+        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+        outdir= expand("{path}{dir}", path=config["output_dir"], dir="/output_denovo")
+
+    log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
+    conda:
+        "../src/env/environment.yaml"
+    threads: config["threads"]
+    shell:
+        "python src/de_novo_reference_creation/make_reference.py "
+        "--inputdir {params.indir} "
+        "--barcodes {input.bar} "
+        "--threads {threads} "
+        "--outputdir {params.outdir} "
+        "--cycles {params.cycles} "
+        "--clustering_treshold {params.identity} "
+        "--max_unique_size {params.max_depth} "
+        "--min_unique_size {params.min_depth} "
+        "--tmpdir {params.tmp} "
+        "--log {log} "
+
+
+param_mq=config["param_SNPcalling"]["min-MQ"]
+param_bq=config["param_SNPcalling"]["min-BQ"]
+param_depth=config["param_SNPcalling"]["max-depth"]
+
+def getParam_mq(param_mq):
+    if param_mq == "default" or param_mq == "":
+        print(param_mq)
+        mq = 0
+    else:
+        mq = param_mq
+    return mq
+def getParam_bq(param_bq):
+    if param_bq=="default" or param_bq == "":
+        bq = 15
+    else:
+        bq = param_bq
+    return bq
+def getParam_dp(param_depth):
+    if param_depth=="default" or param_depth == "":
+        dep = 999999999
+    else:
+        dep = param_depth
+    return dep
+
+rule denovo_mapping:
+    input:
+        merge=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
+        R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+        R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
+    output:
+        expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"]),
+        expand("{path}/mapping/methylation.bed", path=config["output_dir"])
+
+    params:
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+        tmp=expand("{tmp}", tmp=config["tmpdir"]),
+        depth=getParam_dp(param_depth),
+        mq=getParam_mq(param_mq),
+        bq=getParam_bq(param_bq)
+
+    log:
+        config["output_dir"] + "/log/log_map.txt"
+    threads: config["threads"]
+    conda:
+        "../src/env/environment.yaml"
+    shell:
+        "python src/mapping_varcall/mapping_variant_calling.py "
+        "--tmpdir {params.tmp} "
+        "--merged {input.merge} "
+        "--reads_R1 {input.R1} "
+        "--reads_R2 {input.R2} "
+        "--reference {input.ref} "
+        "--barcodes {input.bar} "
+        "--log {log} "
+        "--threads {threads} "
+        "--output_dir {params.out_dir} "
+        "--max_depth {params.depth} "
+        "--min_BQ {params.bq}"
+
+
+onerror:
+	print("An error occurred, look into log files")
