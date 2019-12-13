@@ -64,7 +64,7 @@ rule denovo_reference:
     log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
     conda:
         "../src/env/environment.yaml"
-    threads: config["threads"]
+    threads: 40
     shell:
         "python src/de_novo_reference_creation/make_reference.py "
         "--inputdir {params.indir} "
@@ -123,7 +123,7 @@ rule denovo_mapping:
 
     log:
         config["output_dir"] + "/log/log_map.txt"
-    threads: config["threads"]
+    threads: 40
     conda:
         "../src/env/environment.yaml"
     shell:
