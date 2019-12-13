@@ -17,7 +17,7 @@ rule trim:
         dir=expand("{path}/trimmed/", path=config["output_dir"])
     conda:
         "../src/env/trim_galore.yaml"
-    threads: 12
+    threads: 40
 
     log: expand("{path}/log/trim.log", path=config["output_dir"])
 
@@ -69,7 +69,7 @@ rule mapping_ref:
         bq=getParam_bq(param_bq)
     log: expand("{path}{file}", path=config["output_dir"], file="/log/mapping.log")
 
-    threads: config["threads"]
+    threads: 40
     conda:
         "../src/env/environment.yaml"
 	shell:
