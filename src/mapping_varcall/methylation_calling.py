@@ -148,9 +148,7 @@ def methylation_calling(split_line, context, SNP_nearby):
         #Note that nucleotides order of A and G are inverted (e.g. G/A) as obs is inverted
         #obs.split(',')[1] is for the Crick position
         for obs in split_line[5:]:
-            print(obs)
             for nt, obs in zip('TGCA',obs[::-1].split(':')):
-                print(nt,obs)
                 if nt in 'GA':
                     out_line.append(int(obs.split(',')[0][::-1]))
         #[[out_line.append(int(obs.split(',')[0])) for nt, obs in zip('TGCA', obs[::-1].split(':'))
