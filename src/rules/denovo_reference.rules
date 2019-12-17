@@ -103,7 +103,29 @@ def getParam_dp(param_depth):
         dep = param_depth
     return dep
 
-rule denovo_mapping:
+def getParam_mq(param_mq):
+    if param_mq == "default" or param_mq == "":
+        print(param_mq)
+        mq = 0
+    else:
+        mq = param_mq
+    return mq
+def getParam_bq(param_bq):
+    if param_bq=="default" or param_bq == "":
+        bq = 15
+    else:
+        bq = param_bq
+    return bq
+def getParam_dp(param_depth):
+    if param_depth=="default" or param_depth == "":
+        dep = 999999999
+    else:
+        dep = param_depth
+    return dep
+
+
+
+rule run_star:
     input:
         merge=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
         R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
@@ -111,34 +133,106 @@ rule denovo_mapping:
         ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
         bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
     output:
-        expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"]),
-        expand("{path}/mapping/methylation.bed", path=config["output_dir"])
-
+        watsonBam=expand("{path}/mapping/watson.bam", path=config["output_dir"]),
+        crickBam=expand("{path}/mapping/crick.bam", path=config["output_dir"])
     params:
         out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
-        tmp=expand("{tmp}", tmp=config["tmpdir"]),
-        depth=getParam_dp(param_depth),
-        mq=getParam_mq(param_mq),
-        bq=getParam_bq(param_bq)
-
-    log:
-        config["output_dir"] + "/log/log_map.txt"
+        tmp=expand("{tmp}", tmp=config["tmpdir"])
     threads: 40
-    conda:
-        "../src/env/environment.yaml"
+    log:
+        config["output_dir"] + "/log/log_STAR.txt"
     shell:
-        "python src/mapping_varcall/mapping_variant_calling.py "
+        "python src/mapping_varcall/map_STAR.py "
         "--tmpdir {params.tmp} "
         "--merged {input.merge} "
         "--reads_R1 {input.R1} "
         "--reads_R2 {input.R2} "
         "--reference {input.ref} "
         "--barcodes {input.bar} "
-        "--log {log} "
-        "--threads {threads} "
         "--output_dir {params.out_dir} "
-        "--max_depth {params.depth} "
-        "--min_BQ {params.bq}"
+        "--threads {threads}"
+
+rule run_mpileup_watson:
+    input:
+        watsonBam=expand("{path}/mapping/watson.bam", path=config["output_dir"]),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+    output:
+        watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"])
+    params:
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+        depth=getParam_dp(param_depth),
+        mq=getParam_mq(param_mq),
+        bq=getParam_bq(param_bq),
+    shell:
+        "samtools mpileup --reference {input.ref} "
+        "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
+        "-q {params.mq} -Q {params.bq} "
+        "--skip-indels "
+        "-vu {input.watsonBam} | grep -v '^##contig='|bgzip -c > {output.watsonVCF}"
+
+rule run_mpileup_crick:
+    input:
+        crickBam=expand("{path}/mapping/crick.bam", path=config["output_dir"]),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+    output:
+        crickVCF=expand("{path}/mapping/crick.vcf.gz", path=config["output_dir"])
+    params:
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+        depth=getParam_dp(param_depth),
+        mq=getParam_mq(param_mq),
+        bq=getParam_bq(param_bq),
+    shell:
+        "samtools mpileup --reference {input.ref} "
+        "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
+        "-q {params.mq} -Q {params.bq} "
+        "--skip-indels "
+        "-vu {input.crickBam} | grep -v '^##contig='|bgzip -c > {output.crickVCF}"
+
+rule merge_watson_crick:
+    input:
+        watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"]),
+        crickVCF=expand("{path}/mapping/crick.vcf.gz", path=config["output_dir"])
+    output:
+        mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"])
+    params:
+        mergedtsv=expand("{path}/mapping/merged.tsv", path=config["output_dir"])
+    shell:
+        "python src/mapping_varcall/merge_watson_crick.py "
+        "-w {input.watsonVCF} "
+        "-c {input.crickVCF} "
+        "-o {params.mergedtsv}"
+
+rule SNP_calling:
+    input:
+        watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"]),
+        mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"])
+    output:
+        snpVCF=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
+    params:
+        snpvcf=expand("{path}/mapping/snp.vcf", path=config["output_dir"])
+    shell:
+        "python src/mapping_varcall/SNP_calling.py "
+        "-m {input.mergedTSV} "
+        "-w {input.watsonVCF} "
+        "-s {params.snpvcf}"
+
+rule methylation_calling:
+    input:
+        mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"]),
+        snpVCF=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"]),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+    output:
+        methylationBed=expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
+        methylationIGV=expand("{path}/mapping/heatmap.igv", path=config["output_dir"])
+
+    shell:
+        "python src/mapping_varcall/methylation_calling.py "
+        "-r {input.ref} "
+        "-m {input.mergedTSV} "
+        "-o {output.methylationBed} "
+        "-s {input.snpVCF}  "
+        "-heat {output.methylationIGV}"
+
 
 
 onerror:
