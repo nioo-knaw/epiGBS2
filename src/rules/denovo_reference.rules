@@ -103,27 +103,6 @@ def getParam_dp(param_depth):
         dep = param_depth
     return dep
 
-def getParam_mq(param_mq):
-    if param_mq == "default" or param_mq == "":
-        print(param_mq)
-        mq = 0
-    else:
-        mq = param_mq
-    return mq
-def getParam_bq(param_bq):
-    if param_bq=="default" or param_bq == "":
-        bq = 15
-    else:
-        bq = param_bq
-    return bq
-def getParam_dp(param_depth):
-    if param_depth=="default" or param_depth == "":
-        dep = 999999999
-    else:
-        dep = param_depth
-    return dep
-
-
 
 rule run_star:
     input:
