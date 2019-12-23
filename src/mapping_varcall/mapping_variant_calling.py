@@ -182,7 +182,7 @@ def variant_calling_samtools(in_files,args):
     run_subprocess(cmd, args, log)
     return in_files
 
-def merge_watson_crick(in_files, args):
+def merge_watson_crick(in_files, args, timeout=36000):
     """create merged.tsv.gz with watson and crick calls merged"""
     if 'vcf_out' not in in_files:
         in_files['vcf_out'] = {}
@@ -195,7 +195,7 @@ def merge_watson_crick(in_files, args):
            "-o %s" % in_files['vcf_out']['merged']]
 
     log = "Create custom tsv file for combining watson and crick observation counts per individual"
-    run_subprocess(cmd, args, log)
+    run_subprocess(cmd, args, log, timeout)
     in_files['vcf_out']['merged'] = os.path.join(args.output_dir, 'merged.tsv.gz')
     return in_files
 
