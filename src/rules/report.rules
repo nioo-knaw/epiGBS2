@@ -10,7 +10,7 @@ rule report:
       #dir = config["output_dir"]
     output:
       expand("{path}/report.html", path=config["output_dir"])
-    conda: "../src/env/render.yaml"
+    conda: "../env/render.yaml"
     params: 
       dir=expand("{path}", path=config["output_dir"]),
       bc=expand("{path}/{file}", path=config["input_dir"], file=config["barcodes"])

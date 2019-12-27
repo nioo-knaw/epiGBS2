@@ -18,7 +18,7 @@ rule barcode_stacks:
     output:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     conda:
-        "../src/env/stacks.yaml"
+        "../env/stacks.yaml"
     shell:
          """
          python src/demultiplex/barcode_stacks.py --r1_in {input.R1} --r2_in {input.R2} --output-dir {params.outputdir} -b {input.barcodes} --tmpdir {params.tmpdir}
@@ -36,7 +36,7 @@ rule header_Watson_R1:
     output:
         header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName)
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
          "zcat {params.outputdir}clone-stacks/{params.sample}-Watson.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/'| gzip -c   > {output.header}"
 
@@ -48,7 +48,7 @@ rule cat_watson_R1:
     params:
         tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
        "cat {params.tmp}/samplesHeader/*-Watson.1.fq.gz > {output.outFile}"
 
@@ -66,7 +66,7 @@ rule header_Watson_R2:
     output:
         header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName)
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
          "zcat {params.outputdir}clone-stacks/{params.sample}-Watson.2.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/' | gzip -c > {output.header}"
 
@@ -78,7 +78,7 @@ rule cat_watson_R2:
     params:
         tmp=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName),
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
        "cat {params.tmp}/samplesHeader/*-Watson.2.fq.gz > {output.outFile}"
 
@@ -96,7 +96,7 @@ rule header_Crick_R1:
     output:
         header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName)
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
          "zcat {params.outputdir}clone-stacks/{params.sample}-Crick.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
 
@@ -108,7 +108,7 @@ rule cat_Crick_R1:
     params:
         tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
        "cat {params.tmp}/samplesHeader/*-Crick.1.fq.gz > {output.outFile}"
 
@@ -125,7 +125,7 @@ rule header_Crick_R2:
     output:
         header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName)
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
          "zcat {params.outputdir}clone-stacks/{params.sample}-Crick.2.fq.gz | cut -f1 -d ' '  | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
 
@@ -137,7 +137,7 @@ rule cat_Crick_R2:
     params:
         tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
     conda:
-        "../src/env/python3.yaml"
+        "../env/python3.yaml"
     shell:
        "cat {params.tmp}/samplesHeader/*-Crick.2.fq.gz > {output.outFile}"
 

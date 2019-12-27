@@ -63,7 +63,7 @@ rule denovo_reference:
 
     log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
     conda:
-        "../src/env/environment.yaml"
+        "../env/environment.yaml"
     threads: 40
     shell:
         "python src/de_novo_reference_creation/make_reference.py "
@@ -118,6 +118,8 @@ rule run_star:
         out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
         tmp=expand("{tmp}", tmp=config["tmpdir"])
     threads: 40
+    conda:
+        "../env/environment.yaml"
     log:
         config["output_dir"] + "/log/log_STAR.txt"
     shell:
@@ -142,6 +144,8 @@ rule run_mpileup_watson:
         depth=getParam_dp(param_depth),
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq),
+    conda:
+        "../env/environment.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -160,6 +164,8 @@ rule run_mpileup_crick:
         depth=getParam_dp(param_depth),
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq),
+    conda:
+        "../env/environment.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -175,6 +181,8 @@ rule merge_watson_crick:
         mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"])
     params:
         mergedtsv=expand("{path}/mapping/merged.tsv", path=config["output_dir"])
+    conda:
+        "../env/environment.yaml"
     shell:
         "python src/mapping_varcall/merge_watson_crick.py "
         "-w {input.watsonVCF} "
@@ -189,6 +197,8 @@ rule SNP_calling:
         snpVCF=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
     params:
         snpvcf=expand("{path}/mapping/snp.vcf", path=config["output_dir"])
+    conda:
+        "../env/environment.yaml"
     shell:
         "python src/mapping_varcall/SNP_calling.py "
         "-m {input.mergedTSV} "
@@ -203,7 +213,8 @@ rule methylation_calling:
     output:
         methylationBed=expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
         methylationIGV=expand("{path}/mapping/heatmap.igv", path=config["output_dir"])
-
+    conda:
+        "../env/environment.yaml"
     shell:
         "python src/mapping_varcall/methylation_calling.py "
         "-r {input.ref} "

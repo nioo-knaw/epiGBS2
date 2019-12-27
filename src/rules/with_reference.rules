@@ -16,7 +16,7 @@ rule trim:
     params:
         dir=expand("{path}/trimmed/", path=config["output_dir"])
     conda:
-        "../src/env/trim_galore.yaml"
+        "../env/trim_galore.yaml"
     threads: 40
 
     log: expand("{path}/log/trim.log", path=config["output_dir"])
@@ -71,7 +71,7 @@ rule mapping_ref:
 
     threads: 40
     conda:
-        "../src/env/environment.yaml"
+        "../env/environment.yaml"
 	shell:
 		"python3 src/mapping_varcall/mapping_variant_calling_ref.py "
 		"--tmpdir {params.tmp} "
