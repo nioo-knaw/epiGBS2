@@ -1,32 +1,50 @@
-#path to output directory
-output_dir: "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epigbs-snakemake-3.0/output"
-#input directory where raw reads are
+# path to output directory
+output_dir: "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epigbs-snakemake-3.0-final-ref/output-ref"
+
+# input directory where raw reads are
 input_dir       : "/mnt/nfs/bioinfdata/home/NIOO/fleurg/epiGBS/data"
-barcodes: "barcodes.tsv"
-#barcode file(barcode file should be kept inside input directory) and enzymes will be included in barcode file
-tmpdir        : "/tmp"
-#Projectname to ensure there is no overlap between tmpfiles in the demultiplexing step
-#number of sequencing cycles
-cycles        : 150
-#Sequence Reads
+
+# name of sequence read files
 Read1 : "RRBS_KD17072296_H53KHCCXY_L5_1.fq.gz"
 Read2 : "RRBS_KD17072296_H53KHCCXY_L5_2.fq.gz"
-#genome directory (leaave it blank in denovo mode)
-ref_dir: ""
-#genome name (leaave it blank in denovo mode)
-genome: ""
+
+# number of sequencing cycles (the same as read length in Illumina sequencing)
+cycles        : 150
+
+# barcode file(barcode file should be kept inside input directory) and enzymes will be included in barcode file
+barcodes: "barcodes.tsv"
+
+# the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
+tmpdir        : "/tmp"
+
+# some of the steps can be run in parallel. Please set the number of available computing threads on your system
 threads: "12"
-#mode of running pipeline (set denovo or reference)
-mode: "denovo"
-#set parameters or write default
-#identity in decimal number e.g. for 90% identity write 0.90
+
+# mode of running pipeline (set denovo or reference)
+mode: "reference"
+
+# genome directory (leaave it blank in denovo mode)
+ref_dir: "/home/NIOO.INT/fleurg/epiGBS/analysis/output_denovo_test_data"
+
+# genome name (leaave it blank in denovo mode)
+genome: "consensus_cluster.renamed.fa"
+
+# advanced users have the possibility to change different parameter, leave them blank or write "default" to run them in default mode
+
+# parameters in the denovo reference creation:
+# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.95
+# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
+# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
 param_denovo:
   identity: ""
   min-depth: ""
   max-depth: ""
 
+# parameters in the mpileup step (variant callin)
+# max-depth: At a position, read maximally INT reads per input file, default 999999999
+# min-MQ: Minimum mapping quality for an alignment to be used, default 0
+# min-BQ: Minimum base quality for a base to be considered, default 15
 
-#SNP calling parameters
 param_SNPcalling:
   max-depth: ""
   min-MQ: ""
