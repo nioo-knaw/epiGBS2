@@ -26,7 +26,7 @@ def parse_args():
 def make_header(args,handle,split_line):
     """create header for bed and IGV file"""
     header = ['chr', 'pos', 'context', 'samples_called']
-    for element in split_line[9:]:
+    for element in split_line[5:]:
         header.append('%s_methylated' % element)
         header.append('%s_total' % element)
     output =  '\t'.join(header) + '\n'

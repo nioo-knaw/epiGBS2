@@ -378,7 +378,7 @@ def map_STAR(args):
                 cmd += " %s" %                  vars(args)['%s_%s_r2' % (strand, type)]
 
             cmd += " --outSAMattributes NM MD AS --outSAMtype SAM"
-            cmd += " --outFileNamePrefix %s" % (os.path.join(args.output_dir,'%s_%s'%(type,strand)))
+            cmd += " --outFileNamePrefix %s" % (os.path.join(args.output_dir,'%s_%s'%(strand, type)))
             cmd += " --outReadsUnmapped Fastx" #output of unmapped reads for inspection
             cmd += " --scoreGapATAC -2 --scoreGapNoncan -2"
             #outFilterScoreMinOverLread : float: sam as outFilterMatchNmin, but normalized to the read length (sum of matesâ lengths for paired-end reads)
@@ -400,7 +400,7 @@ def map_STAR(args):
             log = "run STAR for % strand on %s reads"%(strand, type)
             run_subprocess([cmd],args, log)
             log = "write final log of STAR to normal log"
-            cmd = "cat %s " % os.path.join(args.output_dir, '%s_%s' % (type, strand) + 'Log.final.out')
+            cmd = "cat %s " % os.path.join(args.output_dir, '%s_%s' % (strand, type) + 'Log.final.out')
             run_subprocess([cmd], args, log)
     return args
 
@@ -522,8 +522,8 @@ def make_header(args):
     args.header = header
     header_handle = open(header,'w')
     header_handle.write('@HD\tVN:1.4\n')
-    joined_sam = open(os.path.join(args.output_dir, 'joined_watsonAligned.out.sam'))
-    merged_sam = open(os.path.join(args.output_dir, 'merged_watsonAligned.out.sam'))
+    joined_sam = open(os.path.join(args.output_dir, 'watson_joinedAligned.out.sam'))
+    merged_sam = open(os.path.join(args.output_dir, 'watson_mergedAligned.out.sam'))
     for line in joined_sam:
         if line.startswith('@'):
             if line.startswith('@SQ'):
@@ -548,8 +548,8 @@ def bam_output(args):
     """Generate watson and crick output bam file"""
 
     for strand in ['watson', 'crick']:
-        merged_sam = os.path.join(args.output_dir, 'merged_%sAligned.out.sam' % strand)
-        joined_sam = os.path.join(args.output_dir, 'joined_%sAligned.out.sam' % strand)
+        merged_sam = os.path.join(args.output_dir, '%s_mergedAligned.out.sam' % strand)
+        joined_sam = os.path.join(args.output_dir, '%s_joinedAligned.out.sam' % strand)
         out_sam = tempfile.NamedTemporaryFile(prefix=strand, suffix='.sam', dir=args.output_dir)
         #rewrite sam file merged and joined for watson and crick
         parse_sam(merged_sam, out_sam.name, 'merged', strand)
@@ -564,7 +564,6 @@ def bam_output(args):
         out_sam.close()
     return args
 
-
 def clean(args):
     """delete non-used intermediate files"""
     log =  'removing tmp dir %s ' % (args.tmpdir)
@@ -572,13 +571,35 @@ def clean(args):
         cmd = ['rm -rf %s' % (args.tmpdir)]
         run_subprocess(cmd,args,log)
     log = "remove tmp files from output dir"
-    cmd = ['rm -rf %s/merged*' % args.output_dir]
+    cmd = ['mv  %s/crick_joinedLog.final.out %s/Crick_joinedLog.final.out' % (args.output_dir, args.output_dir)]
     run_subprocess(cmd, args, log)
-    cmd = ['rm -rf %s/joined*' % args.output_dir]
+    cmd = ['mv  %s/watson_joinedLog.final.out %s/Watson_joinedLog.final.out' % (args.output_dir, args.output_dir)]
+    run_subprocess(cmd, args, log)
+    cmd = ['mv  %s/crick_mergedLog.final.out %s/Crick_mergedLog.final.out' % (args.output_dir, args.output_dir)]
+    run_subprocess(cmd, args, log)
+    cmd = ['mv  %s/watson_mergedLog.final.out %s/Watson_mergedLog.final.out' % (args.output_dir, args.output_dir)]
+    run_subprocess(cmd, args, log)
+    cmd = ['rm -rf %s/crick_*' % args.output_dir]
+    run_subprocess(cmd, args, log)
+    cmd = ['rm -rf %s/watson_*' % args.output_dir]
     run_subprocess(cmd, args, log)
     cmd = ['rm -rf %s/joined* header.sam' % args.output_dir]
     run_subprocess(cmd, args, log)
 
+
+#def clean(args):
+#    """delete non-used intermediate files"""
+#    log =  'removing tmp dir %s ' % (args.tmpdir)
+#    if args.tmpdir.endswith('STAR'):
+#        cmd = ['rm -rf %s' % (args.tmpdir)]
+#        run_subprocess(cmd,args,log)
+#    log = "remove tmp files from output dir"
+#    cmd = ['rm -rf %s/merged*' % args.output_dir]
+#    run_subprocess(cmd, args, log)
+#    cmd = ['rm -rf %s/joined*' % args.output_dir]
+#    run_subprocess(cmd, args, log)
+#    cmd = ['rm -rf %s/joined* header.sam' % args.output_dir]
+#    run_subprocess(cmd, args, log)
 
 def main():
     """main function loop"""

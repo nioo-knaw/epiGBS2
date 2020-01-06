@@ -17,5 +17,5 @@ rule report:
     shell:
       """
       R -e "rmarkdown::render('src/report/report.Rmd',output_file='report.html', params=list(dir='{params.dir}', bc='{params.bc}'))"
-      mv report.html {params.dir}/report.html
+      mv src/report/report.html {params.dir}/report.html
       """
