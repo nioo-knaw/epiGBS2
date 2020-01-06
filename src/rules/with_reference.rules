@@ -70,10 +70,9 @@ rule run_star:
     shell:
         "python src/mapping_varcall/map_STAR_ref.py "
         "--tmpdir {params.tmp} "
-        "--merged {input.merge} "
         "--barcodes {input.bar} "
         "--output_dir {params.out_dir} "
-        "--threads {threads}"
+        "--threads {threads} "
         "--crick_val_r1 {input.c_R1} "
         "--crick_val_r2 {input.c_R2} "
         "--watson_val_r1 {input.w_R1} "
