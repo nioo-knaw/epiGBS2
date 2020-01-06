@@ -136,14 +136,14 @@ rule run_star:
 rule run_mpileup_watson:
     input:
         watsonBam=expand("{path}/mapping/watson.bam", path=config["output_dir"]),
-        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa")
     output:
         watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"])
     params:
         out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
         depth=getParam_dp(param_depth),
         mq=getParam_mq(param_mq),
-        bq=getParam_bq(param_bq),
+        bq=getParam_bq(param_bq)
     conda:
         "../env/environment.yaml"
     shell:
@@ -156,14 +156,14 @@ rule run_mpileup_watson:
 rule run_mpileup_crick:
     input:
         crickBam=expand("{path}/mapping/crick.bam", path=config["output_dir"]),
-        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa")
     output:
         crickVCF=expand("{path}/mapping/crick.vcf.gz", path=config["output_dir"])
     params:
         out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
         depth=getParam_dp(param_depth),
         mq=getParam_mq(param_mq),
-        bq=getParam_bq(param_bq),
+        bq=getParam_bq(param_bq)
     conda:
         "../env/environment.yaml"
     shell:
@@ -209,7 +209,7 @@ rule methylation_calling:
     input:
         mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"]),
         snpVCF=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"]),
-        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa")
     output:
         methylationBed=expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
         methylationIGV=expand("{path}/mapping/heatmap.igv", path=config["output_dir"])

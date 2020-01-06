@@ -48,7 +48,7 @@ def getParam_dp(param_depth):
         dep = param_depth
     return dep
 
-rule mapping_ref:
+rule run_star:
     input:
         ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"]),
         c_R1=expand("{path}/trimmed/Crick_R1_val_1.fq.gz", path=config["output_dir"]),
@@ -56,37 +56,160 @@ rule mapping_ref:
         w_R1=expand("{path}/trimmed/Watson_R1_val_1.fq.gz", path=config["output_dir"]),
         w_R2=expand("{path}/trimmed/Watson_R2_val_2.fq.gz", path=config["output_dir"]),
         bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
-
     output:
-        expand("{path}/output_mapping/snp.vcf.gz", path=config["output_dir"]),
-        expand("{path}/output_mapping/methylation.bed", path=config["output_dir"])
-
+        watsonBam=expand("{path}/mapping/watson.bam", path=config["output_dir"]),
+        crickBam=expand("{path}/mapping/crick.bam", path=config["output_dir"])
     params:
-        out_dir=expand("{path}{file}", path=config["output_dir"], file="/output_mapping"),
-        tmp=expand("{tmp}", tmp=config["tmpdir"]),
-        depth=getParam_dp(param_depth),
-        mq=getParam_mq(param_mq),
-        bq=getParam_bq(param_bq)
-    log: expand("{path}{file}", path=config["output_dir"], file="/log/mapping.log")
-
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+        tmp=expand("{tmp}", tmp=config["tmpdir"])
     threads: 40
     conda:
         "../env/environment.yaml"
-	shell:
-		"python3 src/mapping_varcall/mapping_variant_calling_ref.py "
-		"--tmpdir {params.tmp} "
-		"--watson_val_r1 {input.w_R1} "
-		"--watson_val_r2 {input.w_R2} "
-                "--crick_val_r1 {input.c_R1} "
-                "--crick_val_r2 {input.c_R2} "
-		"--refgenome {input.ref} "
-		"--barcodes {input.bar} "
-		"--log {log} "
-		"--threads {threads} "
-		"--output_dir {params.out_dir} "
-		"--max_depth {params.depth} "
-		"--min_MQ {params.mq} "
-		"--min_BQ {params.bq} "
+    log:
+        config["output_dir"] + "/log/log_STAR.txt"
+    shell:
+        "python src/mapping_varcall/map_STAR_ref.py "
+        "--tmpdir {params.tmp} "
+        "--merged {input.merge} "
+        "--barcodes {input.bar} "
+        "--output_dir {params.out_dir} "
+        "--threads {threads}"
+        "--crick_val_r1 {input.c_R1} "
+        "--crick_val_r2 {input.c_R2} "
+        "--watson_val_r1 {input.w_R1} "
+        "--watson_val_r2 {input.w_R2} "
+        "--refgenome {input.ref} "
+
+rule run_mpileup_watson:
+    input:
+        watsonBam=expand("{path}/mapping/watson.bam", path=config["output_dir"]),
+        ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"])
+    output:
+        watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"])
+    params:
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+        depth=getParam_dp(param_depth),
+        mq=getParam_mq(param_mq),
+        bq=getParam_bq(param_bq)
+    conda:
+        "../env/environment.yaml"
+    shell:
+        "samtools mpileup --reference {input.ref} "
+        "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
+        "-q {params.mq} -Q {params.bq} "
+        "--skip-indels "
+        "-vu {input.watsonBam} | grep -v '^##contig='|bgzip -c > {output.watsonVCF}"
+
+rule run_mpileup_crick:
+    input:
+        crickBam=expand("{path}/mapping/crick.bam", path=config["output_dir"]),
+        ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"])
+    output:
+        crickVCF=expand("{path}/mapping/crick.vcf.gz", path=config["output_dir"])
+    params:
+        out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
+        depth=getParam_dp(param_depth),
+        mq=getParam_mq(param_mq),
+        bq=getParam_bq(param_bq)
+    conda:
+        "../env/environment.yaml"
+    shell:
+        "samtools mpileup --reference {input.ref} "
+        "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
+        "-q {params.mq} -Q {params.bq} "
+        "--skip-indels "
+        "-vu {input.crickBam} | grep -v '^##contig='|bgzip -c > {output.crickVCF}"
+
+rule merge_watson_crick:
+    input:
+        watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"]),
+        crickVCF=expand("{path}/mapping/crick.vcf.gz", path=config["output_dir"])
+    output:
+        mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"])
+    params:
+        mergedtsv=expand("{path}/mapping/merged.tsv", path=config["output_dir"])
+    conda:
+        "../env/environment.yaml"
+    shell:
+        "python src/mapping_varcall/merge_watson_crick-old.py "
+        "-w {input.watsonVCF} "
+        "-c {input.crickVCF} "
+        "-o {params.mergedtsv}"
+
+rule SNP_calling:
+    input:
+        watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"]),
+        mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"])
+    output:
+        snpVCF=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
+    params:
+        snpvcf=expand("{path}/mapping/snp.vcf", path=config["output_dir"])
+    conda:
+        "../env/environment.yaml"
+    shell:
+        "python src/mapping_varcall/SNP_calling.py "
+        "-m {input.mergedTSV} "
+        "-w {input.watsonVCF} "
+        "-s {params.snpvcf}"
+
+rule methylation_calling:
+    input:
+        mergedTSV=expand("{path}/mapping/merged.tsv.gz", path=config["output_dir"]),
+        snpVCF=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"]),
+        ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"])
+    output:
+        methylationBed=expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
+        methylationIGV=expand("{path}/mapping/heatmap.igv", path=config["output_dir"])
+    conda:
+        "../env/environment.yaml"
+    shell:
+        "python src/mapping_varcall/methylation_calling.py "
+        "-r {input.ref} "
+        "-m {input.mergedTSV} "
+        "-o {output.methylationBed} "
+        "-s {input.snpVCF}  "
+        "-heat {output.methylationIGV}"
+
+
+
+#rule mapping_ref:
+#    input:
+#        ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"]),
+#        c_R1=expand("{path}/trimmed/Crick_R1_val_1.fq.gz", path=config["output_dir"]),
+#        c_R2=expand("{path}/trimmed/Crick_R2_val_2.fq.gz", path=config["output_dir"]),
+#        w_R1=expand("{path}/trimmed/Watson_R1_val_1.fq.gz", path=config["output_dir"]),
+#        w_R2=expand("{path}/trimmed/Watson_R2_val_2.fq.gz", path=config["output_dir"]),
+#        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
+#
+#    output:
+#        expand("{path}/output_mapping/snp.vcf.gz", path=config["output_dir"]),
+#        expand("{path}/output_mapping/methylation.bed", path=config["output_dir"])
+#
+#    params:
+#        out_dir=expand("{path}{file}", path=config["output_dir"], file="/output_mapping"),
+#        depth=getParam_dp(param_depth),
+#        mq=getParam_mq(param_mq),
+#        bq=getParam_bq(param_bq)
+#    log: expand("{path}{file}", path=config["output_dir"], file="/log/mapping.log")
+#
+#    threads: 40
+#    conda:
+#        "../env/environment.yaml"
+#	shell:
+#		"python3 src/mapping_varcall/mapping_variant_calling_ref.py "
+#		"--tmpdir {params.tmp} "
+#		"--watson_val_r1 {input.w_R1} "
+#		"--watson_val_r2 {input.w_R2} "
+#                "--crick_val_r1 {input.c_R1} "
+#                "--crick_val_r2 {input.c_R2} "
+#		"--refgenome {input.ref} "
+#		"--barcodes {input.bar} "
+#		"--log {log} "
+#		"--threads {threads} "
+#		"--output_dir {params.out_dir} "
+#		"--max_depth {params.depth} "
+#		"--min_MQ {params.mq} "
+#		"--min_BQ {params.bq} "
 
 onerror:
     print("An error occurred, look into log files")
