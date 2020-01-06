@@ -25,8 +25,10 @@ if config["mode"]== "reference":
             {out}/trimmed/Watson_R1_val_1_fastqc.html \
             {out}/trimmed/Crick_R2_val_2_fastqc.html \
             {out}/report.html \
-            {out}/output_mapping/methylation.bed \
-            {out}/output_mapping/snp.vcf.gz".split(), out=config["output_dir"])
+            {out}/mapping/watson.bam \
+            {out}/mapping/crick.bam \
+            {out}/mapping/methylation.bed \
+            {out}/mapping/snp.vcf.gz".split(), out=config["output_dir"])
 
 
 if config["mode"]== "denovo":
@@ -38,6 +40,8 @@ if config["mode"]== "denovo":
             {out}/fastqc/ \
             {out}/multiQC_report.html \
             {out}/report.html \
+            {out}/mapping/watson.bam \
+            {out}/mapping/crick.bam \
             {out}/output_denovo/consensus_cluster.renamed.fa \
             {out}/mapping/methylation.bed \
             {out}/mapping/snp.vcf.gz".split(), out=config["output_dir"])
