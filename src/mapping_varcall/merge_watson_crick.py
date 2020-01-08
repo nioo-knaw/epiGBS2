@@ -70,7 +70,7 @@ def merge(args):
             crick_line = crick_handle.readline()
         if watson_line.startswith('#CHROM'):
             header = "#CHROM\tPOS\tREF\tALT_WATSON\tALT_CRICK\t"
-            header += "\t".join(watson_line.split('\t')[10:])
+            header += "\t".join(watson_line.split('\t')[9:])
             output.write(header)
             read_watson = False
         if crick_line.startswith('#CHROM'):

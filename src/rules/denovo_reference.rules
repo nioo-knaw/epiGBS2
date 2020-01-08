@@ -98,7 +98,7 @@ def getParam_bq(param_bq):
     return bq
 def getParam_dp(param_depth):
     if param_depth=="default" or param_depth == "":
-        dep = 999999999
+        dep = 10000000
     else:
         dep = param_depth
     return dep

@@ -53,13 +53,13 @@ This report contains all important information about your epiGBS analysis. The o
 
 File | path
 -----|-----
-bedfile | ``r params$dir`/output_mapping/methylation.bed`
-snpfile | ``r params$dir`/output_mapping/snp.vcf.gz`
+bedfile | ``r params$dir`/mapping/methylation.bed`
+snpfile | ``r params$dir`/mapping/snp.vcf.gz`
 multiQC-report | ``r params$dir`/multiQC_report.html`
 demultiplexing-log | ``r params$dir`/output_demultiplex/demultiplex.log`
 stacks-log | ``r params$dir`/output_demultiplex/clone-stacks/process_radtags.clone.log`
 trimming-log | ``r params$dir`/trimmed/{Watson,Crick}_{R1,R2}.fq.gz_trimming_report.txt`
-mapping-log | ``r params$dir`/output_mapping/mapping_variantcalling.log`
+mapping-log | ``r params$dir`/mapping/mapping_variantcalling.log`
 
 
 # Tabset {.tabset .tabset-fade .tabset-pills}
@@ -147,12 +147,12 @@ It follows the mapping stats:
 
 Watson:
 ```{bash capture="mapping stats Watson-joined"}
-cat $dir/output_mapping/mapping_variantcalling.log | awk '/watsonLog.final.out/,/% of reads unmapped: other/' | grep -E "(Uniquely mapped reads %|% of reads)" # gets mappings stats
+cat $dir/mapping/mapping_variantcalling.log | awk '/watsonLog.final.out/,/% of reads unmapped: other/' | grep -E "(Uniquely mapped reads %|% of reads)" # gets mappings stats
 ```
 
 Crick:
 ```{bash capture="mapping stats Crick-joined"}
-cat $dir/output_mapping/mapping_variantcalling.log | awk '/crickLog.final.out/,/% of reads unmapped: other/' | grep -E "(Uniquely mapped reads %|% of reads)" # gets mappings stats
+cat $dir/mapping/mapping_variantcalling.log | awk '/crickLog.final.out/,/% of reads unmapped: other/' | grep -E "(Uniquely mapped reads %|% of reads)" # gets mappings stats
 ```
 
 ## SNP calling
@@ -161,7 +161,7 @@ The epiGBS pipeline performs SNP calling.
 The SNP depth reflects the reliability of a called SNP and depends e.g. from the amount of reads and the mappibility of the reads.
 
 ```{r warning=FALSE, fig.cap= "Fig.3: Histogram of average SNP depth over all samples"}
-vcf <- read.vcfR(paste0(params$dir,'/output_mapping/snp.vcf.gz'), verbose = FALSE)
+vcf <- read.vcfR(paste0(params$dir,'/mapping/snp.vcf.gz'), verbose = FALSE)
 dp <- extract.gt(vcf, element = "DP", as.numeric=TRUE)
 ```
 In total, you have got `r nrow(dp)` SNPs.
@@ -227,7 +227,7 @@ for(i in 1:myRows){
 This might be the part, you are interestd in the most. You probably will continue your statistical analysis with the methylation.bed file. Here you will find some simple summarized stats about the methylation calls.
 
 ```{r}
-methylation <- read.delim(paste0(params$dir,'/output_mapping/methylation.bed'))
+methylation <- read.delim(paste0(params$dir,'/mapping/methylation.bed'))
 #methylation <- methylation[1:10000,]
 ```
 
@@ -269,7 +269,7 @@ for(i in 1:ncol(methylation.tot)){
   start <- ((i-1)*nrow(methylation.tot))+1
   stop <- start + nrow(methylation.tot)-1
   tot.depth[start:stop,] <- methylation.tot[,i]
-} 
+}
 tot.depth <- as.data.frame(na.omit(as.numeric(tot.depth$V1)))
 tot.depth$label <- "depth"
 colnames(tot.depth)[1] <- "depth"
@@ -334,7 +334,7 @@ methylation.quantile<-data.frame("number called samples"=quantile(methylation.be
 for(i in 1:nrow(methylation.quantile)) {
   methylation.quantile[i,2] <- length(which(methylation$samples_called >= methylation.quantile[i,1]))
 }
-  
+
 methylation.quantile$percentage <- percentages *100
 
 methylation.quantile[,1:2]
@@ -352,4 +352,3 @@ p.clone <- ggplot(methylation.quantile, aes(x=percentage, y=number.positions)) +
   theme_pubr()
 p.clone
 ```
-

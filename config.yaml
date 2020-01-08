@@ -41,7 +41,7 @@ param_denovo:
   max-depth: ""
 
 # parameters in the mpileup step (variant callin)
-# max-depth: At a position, read maximally INT reads per input file, default 999999999
+# max-depth: At a position, read maximally INT reads per input file, default 10000000, check if mpileup automatically reduced the maximal depth even more. You might have to re-run your analysis with a lower max-depth value to avoid this.
 # min-MQ: Minimum mapping quality for an alignment to be used, default 0
 # min-BQ: Minimum base quality for a base to be considered, default 15
 
