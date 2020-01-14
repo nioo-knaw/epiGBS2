@@ -20,5 +20,5 @@ rule report_ref:
       """
       R -e "rmarkdown::render('src/report/report-ref.Rmd',output_file='report.html', params=list(dir='{params.dir}'))"
       mv src/report/report.html {params.dir}/report.html
-      #mv src/report/report-files/ {params.dir}/
+      mv src/report/report_files/ {params.dir}/
       """

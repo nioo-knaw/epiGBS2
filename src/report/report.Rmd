@@ -11,8 +11,9 @@ output:
     df_print: paged
 ---
 
-####author: `r params$u`
-####date: `r params$d`
+#### author: `r params$u`
+
+#### date: `r params$d`
 
 ```{r setup, include=FALSE}
 chooseCRANmirror(graphics=FALSE, ind=33)
@@ -24,27 +25,23 @@ usePackage <- function(p)
 }
 usePackage("ggplot2")
 usePackage("ggpubr")
-usePackage("lattice")
-usePackage("survival")
-usePackage("nlme")
-usePackage("cluster")
-usePackage("mgcv")
 usePackage("viridis")
 usePackage("plyr")
 usePackage("gplots")
 usePackage("vcfR")
 usePackage("reshape2")
-usePackage("Hmisc")
-usePackage("gridExtra")
 usePackage("knitr")
-usePackage("shiny")
+usePackage("reticulate")
 
 options(stringsAsFactors = FALSE)
 
 knitr::opts_chunk$set(echo = FALSE)
+knitr::knit_engines$set(python = reticulate::eng_python)
 options(tinytex.verbose = TRUE)
 
+
 Sys.setenv(dir=params$dir)
+path <- params$dir
 
 ```
 
@@ -288,132 +285,60 @@ for(i in 1:myRows){
 
 ## Methylation calling
 
-This might be the part, you are interestd in the most. You probably will continue your statistical analysis with the methylation.bed file. Here you will find some simple summarized stats about the methylation calls.
+This might be the part, you are interestd in the most. You probably will continue your statistical analysis with the methylation.bed file. Here you will find some simple summarized stats about the methylation calls. Please realize, that all following plots are based on the first 100000 methylation sites because of memory issues.
 
-```{r}
-methylation <- read.delim(paste0(params$dir,'/mapping/methylation.bed'))
-#methylation <- methylation[1:10000,]
+```{python prep}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy
 ```
 
-You found `r nrow(methylation)` methylated positions.
+```{python read-meth}
 
-The following histogram shows the distribution of the number of samples, in which the methylated positions were called. The limit of the x axis is set to 100.
-```{r warning=FALSE, fig.cap="Fig 5.: Histogram of the number of the called samples"}
-methylation.bench <- methylation[,1:4]
-methylation.bench$label <- "called"
-class(methylation.bench$samples_called) <- "numeric"
-methylation.bench.mu <- ddply(methylation.bench, "label", summarise, grp.mean=mean(samples_called))
+df = pd.read_csv(
+    f'{r.path}/mapping/methylation.bed',
+    nrows=100000,
+    sep='\t',
+    na_values=['None']
+)
+```
 
-p.methylation.bench <- ggplot(methylation.bench, aes(x=samples_called, color=label, fill=label)) +
-  geom_histogram(aes(y=..density..), position="identity", alpha=0.7, binwidth=1)+
-  geom_density(alpha=0.2)+
-  geom_vline(data=methylation.bench.mu, aes(xintercept=grp.mean, color=label),
-             linetype="dashed")+
-  scale_color_viridis(discrete=TRUE, option="C") +
-  scale_fill_viridis(discrete=TRUE, option="C") +
-  labs(x="Number of samples", y = "Density")+
-  xlim(0, 100) +
-  theme_pubr()
-p.methylation.bench
+The following histogram shows the distribution of the number of samples, in which the methylated positions were called.
+```{python fig.cap="Fig.5: Distribution of the number of samples, that have a specific methylation site called"}
+fig5, ax = plt.subplots(figsize=(7,7))
+sns.distplot(pd.DataFrame({" samples": df['samples_called']}).dropna(), kde=False, rug=False)
+plt.axvline(numpy.median(pd.DataFrame({" samples": df['samples_called']}).dropna()), color='grey', linestyle='--')
+fig5
 ```
 
 The next bar diagram shows, how many sites you obtained in each context CG, CHG, CHH.
-```{r fig.cap="Fig. 6: Number of methylated sites in each context"}
-gp <- ggplot(methylation.bench, aes(x=context))
-# counts
-gp + geom_bar() + theme_pubr()
+```{python fig.cap="Fig. 6: Number of methylated sites in each context"}
+fig6, ax1 = plt.subplots(1, figsize=(10,10))
+sns.countplot(x="context", data=df)
+fig6
 ```
 
-This diagram shows the distribution of the depth of all methylation sites in all samples. The limit of the x axis is set to 50.
-```{r warning=FALSE, fig.cap="Fig. 7: Histogram of the Methylation site depth"}
-methylation.tot <- methylation[,-c(1,2,3,4,(grep("methylated", colnames(methylation))))]
-methylation.tot <- as.matrix(methylation.tot)
-tot.depth <- as.data.frame(matrix(data=0, nrow=nrow(methylation.tot)*ncol(methylation.tot), ncol=1))
-for(i in 1:ncol(methylation.tot)){
-  start <- ((i-1)*nrow(methylation.tot))+1
-  stop <- start + nrow(methylation.tot)-1
-  tot.depth[start:stop,] <- methylation.tot[,i]
-} 
-tot.depth <- as.data.frame(na.omit(as.numeric(tot.depth$V1)))
-tot.depth$label <- "depth"
-colnames(tot.depth)[1] <- "depth"
-tot.depth.mu <- ddply(tot.depth, "label", summarise, grp.mean=mean(depth))
-
-p.tot.depth <- ggplot(tot.depth, aes(x=depth, color=label, fill=label)) +
-  geom_histogram(aes(y=..density..), position="identity", alpha=0.7, binwidth=10)+
-  geom_density(alpha=0.2)+
-  geom_vline(data=tot.depth.mu, aes(xintercept=grp.mean, color=label),
-             linetype="dashed")+
-  scale_color_viridis(discrete=TRUE, option="C") +
-  scale_fill_viridis(discrete=TRUE, option="C") +
-  labs(x="Depth", y = "Density")+
-  xlim(0, 50) +
-  theme_pubr()
-p.tot.depth
+```{python transform}
+tidy = df.melt(id_vars=['chr', 'pos', 'context', 'samples_called'], var_name='sample', value_name = 'count')
+tidy['kind'] = tidy['sample'].str.split('_').str[-1]
+tidy['sample'] = tidy['sample'].str.split('_').str[:2].str.join('_')
+data = tidy.groupby(['chr', 'pos', 'context', 'samples_called', 'sample', 'kind'])['count'].first().unstack().reset_index()
+data['ratio'] = data['methylated'] / data['total']
 ```
 
-The next figure shows the depth of methylated site for each sample.
-```{r warning=FALSE, fig.cap="Fig. 8: Methylation site depth of each sample"}
-#methylation.tot <- methylation.tot[1:100000,]
-dpf.meth <- melt(methylation.tot, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
-dpf.meth$Depth <- as.numeric(dpf.meth$Depth)
-dpf.meth <- dpf.meth[ dpf.meth$Depth > 0,]
-
-samps_per_row <- 24
-myRows.meth <- ceiling(length(levels(dpf.meth$Sample))/samps_per_row) #calculates how many plot rows will be generated for the set row number
-myList.meth <- vector(mode = "list", length = myRows.meth)
-
-for(i in 1:myRows.meth){
-  myIndex.meth <- c(i*samps_per_row - samps_per_row + 1):c(i*samps_per_row)
-  myIndex.meth <- myIndex.meth[myIndex.meth <= length(levels(dpf.meth$Sample))]
-  myLevels.meth <- levels(dpf.meth$Sample)[myIndex.meth]
-  myRegex.meth <- paste(myLevels.meth, collapse = "$|^")
-  myRegex.meth <- paste("^", myRegex.meth, "$", sep = "")
-  myList.meth[[i]] <- dpf.meth[grep(myRegex.meth, dpf.meth$Sample),]
-  myList.meth[[i]]$Sample <- factor(myList.meth[[i]]$Sample)
-}
-myPlots.meth <- vector(mode = "list", length = myRows.meth)
-for(i in 1:myRows.meth){
-  myPlots.meth[[i]] <- ggplot(myList.meth[[i]], aes(x=Sample, y=Depth)) +
-    geom_violin(adjust=1.0, scale = "count", trim=TRUE)
-
-  myPlots.meth[[i]] <- myPlots.meth[[i]] + theme_pubr()
-  myPlots.meth[[i]] <- myPlots.meth[[i]] + theme(axis.title.x = element_blank(),
-                                       axis.text.x = element_text(angle = 60, hjust = 1))
-  myPlots.meth[[i]] <- myPlots.meth[[i]] + scale_y_continuous(trans=scales::log2_trans())
-  myPlots.meth[[i]] <- myPlots.meth[[i]] + stat_summary(fun.data=mean_sdl, geom="pointrange", color="red", size = 0.25)
-
-  print(myPlots.meth[[i]])
-
-}
+The following diagram shows the distribution of the depth of all methylation sites in all samples.
+```{python fig.cap="Fig.7: Distibution of the average depth per methylation site and sample"}
+fig7, ax = plt.subplots(figsize=(7,7))
+sns.distplot(pd.DataFrame({" total_count": data['total']}).dropna(), kde=False, rug=False)
+plt.axvline(numpy.median(pd.DataFrame({" total_count": data['total']}).dropna()), color='grey', linestyle='--')
+fig7
 ```
-
-
-Before you start performing a differential methylation analysis, you will filter the obtained methylation sites based on the number of samples they are called in and on the read coverage. The following tables and figures will give you a first impression what filtering could do to your data.
-
-```{r}
-percentages <- seq(0.25,1,0.05)
-methylation.quantile<-data.frame("number called samples"=quantile(methylation.bench$samples_called, percentages), "number positions"=rep(0, length(percentages)))
-
-for(i in 1:nrow(methylation.quantile)) {
-  methylation.quantile[i,2] <- length(which(methylation$samples_called >= methylation.quantile[i,1]))
-}
-  
-methylation.quantile$percentage <- percentages *100
-
-methylation.quantile[,1:2]
+The following diagram shows the distribution of methylation ratio ("methylated"/"total") in different contexts (CG, CHG, CHH)
+```{python fig.cap="Fig.8: Distribution of methylation ratio per context"}
+fig8, (ax1, ax2, ax3) = plt.subplots(3, figsize=(10,10))
+sns.distplot(pd.DataFrame({" ratio": data[data['context']== 'CG']['ratio']}).dropna(), color = 'brown', hist=True, kde=False, rug=False, ax=ax1).set_title('CG')
+sns.distplot(pd.DataFrame({" ratio": data[data['context']== 'CHG']['ratio']}).dropna(), color = 'blue', hist=True, kde=False, rug=False, ax=ax2).set_title('CHG')
+sns.distplot(pd.DataFrame({" ratio": data[data['context']== 'CHH']['ratio']}).dropna(), color = 'green', hist=True, kde=False, rug=False, ax=ax3).set_title('CHH')
+fig8
 ```
-
-```{r warning=FALSE, fig.cap="Fig 9: Number of methylation sites by % samples called"}
-p.clone <- ggplot(methylation.quantile, aes(x=percentage, y=number.positions)) +
-  geom_bar(stat="identity", colour="black", lwd=0.5) +
-  #scale_y_continuous(trans='log2', name = "log2(count)") +
-  #scale_x_continuous(trans='log2', name = "log2(number of clones)", labels=breaks, breaks=breaks) +
-  xlab("% samples called") +
-  ylab("number of positions") +
-  scale_color_viridis(discrete=FALSE, option="C") +
-  scale_fill_viridis(discrete=FALSE, option="C") +
-  theme_pubr()
-p.clone
-```
-
