@@ -3,9 +3,6 @@ import csv
 import subprocess
 import os
 
-####TODO use thomas syntax???
-####TODO RN:Z: parameter??
-
 ####Parse args
 parser = argparse.ArgumentParser(description='Process input files')
 parser.add_argument("--r1_in", metavar="reads1", action="store",
@@ -122,7 +119,7 @@ cmd = "process_radtags -1 %s -2 %s " % (read1,
                                         read2)
 cmd += "-b %s -o %s " % (os.path.join(args.outputdir, "barcode_stacks.tsv"), os.path.join(args.outputdir, "clone-stacks"))
 cmd += "-r -D --inline_inline "
-cmd += "--renz_1 %s --renz_2 %s --retain_header " % (line2split[bc_dict["ENZ_R1"][0]],
+cmd += "--renz_1 %s --renz_2 %s --retain_header --barcode_dist_2 0" % (line2split[bc_dict["ENZ_R1"][0]],
                                                      line2split[bc_dict["ENZ_R2"][0]])
 log = "Run process_radtags from stacks"
 print(log)
