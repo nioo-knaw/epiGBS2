@@ -25,7 +25,7 @@ output:
 - No reference genome required
 - Sequencing: paired-end Illumina-sequencing
 - Readfiles: un-demultiplexing and un-trimmed
-- Linux server (Sudo rights not necessary)
+- Linux server (e.g. Ubuntu 16.04, Sudo rights not necessary)
 - Miniconda
 	- Download with `wget` https://docs.conda.io/en/latest/miniconda.html
 	- Installing like described [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html), can be installed in user's home without sudo
