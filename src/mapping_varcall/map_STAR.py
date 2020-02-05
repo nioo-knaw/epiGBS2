@@ -279,6 +279,17 @@ def index_STAR(args):
                 header = line
             else:
                 seq += line.rstrip('\n')
+        #update for fixing the last line while reading ref_genome
+        if 'NNNNNNNN' in seq.upper():
+	        joined_len += len(seq)
+	        joined_count += 1
+	        ref_joined_watson_handle.write(header + seq.upper().replace('C', 'T') + '\n')
+	        ref_joined_crick_handle.write(header + seq.upper().replace('G', 'A') + '\n')
+        else:
+	        merged_len += len(seq)
+	        merged_count += 1
+	        ref_merged_watson_handle.write(header + seq.upper().replace('C', 'T') + '\n')
+	        ref_merged_crick_handle.write(header + seq.upper().replace('G', 'A') + '\n')
         # write final sequence, this is always merged
         merged_len += len(seq)
         merged_count += 1

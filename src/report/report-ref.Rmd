@@ -6,10 +6,11 @@ output:
   html_document:
     df_print: paged
 params:
-  rmd: "report.Rmd"
   d: !r Sys.Date()
-  u: !r Sys.info()['user']
   dir: dir
+  bc: bc
+  rmd: report.Rmd
+  u: !r Sys.info()['user']
 ---
 
 #### author: `r params$u`
@@ -60,11 +61,12 @@ mapping-log | ``r params$dir`/mapping/mapping_variantcalling.log`
 # Tabset {.tabset .tabset-fade .tabset-pills}
 
 ## Clones Removal
+
 The PCR clones are removed from the raw sequencing reads using a random nucleotide sequence ("wobble") in the adapters.
 
 Before removal, your raw reads contained `r system(paste0("cat ",params$dir,"/output_demultiplex/demultiplex.log | grep -v '^  Processing' | grep '% clone reads' | cut -f 3 -d ','"), intern=TRUE)`
 
-The histogram shows how many read sequences you find with a specific number of PCR clones. Ideally, most will occure once "1" only.
+The histogram shows the distribution of PCR clone numbers. Ideally, most reads will occur once "1".
 
 ```{r fig.cap="Fig. 1: Distribution of clone numbers"}
 clone.stats <- system(paste0("cat ",params$dir,"/output_demultiplex/demultiplex.log | awk '/Num/,/^$/'"), intern=TRUE)
@@ -88,13 +90,13 @@ p.clone
 
 ## Demultiplexing
 
-You performed demultiplexing with the process_reads program from stacks. The following stats table will give you information about how many reads were retained after barcode- and RAD-tag (RE cut site) check. For both 1 mismatch is allowed. Check your barcode or your enzyme information if the amount of retained reads is suprisingly low.
+You performed demultiplexing with the process_reads program from stacks. The following stats table will give you information about how many reads were retained after barcode- and RAD-tag (RE cut site) check. For the RAD-tag check 1 mismatch is allowed to correct for mismatches due to C/T conversion in the RAD-tag. Check your barcode or your enzyme information if the amount of retained reads is suprisingly low.
 
 ```{bash capture="demultiplexing stats"}
 cat $dir/output_demultiplex/demultiplex.log | awk '/total sequences/,/^$/'
 ```
 
-In a well designed study, read numbers per sample should be similar. You can check in the following histogram, if this is true for your current analysis:
+In a well designed study, read numbers per sample should be similar. You can check in the following histogram, if this is true for your current analysis. The vertical, dotted line indicates the mean. Please also check the multiQC stats for a full overview about the read quality.
 
 ```{r fig.cap="Fig.2: Histogram of the number of demultiplexed reads per read file"}
 demult.table <- system(paste0("cat ",params$dir,"/output_demultiplex/clone-stacks/process_radtags.clone.log | awk '/^Barcode\tFilename\tTotal\tNoRadTag\tLowQuality\tRetained/,/^$/'"), intern = TRUE)
@@ -111,17 +113,28 @@ demult.mu.ret.tot <- ddply(demult.table.ret.tot, "label", summarise, grp.mean=me
 
 p.demult.ret.tot <- ggplot(demult.table.ret.tot, aes(x=counts, color=label, fill=label)) +
   geom_histogram(aes(y=..density..), position="identity", alpha=0.7, binwidth=10000)+
-  geom_density(alpha=0.2)+
+  #geom_density(alpha=0.2)+
   geom_vline(data=demult.mu.ret.tot, aes(xintercept=grp.mean, color=label),
              linetype="dashed")+
   scale_color_viridis(discrete=TRUE, option="C") +
   scale_fill_viridis(discrete=TRUE, option="C") +
   labs(x="Read Counts", y = "Density")+
   theme_pubr()
-p.demult.ret.tot # ziet er stom uit, ook nadat ik met de binwidth heb gespeelt
+p.demult.ret.tot
 ```
 
-Also check the multiQC stats for a full overview about the read quality. Please remember: Garbage in --> garbage out.
+The (non-)conversion rate is a measurement for the efficiency of your BS-treatment. Sequences with a control nucleotide "C" in the forward (R1) read and a "T" in the reverse (R2) read are normally called "Watson", vice versa "Crick". Sequences with a "C" in both R1 and R2 reads are considered as non-converted.
+
+```{r non-conversion-rate}
+barcodes <- system(paste0("cat ",params$bc, " | cut -f3,4 | sed 's/\t/C-/' | sed 's/$/C/'"), intern=TRUE)
+write.table(barcodes, paste0(params$dir,'/bc.cc.txt'), row.names = FALSE, col.names = FALSE, quote = FALSE)
+watson <- sum(as.integer(system(paste0("cat " ,params$dir, "/output_demultiplex/clone-stacks/process_radtags.clone.log | grep Watson | cut -f 6"), intern=TRUE)))
+crick <- sum(as.integer(system(paste0("cat " ,params$dir, "/output_demultiplex/clone-stacks/process_radtags.clone.log | grep Crick | cut -f 6"), intern=TRUE)))
+non.conv <- sum(as.integer(system(paste0("cat ",params$dir, "/output_demultiplex/clone-stacks/process_radtags.clone.log | grep -w -f " ,params$dir, "/bc.cc.txt | cut -f 2"), intern=TRUE)))
+non.conv.rate <- round((100*non.conv)/(crick + watson + non.conv), 2)
+print(paste0("You have got " ,watson, " Watson reads, " ,crick, " Crick reads and ",non.conv, " non-converted reads. Your non-conversion rate is ",non.conv.rate, " %."))
+system(paste0('rm ',params$dir,'/bc.cc.txt'))
+```
 
 ## Trimming
 
@@ -136,7 +149,7 @@ Crick-R2 | `r system(paste0("cat ",params$dir,"/trimmed/Crick_R2.fq.gz_trimming_
 
 ## Mapping
 
-To determine variants (SNPs or methylation), sequencing reads are mapped against the reference. Mapping is performed with STAR. A low mapping percentage might indicate low quality of the sequencing reads (e.g. 3' adapter sequences), a non-suitable reference or problems with the de novo sequence creation.
+To determine variants (SNPs or methylation), sequencing reads are mapped against the reference. Mapping is performed with STAR. A low mapping percentage might indicate low quality of the sequencing reads (e.g. 3' adapter sequences) or a non-suitable or low-quality reference. The higher the % Uniquely mapped reads, the higher the quality of your alignment is. A high % of reads mapped to multiple or too many loci indicates that you have or very low complexity reads or typically many repetitive regions in your reference. % of reads unmapped: too many mismatches might indicate that your reference(s) of choice might not be suitable for your experiment. % of reads unmapped: too short means that reads could not properly aligned to the reference (but does (confusingly) NOT indicate that reads are actually too short)
 
 It follows the mapping stats:
 
@@ -153,7 +166,8 @@ cat $dir/mapping/mapping_variantcalling.log | awk '/crickLog.final.out/,/% of re
 ## SNP calling
 
 The epiGBS pipeline performs SNP calling.
-The SNP depth reflects the reliability of a called SNP and depends e.g. from the amount of reads and the mappibility of the reads.
+
+The figure shows the average SNP depth over all samples.
 
 ```{r warning=FALSE, fig.cap= "Fig.3: Histogram of average SNP depth over all samples"}
 vcf <- read.vcfR(paste0(params$dir,'/mapping/snp.vcf.gz'), verbose = FALSE)
@@ -182,7 +196,7 @@ p.depth.av <- ggplot(depth.av, aes(x=snp.depth, color=label, fill=label)) +
 p.depth.av
 ```
 
-The second plot(s) shows the SNP depth distribution for each sample.
+<!--The second plot(s) shows the SNP depth distribution for each sample.
 ```{r fig.cap="Fig.4: SNP depth distribution of each sample"}
 dpf <- melt(dp, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
 dpf <- dpf[ dpf$Depth > 0,]
@@ -214,12 +228,13 @@ for(i in 1:myRows){
   print(myPlots[[i]])
 
 }
-```
+
+``` -->
 
 
 ## Methylation calling
 
-This might be the part, you are interestd in the most. You probably will continue your statistical analysis with the methylation.bed file. Here you will find some simple summarized stats about the methylation calls.
+This might be the part, you are interested in the most. You probably will continue your statistical analysis with the methylation.bed file. Here you will find some simple summarized stats about the methylation calls. Please realize, that all following plots are based on the first 100000 methylation sites because of memory issues. You originally obtained `r system(paste0("cat ",params$dir,"/mapping/methylation.bed | wc -l"), intern=TRUE)` methylation sites.
 
 ```{python prep}
 import pandas as pd
@@ -238,11 +253,13 @@ df = pd.read_csv(
 )
 ```
 
-The following histogram shows the distribution of the number of samples, in which the methylated positions were called.
+The following histogram shows the distribution of the number of samples, in which methylated positions were called.
 ```{python fig.cap="Fig.5: Distribution of the number of samples, that have a specific methylation site called"}
 fig5, ax = plt.subplots(figsize=(7,7))
 sns.distplot(pd.DataFrame({" samples": df['samples_called']}).dropna(), kde=False, rug=False)
 plt.axvline(numpy.median(pd.DataFrame({" samples": df['samples_called']}).dropna()), color='grey', linestyle='--')
+plt.xlabel("number of called samples")
+plt.ylabel("count")
 fig5
 ```
 
@@ -261,11 +278,14 @@ data = tidy.groupby(['chr', 'pos', 'context', 'samples_called', 'sample', 'kind'
 data['ratio'] = data['methylated'] / data['total']
 ```
 
-The following diagram shows the distribution of the depth of all methylation sites in all samples.
+The following diagram shows the distribution of the methylation site depth per samples. The x-axis is limited to 250. The vertical line indicated the median.
 ```{python fig.cap="Fig.7: Distibution of the average depth per methylation site and sample"}
 fig7, ax = plt.subplots(figsize=(7,7))
 sns.distplot(pd.DataFrame({" total_count": data['total']}).dropna(), kde=False, rug=False)
 plt.axvline(numpy.median(pd.DataFrame({" total_count": data['total']}).dropna()), color='grey', linestyle='--')
+plt.xlim(0, 250)
+plt.xlabel("methylation site depth per sample")
+plt.ylabel("count")
 fig7
 ```
 
@@ -275,5 +295,7 @@ fig8, (ax1, ax2, ax3) = plt.subplots(3, figsize=(10,10))
 sns.distplot(pd.DataFrame({" ratio": data[data['context']== 'CG']['ratio']}).dropna(), color = 'brown', hist=True, kde=False, rug=False, ax=ax1).set_title('CG')
 sns.distplot(pd.DataFrame({" ratio": data[data['context']== 'CHG']['ratio']}).dropna(), color = 'blue', hist=True, kde=False, rug=False, ax=ax2).set_title('CHG')
 sns.distplot(pd.DataFrame({" ratio": data[data['context']== 'CHH']['ratio']}).dropna(), color = 'green', hist=True, kde=False, rug=False, ax=ax3).set_title('CHH')
+plt.ylabel("count")
+plt.xlabel("methylation ratio")
 fig8
 ```
