@@ -22,8 +22,8 @@ if config["mode"]== "reference":
             {out}/output_demultiplex/Crick_R1.fq.gz \
             {out}/multiQC_report.html \
             {out}/fastqc/ \
-            {out}/trimmed/Watson_R1_val_1_fastqc.html \
-            {out}/trimmed/Crick_R2_val_2_fastqc.html \
+            {out}/trimmed/Watson_R1_trim_fastqc.html \
+            {out}/trimmed/Crick_R2_trim_fastqc.html \
             {out}/report.html \
             {out}/mapping/watson.bam \
             {out}/mapping/crick.bam \

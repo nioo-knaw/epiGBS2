@@ -302,7 +302,7 @@ def map_STAR(args):
         cmd += " --outFilterMismatchNoverLmax 0.95"
             # TODO: implement --alignEndsType endtoend mapping after joined reads are merged
         cmd += "--outFilterMatchNminOverLread 0.9 --scoreGap -4 " \
-                " --alignEndsType Local" \
+                " --alignEndsType EndToEnd" \
                 " --alignSoftClipAtReferenceEnds No" \
                 " --outSAMorder PairedKeepInputOrder" \
                 " --outFilterMultimapNmax 1" \

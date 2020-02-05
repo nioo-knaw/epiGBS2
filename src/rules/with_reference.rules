@@ -5,14 +5,14 @@ rule trim:
         R2_1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
         R2_2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"])
     output:
-        expand("{path}/trimmed/Watson_R1_val_1.fq.gz", path=config["output_dir"]),
-        expand("{path}/trimmed/Watson_R1_val_1_fastqc.html", path=config["output_dir"]),
-        expand("{path}/trimmed/Crick_R1_val_1_fastqc.html", path=config["output_dir"]),
-        expand("{path}/trimmed/Crick_R1_val_1.fq.gz", path=config["output_dir"]),
-        expand("{path}/trimmed/Watson_R2_val_2.fq.gz", path=config["output_dir"]),
-        expand("{path}/trimmed/Watson_R2_val_2_fastqc.html", path=config["output_dir"]),
-        expand("{path}/trimmed/Crick_R2_val_2_fastqc.html", path=config["output_dir"]),
-        expand("{path}/trimmed/Crick_R2_val_2.fq.gz", path=config["output_dir"])
+        expand("{path}/trimmed/Watson_R1_trim.fq.gz", path=config["output_dir"]),
+        expand("{path}/trimmed/Watson_R1_trim_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R1_trim_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R1_trim.fq.gz", path=config["output_dir"]),
+        expand("{path}/trimmed/Watson_R2_trim.fq.gz", path=config["output_dir"]),
+        expand("{path}/trimmed/Watson_R2_trim_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R2_trim_fastqc.html", path=config["output_dir"]),
+        expand("{path}/trimmed/Crick_R2_trim.fq.gz", path=config["output_dir"])
     params:
         dir=expand("{path}/trimmed/", path=config["output_dir"])
     conda:
@@ -22,8 +22,12 @@ rule trim:
     log: expand("{path}/log/trim.log", path=config["output_dir"])
 
     shell:
-        "trim_galore --paired -q 0 --fastqc {input.R1_1} {input.R1_2} {input.R2_1} {input.R2_2} -o {params.dir} > {log}"
-
+        """
+        trim_galore --paired -q 0 --fastqc {input.R1_1} {input.R1_2} {input.R2_1} {input.R2_2} -o {params.dir} > {log}
+        cutadapt -u -10 -U -10 -m 10 -j {threads} -o {params.dir}/Watson_R1_trim.fq.gz -p {params.dir}/Watson_R2_trim.fq.gz {params.dir}/Watson_R1_val_1.fq.gz {params.dir}/Watson_R2_val_2.fq.gz >>{log}
+        cutadapt -u -10 -U -10 -m 10 -j {threads} -o {params.dir}/Crick_R1_trim.fq.gz -p {params.dir}/Crick_R2_trim.fq.gz {params.dir}/Crick_R1_val_1.fq.gz {params.dir}/Crick_R2_val_2.fq.gz >>{log}
+        fastqc -t {threads} --outdir {params.dir} {params.dir}/*_trim.fq.gz
+        """
 param_mq=config["param_SNPcalling"]["min-MQ"]
 param_bq=config["param_SNPcalling"]["min-BQ"]
 param_depth=config["param_SNPcalling"]["max-depth"]
@@ -51,10 +55,10 @@ def getParam_dp(param_depth):
 rule run_star:
     input:
         ref=expand("{path}/{ref}", path=config["ref_dir"], ref=config["genome"]),
-        c_R1=expand("{path}/trimmed/Crick_R1_val_1.fq.gz", path=config["output_dir"]),
-        c_R2=expand("{path}/trimmed/Crick_R2_val_2.fq.gz", path=config["output_dir"]),
-        w_R1=expand("{path}/trimmed/Watson_R1_val_1.fq.gz", path=config["output_dir"]),
-        w_R2=expand("{path}/trimmed/Watson_R2_val_2.fq.gz", path=config["output_dir"]),
+        c_R1=expand("{path}/trimmed/Crick_R1_trim.fq.gz", path=config["output_dir"]),
+        c_R2=expand("{path}/trimmed/Crick_R2_trim.fq.gz", path=config["output_dir"]),
+        w_R1=expand("{path}/trimmed/Watson_R1_trim.fq.gz", path=config["output_dir"]),
+        w_R2=expand("{path}/trimmed/Watson_R2_trim.fq.gz", path=config["output_dir"]),
         bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
     output:
         watsonBam=expand("{path}/mapping/watson.bam", path=config["output_dir"]),
