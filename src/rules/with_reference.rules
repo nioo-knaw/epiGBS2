@@ -134,7 +134,7 @@ rule merge_watson_crick:
     conda:
         "../env/environment.yaml"
     shell:
-        "python src/mapping_varcall/merge_watson_crick-old.py "
+        "python src/mapping_varcall/merge_watson_crick.py "
         "-w {input.watsonVCF} "
         "-c {input.crickVCF} "
         "-o {params.mergedtsv}"
