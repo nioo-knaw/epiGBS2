@@ -196,42 +196,6 @@ p.depth.av <- ggplot(depth.av, aes(x=snp.depth, color=label, fill=label)) +
 p.depth.av
 ```
 
-<!--The second plot(s) shows the SNP depth distribution for each sample.
-```{r fig.cap="Fig.4: SNP depth distribution of each sample"}
-dpf <- melt(dp, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
-dpf <- dpf[ dpf$Depth > 0,]
-
-samps_per_row <- 24
-myRows <- ceiling(length(levels(dpf$Sample))/samps_per_row) #calculates how many plot rows will be generated for the set row number
-myList <- vector(mode = "list", length = myRows)
-
-for(i in 1:myRows){
-  myIndex <- c(i*samps_per_row - samps_per_row + 1):c(i*samps_per_row)
-  myIndex <- myIndex[myIndex <= length(levels(dpf$Sample))]
-  myLevels <- levels(dpf$Sample)[myIndex]
-  myRegex <- paste(myLevels, collapse = "$|^")
-  myRegex <- paste("^", myRegex, "$", sep = "")
-  myList[[i]] <- dpf[grep(myRegex, dpf$Sample),]
-  myList[[i]]$Sample <- factor(myList[[i]]$Sample)
-}
-myPlots <- vector(mode = "list", length = myRows)
-for(i in 1:myRows){
-  myPlots[[i]] <- ggplot(myList[[i]], aes(x=Sample, y=Depth)) +
-    geom_violin(adjust=1.0, scale = "count", trim=TRUE)
-
-  myPlots[[i]] <- myPlots[[i]] + theme_pubr()
-  myPlots[[i]] <- myPlots[[i]] + theme(axis.title.x = element_blank(),
-                                       axis.text.x = element_text(angle = 60, hjust = 1))
-  myPlots[[i]] <- myPlots[[i]] + scale_y_continuous(trans=scales::log2_trans())
-  myPlots[[i]] <- myPlots[[i]] + stat_summary(fun.data=mean_sdl, geom="pointrange", color="red", size = 0.25)
-
-  print(myPlots[[i]])
-
-}
-
-``` -->
-
-
 ## Methylation calling
 
 This might be the part, you are interested in the most. You probably will continue your statistical analysis with the methylation.bed file. Here you will find some simple summarized stats about the methylation calls. Please realize, that all following plots are based on the first 100000 methylation sites because of memory issues. You originally obtained `r system(paste0("cat ",params$dir,"/mapping/methylation.bed | wc -l"), intern=TRUE)` methylation sites.
