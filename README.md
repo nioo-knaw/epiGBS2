@@ -328,9 +328,9 @@ param_SNPcalling:
 ### References
 
 1.	Manuscript on bioRxiv
-1.	Köster, J. & Rahmann, S. Snakemake???a scalable bioinformatics workflow engine. Bioinformatics 28, 2520-2522 (2012).
+1.	Köster, J. & Rahmann, S. Snakemake-a scalable bioinformatics workflow engine. Bioinformatics 28, 2520-2522 (2012).
 2.	Grüning, B. et al. Bioconda: sustainable and comprehensive software distribution for the life sciences. Nat. Methods 15, 475-476 (2018).
-3.	Catchen, J., Hohenlohe, P. A., Bassham, S., Amores, A. & Cresko, W. A. Stacks: an analysis tool set for population genomics. Mol. Ecol. 22, 3124???3140 (2013).
+3.	Catchen, J., Hohenlohe, P. A., Bassham, S., Amores, A. & Cresko, W. A. Stacks: an analysis tool set for population genomics. Mol. Ecol. 22, 3124-3140 (2013).
 4.	Catchen, J. M., Amores, A., Hohenlohe, P., Cresko, W. & Postlethwait, J. H. Stacks: Building and Genotyping Loci De Novo From Short-Read Sequences. G3 Genes Genomes Genet. 1, 171-182 (2011).
 5.	Stacks 2: Analytical Methods for Paired-end Sequencing Improve RADseq-based Population Genomics | bioRxiv. Available at: https://www.biorxiv.org/content/10.1101/615385v1. (Accessed: 27th August 2019)
 6.	Andrews, Simon. FastQC: a quality control tool for high throughput sequence data. Available online at: http://www.bioinformatics.babraham.ac.uk/projects/fastqc. (2010).
