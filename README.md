@@ -42,7 +42,7 @@
 	- `git clone https://gitlab.bioinf.nioo.knaw.nl/FleurG/epigbs-snakemake.git epiGBS3.0`
 - Enter the created directory:
 	- `cd epiGBS3.0`
-- Open and fill in the config file: __All paths are full paths, no relative paths allowed.__
+- Open and fill in the config file: __All paths are full paths, no relative paths allowed.__ For examples, please see [here]((#example-config-files))
 	- `nano config.yaml`
 	- output_dir: Path of directory to store all output files and directory. Path will be created by the pipeline if it does not exist.
 	- input_dir: Path of directory containing raw data (e.g. fastq.gz, or fq.gz) and barcode file
