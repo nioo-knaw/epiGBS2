@@ -1,0 +1,162 @@
+import pandas as pd
+import os
+import random
+df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', index_col='Sample')
+SAMPLES = df.index
+flowCell = df.Flowcell[0]
+lane = df.Lane[0]
+projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
+
+rule barcode_stacks:
+    input:
+        barcodes=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+        R1=expand("{path}/{read1}",path=config["input_dir"],read1=config["Read1"]),
+        R2=expand("{path}/{read1}",path=config["input_dir"],read1=config["Read2"])
+    params:
+        tmpdir=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+        outputdir=expand("{path}/output_demultiplex",  path=config["output_dir"])
+    output:
+        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+    conda:
+        "../env/stacks.yaml"
+    shell:
+         """
+         python src/demultiplex/barcode_stacks.py --r1_in {input.R1} --r2_in {input.R2} --output-dir {params.outputdir} -b {input.barcodes} --tmpdir {params.tmpdir}
+         """
+
+rule header_Watson_R1:
+    params:
+        sample="{sample}",
+        flowcell=flowCell,
+        lane=lane,
+        outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+    input:
+        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+    output:
+        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName)
+    conda:
+        "../env/python3.yaml"
+    shell:
+         "zcat {params.outputdir}clone-stacks/{params.sample}-Watson.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/'| gzip -c   > {output.header}"
+
+rule cat_watson_R1:
+    input:
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+    output:
+        outFile=expand("{path}/output_demultiplex/Watson_R1.fq.gz",  path=config["output_dir"])
+    params:
+        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+    conda:
+        "../env/python3.yaml"
+    shell:
+       "cat {params.tmp}/samplesHeader/*-Watson.1.fq.gz > {output.outFile}"
+
+
+rule header_Watson_R2:
+    params:
+        sample="{sample}",
+        flowcell=flowCell,
+        lane=lane,
+        outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+    input:
+        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+
+    output:
+        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName)
+    conda:
+        "../env/python3.yaml"
+    shell:
+         "zcat {params.outputdir}clone-stacks/{params.sample}-Watson.2.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/' | gzip -c > {output.header}"
+
+rule cat_watson_R2:
+    input:
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+    output:
+        outFile=expand("{path}/output_demultiplex/Watson_R2.fq.gz",  path=config["output_dir"])
+    params:
+        tmp=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName),
+    conda:
+        "../env/python3.yaml"
+    shell:
+       "cat {params.tmp}/samplesHeader/*-Watson.2.fq.gz > {output.outFile}"
+
+
+
+rule header_Crick_R1:
+    params:
+        sample="{sample}",
+        flowcell=flowCell,
+        lane=lane,
+        outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+    input:
+        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+    output:
+        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName)
+    conda:
+        "../env/python3.yaml"
+    shell:
+         "zcat {params.outputdir}clone-stacks/{params.sample}-Crick.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
+
+rule cat_Crick_R1:
+    input:
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+    output:
+        outFile=expand("{path}/output_demultiplex/Crick_R1.fq.gz",  path=config["output_dir"])
+    params:
+        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+    conda:
+        "../env/python3.yaml"
+    shell:
+       "cat {params.tmp}/samplesHeader/*-Crick.1.fq.gz > {output.outFile}"
+
+
+rule header_Crick_R2:
+    params:
+        sample="{sample}",
+        flowcell=flowCell,
+        lane=lane,
+        outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+    input:
+        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+    output:
+        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName)
+    conda:
+        "../env/python3.yaml"
+    shell:
+         "zcat {params.outputdir}clone-stacks/{params.sample}-Crick.2.fq.gz | cut -f1 -d ' '  | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
+
+rule cat_Crick_R2:
+    input:
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+    output:
+        outFile=expand("{path}/output_demultiplex/Crick_R2.fq.gz",  path=config["output_dir"])
+    params:
+        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+    conda:
+        "../env/python3.yaml"
+    shell:
+       "cat {params.tmp}/samplesHeader/*-Crick.2.fq.gz > {output.outFile}"
+
+#rule remove_tmp_files:
+#    params:
+#          tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName),
+#          outputdir= expand("{path}", path=config["output_dir"])
+#    input:
+#          outFile1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+#          outFile2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"]),
+#          outFile3=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+#          outFile4=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"])
+#    output:
+#          barcode=expand("{path}/output_demultiplex/barcode_stacks.tsv", path=config["output_dir"])
+#    shell:
+#        """mv {params.tmpdir}barcode_stacks.tsv {output.barcode}
+#        rm -r {params.tmpdir}
+#        """
+###Add following lines to rule remove_tmp_files for debugging purposes
+####mkdir {params.outputdir}rem
+####mv {params.tmpdir}/clone-stacks/*.rem.*  {params.outputdir}/rem
+####mv {params.tmpdir}/clone/*discards*  {params.outputdir}/rem
