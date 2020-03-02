@@ -3,6 +3,8 @@
 import argparse
 import gzip
 import os
+from os import system
+
 
 def parse_args():
     """Parse command line arguments"""
@@ -16,15 +18,16 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def merge_line(watson_line,crick_line):
+
+def merge_line(watson_line, crick_line):
     """merge watson and crick output"""
     out_line = watson_line[:2]
     out_line += [watson_line[3]]
-    out_line += [watson_line[4].replace('<*>','').rstrip(',')]
-    out_line += [crick_line[4].replace('<*>','').rstrip(',')]
-    if out_line[-2:] == ['',''] and out_line[2] in 'AT':
+    out_line += [watson_line[4].replace('<*>', '').rstrip(',')]
+    out_line += [crick_line[4].replace('<*>', '').rstrip(',')]
+    if out_line[-2:] == ['', ''] and out_line[2] in 'AT':
         return None
-    out_line += ['']*len(watson_line[9:])
+    out_line += [''] * len(watson_line[9:])
     AD_index = watson_line[8].split(':').index('AD')
     watson_nt_index = out_line[3].split(',')
     crick_nt_index = out_line[4].split(',')
@@ -38,7 +41,7 @@ def merge_line(watson_line,crick_line):
             nt_pos_watson = watson_nt_index.index(nt) + 1
         if nt in crick_nt_index:
             nt_pos_crick = crick_nt_index.index(nt) + 1
-        for index,(w_value,c_value) in enumerate(zip(watson_line[9:],crick_line[9:])):
+        for index, (w_value, c_value) in enumerate(zip(watson_line[9:], crick_line[9:])):
             try:
                 watson_obs = w_value.split(':')[AD_index].split(',')[nt_pos_watson]
             except TypeError:
@@ -48,10 +51,11 @@ def merge_line(watson_line,crick_line):
             except TypeError:
                 crick_obs = 0
             if nt == 'T':
-                out_line[index+5] += '%s,%s' % (watson_obs, crick_obs)
+                out_line[index + 5] += '%s,%s' % (watson_obs, crick_obs)
             else:
                 out_line[index + 5] += '%s,%s:' % (watson_obs, crick_obs)
     return '\t'.join(out_line) + '\n'
+
 
 def merge(args):
     """"merge watson and crick calls"""
@@ -59,7 +63,7 @@ def merge(args):
     crick_handle = os.popen("pigz -cd %s" % args.crick)
     read_watson = True
     read_crick = True
-    #TODO: define output header, should include sample names
+    # TODO: define output header, should include sample names
     output = open(args.output, 'w')
     count = 0
     while True:
@@ -100,7 +104,7 @@ def merge(args):
                 output_line = merge_line(watson_line, crick_line)
                 if output_line:
                     output.write(output_line)
-                #start reading both lines again.
+                # start reading both lines again.
                 read_watson = True
                 read_crick = True
                 continue
@@ -110,7 +114,7 @@ def merge(args):
             else:
                 read_crick = False
                 read_watson = True
-        elif int(watson_line[0]) > int(crick_line[0]):
+        elif watson_line[0] > crick_line[0]:
             read_watson = False
             read_crick = True
         else:
@@ -118,12 +122,17 @@ def merge(args):
             read_watson = True
     output.close()
     os.popen('pigz -f %s' % args.output)
+
+
 def main():
     """Main function loop"""
     args = parse_args()
     merge(args)
-    
-    
-    
+    # print('pigz -f %s' % args.output)
+    # system('pigz -f %s' % args.output)
+    # print("gzip %s" %args.output)
+
+
 if __name__ == '__main__':
     main()
+
