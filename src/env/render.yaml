@@ -6,6 +6,7 @@ channels:
 dependencies:
   - pandoc
   - _libgcc_mutex=0.1=main
+  - libgfortran
   - _r-mutex=1.0.1=anacondar_1
   - binutils_impl_linux-64=2.31.1=h6176602_1
   - binutils_linux-64=2.31.1=h6176602_7
