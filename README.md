@@ -39,7 +39,7 @@
 	- `conda create -n snake snakemake=5.4.5`
 	- `conda activate snakemake`
 - Make a copy of the pipeline (skip this step if you got the directory as zipped file. Then just unzip the directory.)
-	- `git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/epigbs2.git`
+	- `git clone https://github.com/nioo-knaw/epiGBS2.git`
 - Enter the created directory:
 	- `cd epiGBS2`
 - Open and fill in the config file: __All paths are full paths, no relative paths allowed.__ For examples, please see [Example Config Files](#example-config-files)
@@ -311,7 +311,7 @@ param_SNPcalling:
 
 ### Software
 
-- [epiGBS2]()
+- [epiGBS2](https://github.com/nioo-knaw/epiGBS2.git)
 - [Snakemake 5.4.5](https://snakemake.readthedocs.io/en/stable/)
 - [Conda](https://docs.conda.io/en/latest/index.html)
 - [Stacks](http://catchenlab.life.illinois.edu/stacks/)
