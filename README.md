@@ -1,4 +1,4 @@
-# Manual epiGBS 3.0
+# Manual epiGBS2
 
 - [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)
 - [Preparation to run the pipeline](#preparation-to-run-the-pipeline)
@@ -39,9 +39,9 @@
 	- `conda create -n snake snakemake=5.4.5`
 	- `conda activate snakemake`
 - Make a copy of the pipeline (skip this step if you got the directory as zipped file. Then just unzip the directory.)
-	- `git clone https://gitlab.bioinf.nioo.knaw.nl/FleurG/epigbs-snakemake.git epiGBS3.0`
+	- `git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/epigbs2.git`
 - Enter the created directory:
-	- `cd epiGBS3.0`
+	- `cd epiGBS2`
 - Open and fill in the config file: __All paths are full paths, no relative paths allowed.__ For examples, please see [Example Config Files](#example-config-files)
 	- `nano config.yaml`
 	- output_dir: Path of directory to store all output files and directory. Path will be created by the pipeline if it does not exist.
@@ -197,10 +197,10 @@ The required amount of reads will depend from the expected number of DNA fragmen
 
 ```
 # path to output directory
-output_dir: "/fleurg/projects/epiGBS3.0/output"
+output_dir: "/fleurg/projects/epiGBS2/output"
 
 # input directory where raw reads are
-input_dir       : "/fleurg/projects/epiGBS3.0/data"
+input_dir       : "/fleurg/projects/epiGBS2/data"
 
 # name of sequence read files
 Read1 : "epiGBS_1.fq.gz"
@@ -255,10 +255,10 @@ param_SNPcalling:
 
 ```
 # path to output directory
-output_dir: "/fleurg/projects/epiGBS3.0-ref/output"
+output_dir: "/fleurg/projects/epiGBS2-ref/output"
 
 # input directory where raw reads are
-input_dir       : "/fleurg/projects/epiGBS3.0-ref/data"
+input_dir       : "/fleurg/projects/epiGBS2-ref/data"
 
 # name of sequence read files
 Read1 : "epiGBS_1.fq.gz"
@@ -280,7 +280,7 @@ threads: "12"
 mode: "reference"
 
 # genome directory (leaave it blank in denovo mode)
-ref_dir: "/fleurg/projects/epiGBS3.0-ref/data/ref"
+ref_dir: "/fleurg/projects/epiGBS2-ref/data/ref"
 
 # genome name (leave it blank in denovo mode)
 genome: "reference.fa"
@@ -311,7 +311,7 @@ param_SNPcalling:
 
 ### Software
 
-- [epiGBS3.0]()
+- [epiGBS2]()
 - [Snakemake 5.4.5](https://snakemake.readthedocs.io/en/stable/)
 - [Conda](https://docs.conda.io/en/latest/index.html)
 - [Stacks](http://catchenlab.life.illinois.edu/stacks/)
