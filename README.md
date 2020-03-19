@@ -38,7 +38,7 @@
 - Make a conda environment for snakemake if snakemake is not installed globally on the server. You do not need administrator rights to do this but conda has to be installed (see [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)).
 	- `conda create -n snake snakemake=5.4.5`
 	- `conda activate snakemake`
-- Make a copy of the pipeline (skip this step if you got the directory as zipped file. Then just unzip the directory.)
+- Make a copy of the pipeline
 	- `git clone https://github.com/nioo-knaw/epiGBS2.git`
 - Enter the created directory:
 	- `cd epiGBS2`
