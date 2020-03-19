@@ -55,7 +55,7 @@
 	- mode: choice between "denovo" or "reference"
 	- ref_dir: Only needed for reference-based analysis. Path to directory containing a reference genome
 	- Genome: Only needed for reference-based analysis. Name of the genome file (prefix .fa)
-	- Param_denovo: Optional and only relevant for analysis in de-novo mode. To run on default choose "" or "default", otherwise enter a number
+	- Param_denovo: Optional and only relevant for analysis in denovo mode. To run on default choose "" or "default", otherwise enter a number
 		- Identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default: "0.95"
 		- Min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
 		- Max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
@@ -84,14 +84,14 @@ H53KHCCXY       5       CCTTC   CCAG    WUR_175 SD      WUR     BUXTON_WUR_AseI_
 - Dry-run:
 	- `snakemake -n --use-conda`
 - Run the pipeline:
-	`snakemake -j <threads> -p --use-conda` Replace <threads> by number of CPU's to use on your server, e.g. 12
+	`snakemake -j <threads> -p --use-conda` Replace <threads> by number of CPU's to use on your server, e.g. `snakemake -j 12 -p --use-conda`
 
 ## Explanation of files in the output directory
 
 It follows a description of all output files. Files that are important for downstream analysis are highlighted in bold. Files or Directories in italics are specific for the de-novo and reference branch respectively.
 
--  __report.html__: A report summarizing all stats from the epiGBS analysis. Absolutely crucial to determine, whether your analysis run successfully or not. However, this file gives only a first impression and further analysis is necessary to confirm the quality of your analysis.
-- __multiQC_report.html__: A report summarizing QC stats for the input data. Can be opened in any webbrowser. This file can be very large. Hide parts of the files to make loading easier.
+-  __report.html__: A report summarizing all stats from the epiGBS analysis. Absolutely crucial to determine, whether your analysis ran successfully or not. However, this file gives only a first impression and further analysis is necessary to confirm the quality of your analysis.
+- __multiQC_report.html__: A report summarizing QC stats for the input data. Can be opened in any webbrowser. This file can be very large. Hide parts of the files to make loading easier, e.g. filter out all files containing "rem"
 - output_demultiplex:
 	- barcode_stacks.tsv: barcode file converted to the required stacks format  
 	- clone: Directory containing read files from which PCR duplicates were removed  
@@ -130,8 +130,9 @@ It follows a description of all output files. Files that are important for downs
 
 ## When not to run the pipeline?
 
-- If you want to determine methylation in restriction enzyme overhang. The original sequence will be replaced by the expected during demultiplexing if a sequence error occurs. This does not take into account C-T conversions.
+- If you want to determine methylation in restriction enzyme overhang. The original sequence will be replaced by the expected overhang during demultiplexing if a mismatch between expected and actual overhang sequence occurs. Hence, C-T conversions are replaced by a C and methylation would be artifically set to 100%.
 - The reference branch is in an experimental stage. One observed drawback is a low mapping percentage (20-30 %) but it might depend from the reference genome and organism.
+- SNP calling is not benchmarked.
 
 ## Quality control or "How to discover errors?"
 
@@ -153,9 +154,9 @@ Recommendation: Run fastq-screen on raw data to determine sources of contaminati
 	- The number of consensus clusters (third clustering step) should be comparable with the numbers of fragments that you expected, e.g. by performing an in silico digest using R packages like SimRAD.
 - Mapping:
 	- The mapping percentage for all reads should be higher than 40%. In general, we observe a lower mapping percentage for assembled than for joined reads.
-- SNP calling
+- SNP calling:
 	- The amount of detected SNPs will depend from the used species and the diversity of samples. The SNP depth should be greater than 10 for reliable calling.
-- Methylation calling
+- Methylation calling:
 	- The amount of methylated cytosines and their context will depend from the used species and used restriction enzymes. In general, the depth should be greater than 10 for reliable calling.
 
 ## Fix errors
@@ -167,22 +168,22 @@ I have a very high percentage of clone reads
 
 #### Fix:
 
-- Check the length of the Wobble in your adapter sequence and the set number in the barcode file.
-- Check the quality and quantity of input DNA of the wetlab protocol.
+- Check the length of the Wobble in your adapter sequence and the number in the barcode file.
+- Check the quality and quantity of input DNA during the wetlab procedure.
 
 ### Demultiplexing
 
 #### Problem:
-One or more samples have small amounts of recovered reads or read number differ a lot between different samples.
+One or more samples have small amounts of recovered reads or read numbers differ a lot between different samples.
 
 #### Fix:
 
 - Check the labwork (e.g. the used barcodes and your pipetting scheme)
 - Check the barcode file based on the wetlab-scheme
-- The Barcode log file (output.dir/output-demultiplex/clone-stacks/process_radtags.clone.log) contains de-novo discovered barcodes. Do you find complete set of Watson and Crick, reverse and forward? Then check your barcode file and experimental design file again. Do you find a lot of barcode-sets, where both R1 and R2 barcode end on "C"? Then bisulfite conversion might be low in your experiment.
+- The Barcode log file (output.dir/output-demultiplex/clone-stacks/process_radtags.clone.log) contains denovo discovered barcodes. Do you find complete set of Watson and Crick, reverse and forward? Then check your barcode file and experimental design file again. Do you find a lot of barcode-sets, where both R1 and R2 barcode end on "C"? Then bisulfite conversion might be low in your experiment.
 - Check DNA quantification and quality of the missing samples
 - RAD-tag: Pipeline checks for the presence of the restriction enzyme overhang (RAD-tag). If this sequence contains unmethylated "Cs", they will be converted to "Ts". The RAD-tag check allows one nucleotide mismatch. Depending from the chosen enzyme combination, two or more mismatches should be allowed. Possible fix is to switch off RAD-tag check by opening demultiplex/barcode_stacks.py and change line XX from cmd += "-r -D --inline_inline --barcode_dist_2 0 " to cmd += "-r -D --inline_inline --barcode_dist_2 0 --disable_rad_check "
-- Check the .rm. files in output.dir/output-demultiplex/clone-stacks/ in the QC. Do they show a common sequence in the beginning of the read different from your expected RAD-tag?
+- Check the .rem. files in output.dir/output-demultiplex/clone-stacks/ in the QC. Do they show a common sequence in the beginning of the read different from your expected RAD-tag?
 - check for barcode bias. From GBS experiment it is known that some barcodes perform better than others
 
 #### Problem:
