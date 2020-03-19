@@ -64,7 +64,7 @@
 		- min-MQ: Minimum mapping quality for an alignment to be used, default 0
 		- min-BQ: Minimum base quality for a base to be considered, default 15
 
-- Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Flowcell, Lane, Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession.
+- Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Flowcell, Lane, Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. Make sure that the sample name does not only contain numbers but also letters. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession.
 
 ```
 # barcodes.tsv
