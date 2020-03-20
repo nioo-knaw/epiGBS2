@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import random
-df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', index_col='Sample')
+df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', dtype="object").set_index('Sample')
 SAMPLES = df.index
 flowCell = df.Flowcell[0]
 lane = df.Lane[0]
