@@ -29,7 +29,7 @@
 	- paired-end Illumina-sequencing
 	- adjust output (number of reads) according to your genome size and expected number of fragments (e.g. based on an *in silico* digest)
 - Readfiles:
-	- un-demultiplexing and un-trimmed
+	- un-demultiplexed but standard Illumina adapter trimmed (usually already done by sequencing agency)
 - No reference genome required
 
 
@@ -37,25 +37,25 @@
 
 - Make a conda environment for snakemake if snakemake is not installed globally on the server. You do not need administrator rights to do this but conda has to be installed (see [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)).
 	- `conda create -n snake snakemake=5.4.5`
-	- `conda activate snakemake`
-- Make a copy of the pipeline (skip this step if you got the directory as zipped file. Then just unzip the directory.)
-	- `git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/epigbs2.git`
+	- `conda activate snake`
+- Make a copy of the pipeline
+	- `git clone https://github.com/nioo-knaw/epiGBS2.git`
 - Enter the created directory:
 	- `cd epiGBS2`
-- Open and fill in the config file: __All paths are full paths, no relative paths allowed.__ For examples, please see [Example Config Files](#example-config-files)
+- Open and adjust the config file: __All paths are full paths, no relative paths allowed.__ For examples, please see [Example Config Files](#example-config-files)
 	- `nano config.yaml`
-	- output_dir: Path of directory to store all output files and directory. Path will be created by the pipeline if it does not exist.
+	- output_dir: Path of directory to store all output files and directory. Path will be created by the pipeline and should not pre-exist. E.g. if the path of the cloned directory is `/fleurg/projects/epiGBS2`, then use `/fleurg/projects/epiGBS2/output`.
 	- input_dir: Path of directory containing raw data (e.g. fastq.gz, or fq.gz) and barcode file
 	- read1: Name of the read file containing forward (R1) reads
 	- read2: Name of the read file containing forward (R2) reads
 	- cycles: read length
-	- barcodes: Filename of the barcode file
+	- barcodes: Filename of the barcode file (do not include the path!)
 	- tmpdir: Path to the directory where temporary files will be stored. For most systems this will be /tmp
 	- threads: number of available computing threads on your system
 	- mode: choice between "denovo" or "reference"
 	- ref_dir: Only needed for reference-based analysis. Path to directory containing a reference genome
 	- Genome: Only needed for reference-based analysis. Name of the genome file (prefix .fa)
-	- Param_denovo: Optional and only relevant for analysis in de-novo mode. To run on default choose "" or "default", otherwise enter a number
+	- Param_denovo: Optional and only relevant for analysis in denovo mode. To run on default choose "" or "default", otherwise enter a number
 		- Identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default: "0.95"
 		- Min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
 		- Max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
@@ -66,6 +66,7 @@
 
 - Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Flowcell, Lane, Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. Make sure that the sample name does not only contain numbers but also letters. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession.
 
+The Flowcellname can be found in the fastq headers of the read file, e.g. `@ST-E00317:403:H53KHCCXY:5:1101:5660:1309 1:N:0:NCAATCAC` translates to `@ST-E00317:403:FLOWCELL:LANE-NUMBER:1101:5660:1309 1:N:0:NCAATCAC`. ENZ_R1/2 expects the names of the restriction enzymes and Wobble_R1/2 is the length of the unique molecular identifier ("Wobble") sequence (usually 3).
 ```
 # barcodes.tsv
 Flowcell        Lane    Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
@@ -83,15 +84,16 @@ H53KHCCXY       5       CCTTC   CCAG    WUR_175 SD      WUR     BUXTON_WUR_AseI_
 
 - Dry-run:
 	- `snakemake -n --use-conda`
-- Run the pipeline:
-	`snakemake -j <threads> -p --use-conda` Replace <threads> by number of CPU's to use on your server, e.g. 12
+- everythin green? Then...
+- run the pipeline:
+	`snakemake -j <threads> -p --use-conda` Replace <threads> by number of CPU's to use on your server, e.g. `snakemake -j 12 -p --use-conda`
 
 ## Explanation of files in the output directory
 
 It follows a description of all output files. Files that are important for downstream analysis are highlighted in bold. Files or Directories in italics are specific for the de-novo and reference branch respectively.
 
--  __report.html__: A report summarizing all stats from the epiGBS analysis. Absolutely crucial to determine, whether your analysis run successfully or not. However, this file gives only a first impression and further analysis is necessary to confirm the quality of your analysis.
-- __multiQC_report.html__: A report summarizing QC stats for the input data. Can be opened in any webbrowser. This file can be very large. Hide parts of the files to make loading easier.
+-  __report.html__: A report summarizing all stats from the epiGBS analysis. Absolutely crucial to determine, whether your analysis ran successfully or not. However, this file gives only a first impression and further analysis is necessary to confirm the quality of your analysis.
+- __multiQC_report.html__: A report summarizing QC stats for the input data. Can be opened in any webbrowser. This file can be very large. Hide parts of the files to make loading easier, e.g. filter out all files containing "rem"
 - output_demultiplex:
 	- barcode_stacks.tsv: barcode file converted to the required stacks format  
 	- clone: Directory containing read files from which PCR duplicates were removed  
@@ -109,11 +111,11 @@ It follows a description of all output files. Files that are important for downs
 	- consensus.fa: sequence file. outputfile from second clustering step, in which binary watson and crick reads are matched, and after reference reconstruction
 	- consensus_cluster.fa: De novo reference sequence file. Outputfile from third clustering step, in which sequences from previous steps were clustered based on identity  
 	- __consensus_cluster.renamed.fa__: sequences are identical to consensus_cluster.fa but fasta names were renamed. Input for mapping.
-	- consensus_cluster.renamed.fa.fai: Indexed de novo reference sequences.
+	- consensus_cluster.renamed.fa.fai: Indexed *de novo* reference sequences.
 	- make_reference.log: Log file containing some stats about the clustering.  
 - mapping:
 	- STAR_{joined,merged}_{crick,watson}: Directory, which contains the (indexed) Crick/Watson-reference converted to a three-letter alphabet. If working with a reference genome, differentiation between joined/merged absent.
-	- {crick, watson}.bam: Alignment file of crick or watson reads against the crick- or watson-converted reference, created by STAR
+	- {crick, watson}.bam: Alignment file of crick or watson reads against the reference, created by STAR
 	- {crick,watson}.bam.bai: indexed alignment files, used as input for samtools        
 	- {crick,watson}.vcf.gz: created by samtools, contains all variant positions in {crick,watson} reads against the reference for each sample          
 	- merged.tsv.gz: created by a custom script that merges crick.vcf.gz and watson.vcf.gz   
@@ -125,17 +127,18 @@ It follows a description of all output files. Files that are important for downs
 	- {Crick,Watson}_{joined,merged}Log.final.out:   
 - *trimmed*: Directory containing adapter trimmed reads and their fastqc output files. For running in reference-mode only.
 - multiQC_report_data: Directory containing all log and intermediary files that are created by MultiQC
-- fastqc: Directory containing individual fastQC reports
+- fastqc: Directory containing individual FastQC reports
 - log: Directory containing log-files
 
 ## When not to run the pipeline?
 
-- If you want to determine methylation in restriction enzyme overhang. The original sequence will be replaced by the expected during demultiplexing if a sequence error occurs. This does not take into account C-T conversions.
+- If you want to determine methylation in restriction enzyme overhang. The original sequence will be replaced by the expected overhang during demultiplexing if a mismatch between expected and actual overhang sequence occurs. Hence, C-T conversions are replaced by a C and methylation would be artifically set to 100%.
 - The reference branch is in an experimental stage. One observed drawback is a low mapping percentage (20-30 %) but it might depend from the reference genome and organism.
+- SNP and methylation calling are not benchmarked.
 
 ## Quality control or "How to discover errors?"
 
-Recommendation: Run fastq-screen on raw data to determine sources of contamination (e.g. by sharing a lane with other customers, human DNA, phiX, vectors and adapters). https://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/_build/html/index.html and https://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_documentation.html
+Recommendation: Run fastq-screen in bisulphite mode on raw data to determine sources of contamination (e.g. by sharing a lane with other customers, human DNA, phiX, vectors and adapters). https://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/_build/html/index.html and https://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_documentation.html
 
 ### MultiQC report:
 
@@ -143,19 +146,20 @@ Recommendation: Run fastq-screen on raw data to determine sources of contaminati
 - you can consider the FastQC documentation to understand most of the FastQC plots: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/. However, epiGBS libraries have the following specific characteristics that will be reflected in the quality reports. You can also compare this with the RRBS example from the FastQC website: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/RRBS_fastqc.html
 	- The sequence duplication levels will be higher than average because restriction enzymes were used to create the libraries versus random shearing for e.g. whole genome sequencing.
 	- The per base sequence content of the first nucleotides will re-construct the overhang of the used restriction enzyme after demultiplexing the reads. The "C" content is usually low and "T" is high.
+	- The 3'-end adapter content is usually high
 
 ### EpiGBS-report:
 
 - Number of clones: Check the number and distributions of clones. The dominant peak should be at a number of clones = 1.
 - Demultiplexing: The number of reads per sample should be comparable and agree with the expected numbers. The amount of Watson and Crick reads for a specific sample should be similar, too. The optimal number of reads depends on the expected number of fragments (> 10 reads per fragment) and required coverage.
-- De novo reference:
+- *De novo* reference:
 	- Check the number of assembled reads. Usually the percentage of assembled reads should be higher than unassembled reads. This depends from the size of the fragments that you expect. If the fragment size is greater than twice the chosen read site, the amount of assembled reads will be small.
-	- The number of consensus clusters (third clustering step) should be comparable with the numbers of fragments that you expected, e.g. by performing an in silico digest using R packages like SimRAD.
+	- The number of consensus clusters (third clustering step) should be comparable with the number of fragments that you expected, e.g. by performing an in silico digest using R packages like SimRAD.
 - Mapping:
 	- The mapping percentage for all reads should be higher than 40%. In general, we observe a lower mapping percentage for assembled than for joined reads.
-- SNP calling
+- SNP calling:
 	- The amount of detected SNPs will depend from the used species and the diversity of samples. The SNP depth should be greater than 10 for reliable calling.
-- Methylation calling
+- Methylation calling:
 	- The amount of methylated cytosines and their context will depend from the used species and used restriction enzymes. In general, the depth should be greater than 10 for reliable calling.
 
 ## Fix errors
@@ -167,29 +171,31 @@ I have a very high percentage of clone reads
 
 #### Fix:
 
-- Check the length of the Wobble in your adapter sequence and the set number in the barcode file.
-- Check the quality and quantity of input DNA of the wetlab protocol.
+- Check the length of the Wobble in your adapter sequence and the number in the barcode file.
+- Check the quality and quantity of input DNA during the wetlab procedure.
 
 ### Demultiplexing
 
 #### Problem:
-One or more samples have small amounts of recovered reads or read number differ a lot between different samples.
+One or more samples have small amounts of recovered reads or read numbers differ a lot between different samples.
 
 #### Fix:
 
 - Check the labwork (e.g. the used barcodes and your pipetting scheme)
 - Check the barcode file based on the wetlab-scheme
-- The Barcode log file (output.dir/output-demultiplex/clone-stacks/process_radtags.clone.log) contains de-novo discovered barcodes. Do you find complete set of Watson and Crick, reverse and forward? Then check your barcode file and experimental design file again. Do you find a lot of barcode-sets, where both R1 and R2 barcode end on "C"? Then bisulfite conversion might be low in your experiment.
+- The Barcode log file (output.dir/output-demultiplex/clone-stacks/process_radtags.clone.log) contains denovo discovered barcodes. Do you find a complete set of Watson and Crick, reverse and forward? Then check your barcode file and experimental design file again. Do you find a lot of barcode-sets, where both R1 and R2 barcode end on "C"? Then bisulfite conversion might be low in your experiment.
 - Check DNA quantification and quality of the missing samples
 - RAD-tag: Pipeline checks for the presence of the restriction enzyme overhang (RAD-tag). If this sequence contains unmethylated "Cs", they will be converted to "Ts". The RAD-tag check allows one nucleotide mismatch. Depending from the chosen enzyme combination, two or more mismatches should be allowed. Possible fix is to switch off RAD-tag check by opening demultiplex/barcode_stacks.py and change line XX from cmd += "-r -D --inline_inline --barcode_dist_2 0 " to cmd += "-r -D --inline_inline --barcode_dist_2 0 --disable_rad_check "
-- Check the .rm. files in output.dir/output-demultiplex/clone-stacks/ in the QC. Do they show a common sequence in the beginning of the read different from your expected RAD-tag?
+- Check the .rem. files in output.dir/output-demultiplex/clone-stacks/ in the QC. Do they show a common sequence in the beginning of the read different from your expected RAD-tag?
 - check for barcode bias. From GBS experiment it is known that some barcodes perform better than others
 
 #### Problem:
 The coverage is too low in the methylation bed file and after filtering on coverage (>10) only few positions remain.
 
 #### Fix:
-The required amount of reads will depend from the expected number of DNA fragments. You can calculate this for your (or a related) species by using R packages like SimRAD (https://cran.r-project.org/package=SimRAD)
+- The required amount of reads will depend from the expected number of DNA fragments. You can calculate this for your (or a related) species by using R packages like SimRAD (https://cran.r-project.org/package=SimRAD)
+- sequence more
+- reduce the genome representation by using a low cutting restriction enzyme
 
 ## Example Config Files
 
@@ -311,7 +317,7 @@ param_SNPcalling:
 
 ### Software
 
-- [epiGBS2]()
+- [epiGBS2](https://github.com/nioo-knaw/epiGBS2.git)
 - [Snakemake 5.4.5](https://snakemake.readthedocs.io/en/stable/)
 - [Conda](https://docs.conda.io/en/latest/index.html)
 - [Stacks](http://catchenlab.life.illinois.edu/stacks/)
