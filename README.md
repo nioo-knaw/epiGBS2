@@ -29,7 +29,7 @@
 	- paired-end Illumina-sequencing
 	- adjust output (number of reads) according to your genome size and expected number of fragments (e.g. based on an *in silico* digest)
 - Readfiles:
-	- un-demultiplexing but standard Illumina adapter trimmed (usually already done by sequencing agency)
+	- un-demultiplexed but standard Illumina adapter trimmed (usually already done by sequencing agency)
 - No reference genome required
 
 
