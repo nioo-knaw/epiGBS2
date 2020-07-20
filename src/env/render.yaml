@@ -68,12 +68,13 @@ dependencies:
   - r-knitr=1.22=r36h6115d3f_0
   - r-magrittr=1.5=r36h6115d3f_4
   - r-markdown=0.9=r36h96ca727_0
-  - r-mime=0.6=r36h96ca727_0
+  - r-ggpubr
   - r-rcpp=1.0.1=r36h29659fb_0
   - r-rmarkdown=1.12=r36h6115d3f_0
   - r-stringi=1.4.3=r36h29659fb_0
   - r-stringr=1.4.0=r36h6115d3f_0
   - r-tinytex=0.12=r36h6115d3f_0
+  - r-vcfr
   - r-xfun=0.6=r36h6115d3f_0
   - r-yaml=2.2.0=r36h96ca727_0
   - readline=8.0=hf8c457e_0
