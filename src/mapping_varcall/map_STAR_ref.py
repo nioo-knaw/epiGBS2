@@ -208,7 +208,7 @@ def process_reads_crick(args):
         g_pos_c = [str(n) for n, i in enumerate(c_r1[1]) if i.upper() == 'G']
         c_pos_c = [str(n) for n, i in enumerate(c_r2[1].rstrip('\n')[::-1]) if i.upper() == 'C']
         header_c = '@%s' % (c_r1[0][1:-1].replace(' ', '|').replace('\t', '|'))
-        header_c += '|%s\n' % (','.join(c_pos_c) + '|' + ','.join(g_pos_c))
+        header_c += '|%s\n' % (','.join(g_pos_c) + '|' + ','.join(c_pos_c))
         crick_r1_handle.write(header_c + convert_c_r1 + '+\n' + c_r1[3])
         #print(read_r1[3])
         crick_r2_handle.write(header_c + convert_c_r2 + '+\n' + c_r2[3])
