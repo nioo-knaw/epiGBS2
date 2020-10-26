@@ -257,8 +257,8 @@ This might be the part, you are interested in the most. You probably will contin
 
 ```{python prep}
 import pandas as pd
-import matplotlib.pyplot as plt
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy
 ```
