@@ -35,6 +35,7 @@ genome: "consensus_cluster.renamed.fa"
 # identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.95
 # min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
 # max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
+# When specifying min-depth or max-depth make sure to set both parameters.
 param_denovo:
   identity: ""
   min-depth: ""
