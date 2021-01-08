@@ -47,7 +47,7 @@
 	- output_dir: Path of directory to store all output files and directory. Path will be created by the pipeline and should not pre-exist. E.g. if the path of the cloned directory is `/fleurg/projects/epiGBS2`, then use `/fleurg/projects/epiGBS2/output`.
 	- input_dir: Path of directory containing raw data (e.g. fastq.gz, or fq.gz) and barcode file
 	- read1: Name of the read file containing forward (R1) reads
-	- read2: Name of the read file containing forward (R2) reads
+	- read2: Name of the read file containing reverse (R2) reads
 	- cycles: read length
 	- barcodes: Filename of the barcode file (do not include the path!)
 	- tmpdir: Path to the directory where temporary files will be stored. For most systems this will be /tmp
