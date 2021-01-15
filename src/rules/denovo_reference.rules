@@ -33,7 +33,6 @@ rule denovo_reference:
         CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
         WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
         WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
-
     output:
         #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa",
         #config["output_dir"] + "/output_denovo/consensus_cluster.fa",

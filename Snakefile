@@ -35,8 +35,7 @@ if config["mode"]== "reference":
             {out}/mapping/watson.bam \
             {out}/mapping/crick.bam \
             {out}/mapping/methylation.bed \
-            {out}/mapping/snp.vcf.gz".split(), out=config["output_dir"])
-
+            {out}/mapping/snp.vcf.gz".split(),out=config["output_dir"])
 
 if config["mode"]== "denovo":
     rule all:
@@ -52,7 +51,7 @@ if config["mode"]== "denovo":
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
 		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
-		    {out}/methylation_calling/{sample}_bismark.cov".split(), out=config["output_dir"],sample=SAMPLES)
+		    {out}/methylation_calling/{sample}_bismark.cov".split(),out=config["output_dir"],sample=SAMPLES)
 
 
 # if config["mode"]== "denovo":
