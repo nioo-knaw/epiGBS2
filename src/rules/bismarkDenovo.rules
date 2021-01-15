@@ -3,7 +3,7 @@
 
 rule genome_prep_for_bismark:
     input:
-         reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["out_dir"])
+         reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
     output:
          refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["tmpdir"])
     params:
@@ -19,11 +19,11 @@ rule genome_prep_for_bismark:
 
 rule alignment:
 	input:
-		R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["out_dir"]),
-		R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["out_dir"]),
+		R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
+		R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
 		refgenome=config["ref"]
 	output:
-		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["out_dir"])
+		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
 	params:
 		sample="{{sample}}"
 	conda:
@@ -34,11 +34,11 @@ rule alignment:
 
 rule methylation_calling:
 	input:
-		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["out_dir"]),
+		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
 		refgenome=config["ref"]
 	output:
-		calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["out_dir"]),
-		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["out_dir"])
+		calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"]),
+		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
 
 	conda:
 		"../env/bismark.yaml"
@@ -48,9 +48,9 @@ rule methylation_calling:
 
 rule gunzip:
 	input: 
-		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["out_dir"])
+		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
 	output:
-		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark.cov",out=config["out_dir"])
+		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark.cov",out=config["output_dir"])
 	threads: 1
 	shell:
 		"gunzip -c {input.coveragecompr} > {output.coverageuncompr}"
