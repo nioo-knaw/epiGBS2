@@ -1,6 +1,13 @@
 
 configfile: "config.yaml"
-
+import pandas as pd
+import os
+import random
+df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', dtype="object").set_index('Sample')
+SAMPLES = df.index
+flowCell = df.Flowcell[0]
+lane = df.Lane[0]
+projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 
 if config["mode"] == "reference":
     include: "src/rules/fastqc-ref.rules"
@@ -13,6 +20,7 @@ if config["mode"] == "denovo":
     include: "src/rules/demultiplex.rules"
     include: "src/rules/fastqc.rules"
     include: "src/rules/report.rules"
+    include: "src/bismarkDenovo.rules"
 
 if config["mode"]== "reference":
     rule all:
@@ -40,8 +48,12 @@ if config["mode"]== "denovo":
             {out}/fastqc/ \
             {out}/multiQC_report.html \
             {out}/report.html \
-            {out}/mapping/watson.bam \
-            {out}/mapping/crick.bam \
             {out}/output_denovo/consensus_cluster.renamed.fa \
-            {out}/mapping/methylation.bed \
-            {out}/mapping/snp.vcf.gz".split(), out=config["output_dir"])
+		    {out}/log/{sample}_read-info.txt \
+		    {out}/log/{sample}_untrimmed_filt_read-info.txt \
+		    {out}/log/{sample}_trimmed_three_read-info.txt \
+		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
+		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
+		    {out}/methylation_calling/{sample}_bismark.cov".split(), out=config["output_dir"],sample=SAMPLES)

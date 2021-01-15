@@ -1,0 +1,56 @@
+#TODO Make conda environments
+#TODO adde bismark_prepare_genome to pipeline
+
+rule genome_prep_for_bismark:
+    input:
+         reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["out_dir"])
+    output:
+         refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["tmpdir"])
+    params:
+        NNrefDir=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["tmpdir"])
+    conda:
+        "../env/bismark.yaml"
+    shell:
+         '''
+         cat {input.reference} | tr "\\n" "X" | sed "s/X>/\\n>/g" | sed 's/$/NNNN/' | sed "s/X/\\nNNNN/"| sed 's/X//g' > {params.NNrefDir}/ref.fa
+         bismark_genome_preparation {params.NNrefDir}
+         '''
+
+
+rule alignment:
+	input:
+		R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["out_dir"]),
+		R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["out_dir"]),
+		refgenome=config["ref"]
+	output:
+		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["out_dir"])
+	params:
+		sample="{{sample}}"
+	conda:
+		"../env/bismark.yaml"
+	threads: 8
+	shell:
+		"bismark --un --ambiguous --genome {input.refgenome} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o output/alignment/ --rg_tag --rg_id {params.sample}"
+
+rule methylation_calling:
+	input:
+		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["out_dir"]),
+		refgenome=config["ref"]
+	output:
+		calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["out_dir"]),
+		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["out_dir"])
+
+	conda:
+		"../env/bismark.yaml"
+	threads: 2
+	shell:
+		"bismark_methylation_extractor -p --CX --no_overlap --report --bedGraph --scaffolds --cytosine_report --genome_folder {input.refgenome} {input.alignment} -o output/methylation_calling/"
+
+rule gunzip:
+	input: 
+		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["out_dir"])
+	output:
+		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark.cov",out=config["out_dir"])
+	threads: 1
+	shell:
+		"gunzip -c {input.coveragecompr} > {output.coverageuncompr}"
