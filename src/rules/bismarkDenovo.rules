@@ -5,9 +5,9 @@ rule genome_prep_for_bismark:
     input:
          reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
     output:
-         refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["tmpdir"])
+         refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     params:
-        NNrefDir=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["tmpdir"])
+        NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
     conda:
         "../env/bismark.yaml"
     shell:
@@ -21,25 +21,27 @@ rule alignment:
 	input:
 		R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
 		R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
-		refgenome=config["ref"]
+        refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
 	output:
 		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
 	params:
-		sample="{{sample}}"
+		sample="{{sample}}",
+		NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
 	conda:
 		"../env/bismark.yaml"
 	threads: 8
 	shell:
-		"bismark --un --ambiguous --genome {input.refgenome} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o output/alignment/ --rg_tag --rg_id {params.sample}"
+		"bismark --un --ambiguous --genome {params.refgenome} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o output/alignment/ --rg_tag --rg_id {params.sample}"
 
 rule methylation_calling:
 	input:
 		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-		refgenome=config["ref"]
+        refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
 	output:
 		calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"]),
 		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
-
+    params:
+        NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
 	conda:
 		"../env/bismark.yaml"
 	threads: 2
