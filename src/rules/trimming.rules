@@ -64,7 +64,6 @@ rule pigz_trimmed_merged:
 		trimmed_three=expand("{tmp}/cutadapt_trimmed_three/{{sample}}_trimmed_three.{{strand}}.fq.gz",tmp=config["tmpdir"])
 	output:
 		trimmed_merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.{{strand}}.fq.gz",out=config["output_dir"])
-	conda:
 	threads: 1
 	shell:
 		"cat {input.untrimmedfilt} {input.trimmed_three} > {output.trimmed_merged}"
