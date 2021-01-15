@@ -1,7 +1,7 @@
 rule pigz_merge:
 	input:
-		watson=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-Crick.{{strand}}.fq.gz",out=config["out_dir"]),
-		crick=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-Watson.{{strand}}.fq.gz",out=config["out_dir"])
+		watson=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-Crick.{{strand}}.fq.gz",out=config["output_dir"]),
+		crick=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-Watson.{{strand}}.fq.gz",out=config["output_dir"])
 	output:
 		merged=expand("{tmp}/merged/{{sample}}.{{strand}}.fq.gz",tmp=config["tmpdir"])
 	threads: 1
@@ -13,13 +13,13 @@ rule cutadapt_adapter:
 		R1=expand("{tmp}/merged/{{sample}}.1.fq.gz",tmp=config["tmpdir"]),
 		R2=expand("{tmp}/merged/{{sample}}.2.fq.gz",tmp=config["tmpdir"])
 	output:
-		txt=expand("{out}/log/{{sample}}_read-info.txt",out=config["out_dir"]),
+		txt=expand("{out}/log/{{sample}}_read-info.txt",out=config["output_dir"]),
 		R1untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed.1.fq.gz",tmp=config["tmpdir"]),
 		R2untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed.2.fq.gz",tmp=config["tmpdir"]),
 		R1trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_trimmed.1.fq.gz",tmp=config["tmpdir"]),
 		R2trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_trimmed.2.fq.gz",tmp=config["tmpdir"])
 	log:
-		log=expand("{out}/log/{{sample}}_cutadapt_adapter.log",out=config["out_dir"])
+		log=expand("{out}/log/{{sample}}_cutadapt_adapter.log",out=config["output_dir"])
 	conda:
 		"../env/cutadapt.yaml"
 	threads: 1
@@ -31,11 +31,11 @@ rule cutadapt_untrimmed:
 		R1untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed.1.fq.gz",tmp=config["tmpdir"]),
 		R2untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed.2.fq.gz",tmp=config["tmpdir"])
 	output:
-		txtuntrimmedfilt=expand("{out}/log/{{sample}}_untrimmed_filt_read-info.txt",out=config["out_dir"]),
+		txtuntrimmedfilt=expand("{out}/log/{{sample}}_untrimmed_filt_read-info.txt",out=config["output_dir"]),
 		R1untrimmedfilt=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed_filt.1.fq.gz",tmp=config["tmpdir"]),
 		R2untrimmedfilt=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed_filt.2.fq.gz",tmp=config["tmpdir"])
 	log:
-		log=expand("{out}/log/{{sample}}_cutadapt_untrimmedfilt.log",out=config["out_dir"])
+		log=expand("{out}/log/{{sample}}_cutadapt_untrimmedfilt.log",out=config["output_dir"])
 	conda:
 		"../env/cutadapt.yaml"
 	threads: 1
@@ -47,11 +47,11 @@ rule cutadapt_trimmed_three:
 		R1trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_trimmed.1.fq.gz",tmp=config["tmpdir"]),
 		R2trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}_trimmed.2.fq.gz",tmp=config["tmpdir"])
 	output:
-		txttrimmed_three=expand("{out}/log/{{sample}}_trimmed_three_read-info.txt",out=config["out_dir"]),
+		txttrimmed_three=expand("{out}/log/{{sample}}_trimmed_three_read-info.txt",out=config["output_dir"]),
 		R1trimmed_three=expand("{tmp}/cutadapt_trimmed_three/{{sample}}_trimmed_three.1.fq.gz",tmp=config["tmpdir"]),
 		R2trimmed_three=expand("{tmp}/cutadapt_trimmed_three/{{sample}}_trimmed_three.2.fq.gz",tmp=config["tmpdir"])
 	log:
-		log=expand("{out}/log/{{sample}}_cutadapt_trimmed_three.log",out=config["out_dir"])
+		log=expand("{out}/log/{{sample}}_cutadapt_trimmed_three.log",out=config["output_dir"])
 	conda:
 		"../env/cutadapt.yaml"
 	threads: 1
@@ -63,7 +63,7 @@ rule pigz_trimmed_merged:
 		untrimmedfilt=expand("{tmp}/cutadapt_adapter/{{sample}}_untrimmed_filt.{{strand}}.fq.gz",tmp=config["tmpdir"]),
 		trimmed_three=expand("{tmp}/cutadapt_trimmed_three/{{sample}}_trimmed_three.{{strand}}.fq.gz",tmp=config["tmpdir"])
 	output:
-		trimmed_merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.{{strand}}.fq.gz",out=config["out_dir"])
+		trimmed_merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.{{strand}}.fq.gz",out=config["output_dir"])
 	conda:
 	threads: 1
 	shell:
