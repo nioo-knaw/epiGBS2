@@ -1,0 +1,23 @@
+SAMPLE, = glob_wildcards("../data/{sample}.bam")
+
+rule all:
+    input:
+        Snps=expand("Snps_out/{sample}_snp.out",sample=SAMPLE),
+        Cov=expand("Bismark/BaseQualityRecalibration/{sample}_after.csv", sample=SAMPLE)
+        
+# call SNPs from recalibrated alignments
+rule call:
+    input:
+        "Bismark/alignments/{sample}.deduplicated_merged_coordinate.bam.recal.bam"
+    output:
+        "Bismark/SNP_calls/{sample}_snp.raw.vcf.out"
+    log:
+        "logs/{sample}_call.log"
+    conda:
+        "../src/env_bis-snp0.82.yml"
+    benchmark:
+        "benchmarks/{sample}_call.benchmark.txt"
+    threads: 1
+    shell:
+        "(bis-snp -T BisulfiteGenotyper -R ../data/ref/NNrefFull.fa -I {input} -vfn1 Bismark/Meth_calls/{wildcards.sample}_cpg.raw.vcf -vfn2 {output} -stand_call_conf 20 -stand_emit_conf 0 -toCoverage 1000 -mmq 20 -mbq 20) 2> {log}"
+
