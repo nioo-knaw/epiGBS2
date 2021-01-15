@@ -18,8 +18,6 @@ if config["mode"] == "reference":
 if config["mode"] == "denovo":
     include: "src/rules/denovo_reference.rules"
     include: "src/rules/demultiplex.rules"
-    #include: "src/rules/fastqc.rules"
-    #include: "src/rules/report.rules"
     include: "src/rules/bismarkDenovo.rules"
     include: "src/rules/trimming.rules"
 
@@ -75,3 +73,10 @@ if config["mode"]== "denovo":
 # 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
 # 		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
 # 		    {out}/methylation_calling/{sample}_bismark.cov".split(), out=config["output_dir"],sample=SAMPLES)
+# if config["mode"] == "denovo":
+#     include: "src/rules/denovo_reference.rules"
+#     include: "src/rules/demultiplex.rules"
+#     include: "src/rules/fastqc.rules"
+#     include: "src/rules/report.rules"
+#     include: "src/rules/bismarkDenovo.rules"
+#     include: "src/rules/trimming.rules"
