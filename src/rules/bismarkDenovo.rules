@@ -1,7 +1,7 @@
 #TODO Make conda environments
 #TODO adde bismark_prepare_genome to pipeline
 
-rule genome_prep_for_bismark:
+rule genome_prep_for_bismark_denovo_bismark:
     input:
          reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
     output:
@@ -17,7 +17,7 @@ rule genome_prep_for_bismark:
          '''
 
 
-rule alignment:
+rule alignment_denovo_bismark:
     input:
         R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
         R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
@@ -33,7 +33,7 @@ rule alignment:
     shell:
         "bismark --un --ambiguous --genome {params.refgenome} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o output/alignment/ --rg_tag --rg_id {params.sample}"
 
-rule methylation_calling:
+rule methylation_calling_denovo_bismark:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
         refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
