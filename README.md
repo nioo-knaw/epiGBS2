@@ -1,3 +1,5 @@
+epiGBS2 is a snakemake workflow to execute the analysis of reduced representation bisulfite sequencing by creating a de novo reference based on a control nucleotide that was added during library preparation.
+
 # Manual epiGBS2
 
 - [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)
