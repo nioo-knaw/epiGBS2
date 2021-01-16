@@ -63,7 +63,7 @@ rule denovo_reference:
 
     log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
     conda:
-        "../env/environment.yaml"
+        "../env/de-novo.yaml"
     threads: 40
     shell:
         "python src/de_novo_reference_creation/make_reference.py "
