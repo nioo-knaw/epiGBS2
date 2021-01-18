@@ -76,7 +76,7 @@ rule call_SNPs_denovo:
         expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir"])
     conda:
         "../env/env_bis-snp0.82.yaml"
-    threads: 1
+    threads: 3
     shell:
-        "(bis-snp -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.bisSNP_meth} -vfn2 {output.perIndVCF} -stand_call_conf 20 -stand_emit_conf 0 -toCoverage 1000 -mmq 20 -mbq 20) 2> {log}"
+        "(bis-snp -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.bisSNP_meth} -vfn2 {output.perIndVCF} -stand_call_conf 20 -stand_emit_conf 0 -toCoverage 1000 -mmq 20 -mbq 20 -nt {threads}) 2> {log}"
 
