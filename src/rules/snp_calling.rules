@@ -1,23 +1,33 @@
-SAMPLE, = glob_wildcards("../data/{sample}.bam")
 
-rule all:
+
+
+rule sort_bam:
     input:
-        Snps=expand("Snps_out/{sample}_snp.out",sample=SAMPLE),
-        Cov=expand("Bismark/BaseQualityRecalibration/{sample}_after.csv", sample=SAMPLE)
+        alignment=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES),
+    output:
+        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools sort {input.alignment} > {output.aligmentSorted}"
+
         
 # call SNPs from recalibrated alignments
-rule call:
+rule call_SNPs_denovo:
     input:
-        "Bismark/alignments/{sample}.deduplicated_merged_coordinate.bam.recal.bam"
+        alignment=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES)
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
     output:
-        "Bismark/SNP_calls/{sample}_snp.raw.vcf.out"
+        perIndVCF=expand("{path}//snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
+        bisSNP_meth=expand("{path}/output/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf")
+    params:
+        sample="{sample}"
     log:
-        "logs/{sample}_call.log"
+        "/log/{sample}_call.log"
     conda:
-        "../src/env_bis-snp0.82.yml"
-    benchmark:
-        "benchmarks/{sample}_call.benchmark.txt"
+        "../env/env_bis-snp0.82.yaml"
     threads: 1
     shell:
-        "(bis-snp -T BisulfiteGenotyper -R ../data/ref/NNrefFull.fa -I {input} -vfn1 Bismark/Meth_calls/{wildcards.sample}_cpg.raw.vcf -vfn2 {output} -stand_call_conf 20 -stand_emit_conf 0 -toCoverage 1000 -mmq 20 -mbq 20) 2> {log}"
+        "(bis-snp -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1  -vfn2 {output.perIndVCF} -stand_call_conf 20 -stand_emit_conf 0 -toCoverage 1000 -mmq 20 -mbq 20) 2> {log}"
 
