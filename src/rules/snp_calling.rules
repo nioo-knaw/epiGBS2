@@ -68,7 +68,7 @@ rule call_SNPs_denovo:
         referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
-        bisSNP_meth=expand("{path}/output/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf")
+        bisSNP_meth=expand("{path}/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf",path=config["output_dir"])
     params:
         sample="{sample}"
     log:
