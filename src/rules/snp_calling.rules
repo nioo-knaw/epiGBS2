@@ -85,5 +85,7 @@ rule zip_vcfs_denovo:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
     output:
         perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+    conda:
+        "../env/bcftools.yaml"
     shell:
-        "gzip -c {input.perIndVCF} > {output.perIndvcfGZ}"
+        "bcftools view {input.perIndVCF} > {output.perIndvcfGZ}"
