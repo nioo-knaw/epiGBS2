@@ -46,7 +46,7 @@ rule dictionaryHack:
     output:
         referenceDictReal=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
     shell:
-        "cat {input.asReferenceDict} | sed 's/{input.asReferenceDict}/{input.reference}/' > {output.referenceDictReal}"
+        "cat {input.AsReferenceDict} | sed 's/{input.AsReferenceDict}/{input.reference}/' > {output.referenceDictReal}"
 
 rule faidx_ref:
     input:
