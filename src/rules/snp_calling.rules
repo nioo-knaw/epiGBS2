@@ -65,6 +65,7 @@ rule faidx_ref:
 rule call_SNPs_denovo:
     input:
         alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
         referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
         referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
