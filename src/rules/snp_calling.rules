@@ -52,11 +52,13 @@ rule faidx_ref:
     input:
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools faidx {input.reference}"
+        """
+        samtools faidx {input.reference}
+        """
 
 
 # call SNPs from recalibrated alignments
