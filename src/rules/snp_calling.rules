@@ -19,7 +19,7 @@ rule index_bam:
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools index {input.alignment}"
+        "samtools index {input.alignmentSorted}"
         
 rule replaceNsWithAsRef:
     input:
