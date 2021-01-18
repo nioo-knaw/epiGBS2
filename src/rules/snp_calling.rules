@@ -3,7 +3,7 @@
 
 rule sort_bam:
     input:
-        alignment=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES),
+        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
     output:
         alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
     conda:
@@ -13,7 +13,7 @@ rule sort_bam:
 
 rule index_bam:
     input:
-        alignmentSorted=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES)
+        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
     output:
         aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"])
     conda:
@@ -62,15 +62,13 @@ rule faidx_ref:
 # call SNPs from recalibrated alignments
 rule call_SNPs_denovo:
     input:
-        alignment=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES),
+        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
         referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
         referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
         bisSNP_meth=expand("{path}/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf",path=config["output_dir"])
-    params:
-        sample="{sample}"
     log:
         "/log/{sample}_call.log"
     conda:
