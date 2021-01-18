@@ -11,15 +11,63 @@ rule sort_bam:
     shell:
         "samtools sort {input.alignment} > {output.aligmentSorted}"
 
+rule index_bam:
+    input:
+        alignmentSorted=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES)
+    output:
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.alignment}"
         
+rule replaceNsWithAsRef:
+    input:
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        AsReference=expand("{path}/AAAAref.fa",path=config["tmpdir"])
+    shell:
+        "cat {input.reference} | sed 's/N/A/g' > {output.AsReference}"
+
+rule referenceDict:
+    input:
+        AsReference=expand("{path}/AAAAref.fa",path=config["tmpdir"])
+    output:
+        AsReferenceDict=expand("{path}/AAAAref.dict",path=config["tmpdir"])
+    conda:
+        "../env/picard.yaml"
+    shell: 
+        "picard CreateSequenceDictionary R={input.AsReference} O={output.AsReferenceDict}"
+
+rule dictionaryHack:
+    input:
+        AsReferenceDict=expand("{path}/AAAAref.dict",path=config["tmpdir"]),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        referenceDictReal=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
+    shell:
+        "cat {input.asReferenceDict} | sed 's/{input.asReferenceDict}/{input.reference}/' > {output.referenceDictReal}"
+
+rule faidx_ref:
+    input:
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools faidx {input.reference}"
+
+
 # call SNPs from recalibrated alignments
 rule call_SNPs_denovo:
     input:
-        alignment=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES)
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
-        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
+        alignment=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
+        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
-        perIndVCF=expand("{path}//snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
+        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
         bisSNP_meth=expand("{path}/output/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf")
     params:
         sample="{sample}"

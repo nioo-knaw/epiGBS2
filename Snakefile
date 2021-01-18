@@ -20,6 +20,7 @@ if config["mode"] == "denovo":
     include: "src/rules/demultiplex.rules"
     include: "src/rules/bismarkDenovo.rules"
     include: "src/rules/trimming.rules"
+    include: "src/rules/snp_calling.rules"
 
 if config["mode"]== "reference":
     rule all:
@@ -51,7 +52,8 @@ if config["mode"]== "denovo":
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
 		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
-		    {out}/methylation_calling/{sample}_bismark.cov".split(),out=config["output_dir"],sample=SAMPLES)
+		    {out}/methylation_calling/{sample}_bismark.cov \
+            {out}/snp_calling/{sample}_snp.raw.vcf.out",path=config["output_dir"]).split(),out=config["output_dir"],sample=SAMPLES)
 
 
 # if config["mode"]== "denovo":
