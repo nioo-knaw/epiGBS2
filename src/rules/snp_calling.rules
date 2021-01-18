@@ -33,7 +33,7 @@ rule referenceDict:
     input:
         AsReference=expand("{path}/AAAAref.fa",path=config["tmpdir"])
     output:
-        AsReferenceDict=expand("{path}/AAAAref.dict",path=config["tmpdir"])
+        AsReferenceDict=expand("{path}AAAAref.dict",path=config["tmpdir"])
     conda:
         "../env/picard.yaml"
     shell: 
@@ -41,10 +41,10 @@ rule referenceDict:
 #TODO there cannot be a double // in the in or output. To ensure the sed command works but I'm not to sure how to enforce this
 rule dictionaryHack:
     input:
-        AsReferenceDict=expand("{path}/AAAAref.dict",path=config["tmpdir"]),
-        reference=expand("{path}output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+        AsReferenceDict=expand("{path}AAAAref.dict",path=config["tmpdir"]),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
-        referenceDictReal=expand("{path}output_denovo/NNNNref/ref.dict",path=config["output_dir"])
+        referenceDictReal=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
     shell:
         "cat {input.AsReferenceDict} | sed 's|{input.AsReferenceDict}|{input.reference}|' > {output.referenceDictReal}"
 
