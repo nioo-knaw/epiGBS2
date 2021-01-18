@@ -70,7 +70,7 @@ rule call_SNPs_denovo:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
         bisSNP_meth=expand("{path}/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf",path=config["output_dir"])
     log:
-        "/log/{sample}_call.log"
+        expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir}"])
     conda:
         "../env/env_bis-snp0.82.yaml"
     threads: 1
