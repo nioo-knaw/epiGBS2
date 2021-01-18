@@ -145,7 +145,7 @@ rule run_mpileup_watson:
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq)
     conda:
-        "../env/environment.yaml"
+        "../env/samtools.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -165,7 +165,7 @@ rule run_mpileup_crick:
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq)
     conda:
-        "../env/environment.yaml"
+        "../env/samtools.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -182,7 +182,7 @@ rule merge_watson_crick:
     params:
         mergedtsv=expand("{path}/mapping/merged.tsv", path=config["output_dir"])
     conda:
-        "../env/environment.yaml"
+        "../env/merge.yaml"
     shell:
         "python src/mapping_varcall/merge_watson_crick-old.py "
         "-w {input.watsonVCF} "
@@ -198,7 +198,7 @@ rule SNP_calling:
     params:
         snpvcf=expand("{path}/mapping/snp.vcf", path=config["output_dir"])
     conda:
-        "../env/environment.yaml"
+        "../env/SNP-calling.yaml"
     shell:
         "python src/mapping_varcall/SNP_calling.py "
         "-m {input.mergedTSV} "
@@ -214,7 +214,7 @@ rule methylation_calling:
         methylationBed=expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
         methylationIGV=expand("{path}/mapping/heatmap.igv", path=config["output_dir"])
     conda:
-        "../env/environment.yaml"
+        "../env/methylation-calling.yaml"
     shell:
         "python src/mapping_varcall/methylation_calling.py "
         "-r {input.ref} "
