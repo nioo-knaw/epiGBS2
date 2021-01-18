@@ -9,7 +9,7 @@ rule sort_bam:
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools sort {input.alignment} > {output.aligmentSorted}"
+        "samtools sort {input.alignment} > {output.alignmentSorted}"
 
 rule index_bam:
     input:
