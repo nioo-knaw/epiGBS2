@@ -85,10 +85,12 @@ rule zip_vcfs_denovo:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
     output:
         perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+    params:
+        sample="{sample}"
     conda:
         "../env/bcftools.yaml"
     shell:
-        "bcftools view {input.perIndVCF}| bcftools sort | bgzip -c > {output.perIndvcfGZ}"
+        "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bgzip -c > {output.perIndvcfGZ}"
 
 rule index_vcfs_denovo:
     input:
