@@ -1,5 +1,5 @@
 
-
+#Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
 
 rule sort_bam:
     input:
@@ -10,7 +10,7 @@ rule sort_bam:
         "../env/samtools.yaml"
     shell:
         "samtools sort {input.alignment} > {output.alignmentSorted}"
-
+#Index the sorted bam files
 rule index_bam:
     input:
         alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
@@ -20,7 +20,7 @@ rule index_bam:
         "../env/samtools.yaml"
     shell:
         "samtools index {input.alignmentSorted}"
-        
+#CreateSequenceDirectory does not allow for NNNN's to be present in the genome thus they need to be replaced        
 rule replaceNsWithAsRef:
     input:
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
@@ -29,6 +29,7 @@ rule replaceNsWithAsRef:
     shell:
         "cat {input.reference} | sed 's/N/A/g' > {output.AsReference}"
 
+#Create the reference dictionary
 rule referenceDict:
     input:
         AsReference=expand("{path}/AAAAref.fa",path=config["tmpdir"])
@@ -38,6 +39,8 @@ rule referenceDict:
         "../env/picard.yaml"
     shell: 
         "picard CreateSequenceDictionary R={input.AsReference} O={output.AsReferenceDict}"
+
+#Here I attempted to replace the paths but it seems functional without replacing the paths???
 #TODO there cannot be a double // in the in or output. To ensure the sed command works but I'm not to sure how to enforce this
 rule dictionaryHack:
     input:
@@ -48,6 +51,7 @@ rule dictionaryHack:
     shell:
         "cat {input.AsReferenceDict} | sed 's|{input.AsReferenceDict}|{input.reference}|' > {output.referenceDictReal}"
 
+#Index the reference with NNNNs. If we don't this it skips the last line due to there not being an \n
 rule faidx_ref:
     input:
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
@@ -62,6 +66,19 @@ rule faidx_ref:
 
 
 # call SNPs from recalibrated alignments
+# -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessary...)
+# -out_modes EMIT_ALL_CONFIDENT_SITES (Work in progress (default only outputs SNP sites so when combining you do not find coverage on homozygous ref alleles))
+# #TODO We could perhaps also combine the bam file before SNP_calling??
+
+# -stand_call_conf 20 defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
+# #TODO Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
+# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
+# 50X, you could specify higher threshold to obtain higher accuracy. (So maybe play with this value?)
+
+# -toCoverage 1000 maximum read coverage allowed
+#-mmq 20 minimal mapping quality
+#-mbq 20 minimal base quality
+#-nt 1 "Number of threads" actually number of gatk instances started.
 rule call_SNPs_denovo:
     input:
         alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
@@ -80,6 +97,8 @@ rule call_SNPs_denovo:
     shell:
         "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.bisSNP_meth} -vfn2 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf 20 -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
 
+#Attempts to combine all different output files
+#Order / zip vcf files
 rule zip_vcfs_denovo:
     input:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
@@ -91,7 +110,7 @@ rule zip_vcfs_denovo:
         "../env/bcftools.yaml"
     shell:
         "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bgzip -c > {output.perIndvcfGZ}"
-
+#index them so we can use bcftools merge
 rule index_vcfs_denovo:
     input:
         perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
