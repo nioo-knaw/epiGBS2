@@ -88,7 +88,7 @@ rule zip_vcfs_denovo:
     conda:
         "../env/bcftools.yaml"
     shell:
-        "bgzip -c {input.perIndVCF} > {output.perIndvcfGZ}"
+        "bcftools view {input.perIndVCF}| bcftools sort | bgzip -c > {output.perIndvcfGZ}"
 
 rule index_vcfs_denovo:
     input:
