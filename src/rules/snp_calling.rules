@@ -89,3 +89,13 @@ rule zip_vcfs_denovo:
         "../env/bcftools.yaml"
     shell:
         "bgzip -c {input.perIndVCF} > {output.perIndvcfGZ}"
+
+rule index_vcfs_denovo:
+    input:
+        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+    output:
+        perIndVCFTBI=expand("{path}/snp_calling/{{sample}}.vcf.gz.csi",path=config["output_dir"])
+    conda:
+        "../env/bcftools.yaml"
+    shell:
+        "bcftools index {input.perIndvcfGZ}"
