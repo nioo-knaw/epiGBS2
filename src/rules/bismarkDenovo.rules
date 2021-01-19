@@ -1,6 +1,9 @@
 #TODO Make conda environments
 #TODO adde bismark_prepare_genome to pipeline
 
+
+#This rule adds the NNNN's at the start and end of the denovo sequences 
+#otherwise bismark can't call context at these sites and breaks
 rule genome_prep_for_bismark_denovo_bismark:
     input:
          reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
@@ -16,6 +19,11 @@ rule genome_prep_for_bismark_denovo_bismark:
          bismark_genome_preparation {params.NNrefDir}
          '''
 
+#Align the trimmed reads to the denovo clusters
+# --un outputs  unmapped reads to the output directory #Needed?
+# --outputs ambigious writes the ambigiuos reads #Needed?
+# --non_directional: sequencing library not in a specific direction
+# --rg_tag --rg_id adds sample names to the bam file
 
 rule alignment_denovo_bismark:
     input:
@@ -33,6 +41,16 @@ rule alignment_denovo_bismark:
     shell:
         "bismark --un --ambiguous --genome {params.NNrefDir} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o output/alignment/ --rg_tag --rg_id {params.sample}"
 
+
+# Call methylation sites with bismark
+# -p paired end reads
+# --CX output all C's independent of context (if not present only CG sites)
+# --no_overlap scores overlapping methylation sites only using Read 1.
+# --report Prints out a short methylation summary as well as the parameters used to run this script. 
+# --bedGraph outputs a bedGraph file 
+# --scaffolds necessary if the genome contains more then 1024? contigs
+# --cytosine_report produces a genome-wide methylation report for all cytosines in the genome. (Not sure how this interacts with bedGraph)
+# 
 rule methylation_calling_denovo_bismark:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
@@ -48,6 +66,9 @@ rule methylation_calling_denovo_bismark:
     shell:
         "bismark_methylation_extractor -p --CX --no_overlap --report --bedGraph --scaffolds --cytosine_report --genome_folder {params.NNrefDir} {input.alignment} -o output/methylation_calling/"
 
+
+#Unzips the individuals sites?
+#Maybe add script which combines everything into an epiGBS like format???
 rule gunzip:
     input: 
         coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
