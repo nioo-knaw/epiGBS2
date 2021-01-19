@@ -145,7 +145,7 @@ rule run_mpileup_watson:
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq)
     conda:
-        "../env/samtools.yaml"
+        "../env/samtools-1.3.1.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -165,7 +165,7 @@ rule run_mpileup_crick:
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq)
     conda:
-        "../env/samtools.yaml"
+        "../env/samtools-1.3.1.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
