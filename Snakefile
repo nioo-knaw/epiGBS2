@@ -13,7 +13,7 @@ if config["mode"] == "reference":
     include: "src/rules/fastqc-ref.rules"
     include: "src/rules/reference.rules"
     include: "src/rules/demultiplex.rules"
-    include: "src/rules/snp_calling_reference.rules"
+    #include: "src/rules/snp_calling_reference.rules"
     include: "src/rules/trimming.rules"
 
 
