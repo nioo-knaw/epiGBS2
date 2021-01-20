@@ -1,7 +1,7 @@
 #prepares the genome for bismark
 rule genome_prep_for_bismark_denovo_bismark:
     input:
-        reference=expand("{path}/{genome}", path=config["ref_dir"])
+        reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
     output:
         preparedReference=expand("{path}/output/output_denovo/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["output_dir"])
     params:
@@ -23,7 +23,7 @@ rule alignment_denovo_bismark:
     input:
         R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
         R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
-        preparedReference=expand("{path}/output/output_denovo/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["output_dir"])
+        preparedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
     output:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
     params:
@@ -48,7 +48,7 @@ rule methylation_calling_denovo_bismark:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
         refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
-        preparedReference=expand("{path}/output/output_denovo/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["output_dir"])
+        preparedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
     output:
         calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"]),
         coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
