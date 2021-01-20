@@ -102,8 +102,8 @@ rule index_vcfs_denovo:
 
 rule merge_vcfs_denovo:
     input:
-        perIndVCFTBI=expand("{path}/snp_calling/{{sample}}.vcf.gz.csi",path=config["output_dir"]),
-        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+        perIndVCFTBI=expand("{path}/snp_calling/{sample}.vcf.gz.csi",path=config["output_dir"],sample=SAMPLES),
+        perIndvcfGZ=expand("{path}/snp_calling/{sample}.vcf.gz",path=config["output_dir"],sample=SAMPLES)
     output:
         finalVCF=expand("{path}/snp_calling/snp.vcf.gz",path=config["output_dir"])
     params:
