@@ -47,7 +47,7 @@ rule alignment_denovo_bismark:
 rule methylation_calling_denovo_bismark:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-        refNN=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
+        refNN=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
         preparedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
     output:
         calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"]),
