@@ -69,7 +69,7 @@ rule gunzip:
     input: 
         coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
     output:
-        coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark.cov",out=config["output_dir"])
+        coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark.cov.gz",out=config["output_dir"])
     threads: 1
     shell:
-        "gunzip -c {input.coveragecompr} > {output.coverageuncompr}"
+        "mv {input.coveragecompr} {output.coverageuncompr}"

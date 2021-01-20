@@ -11,16 +11,18 @@ projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 
 if config["mode"] == "reference":
     include: "src/rules/fastqc-ref.rules"
-    include: "src/rules/with_reference.rules"
+    include: "src/rules/reference.rules"
     include: "src/rules/demultiplex.rules"
-    include: "src/rules/report-ref.rules"
+    include: "src/rules/snp_calling_reference.rules"
+    include: "src/rules/trimming.rules"
+
 
 if config["mode"] == "denovo":
     include: "src/rules/denovo_reference.rules"
     include: "src/rules/demultiplex.rules"
-    include: "src/rules/bismarkDenovo.rules"
+    include: "src/rules/denovo.rules"
     include: "src/rules/trimming.rules"
-    include: "src/rules/snp_calling.rules"
+    include: "src/rules/snp_calling_denovo.rules"
 
 if config["mode"]== "reference":
     rule all:
@@ -28,15 +30,14 @@ if config["mode"]== "reference":
             {out}/output_demultiplex/Watson_R1.fq.gz \
             {out}/output_demultiplex/Crick_R2.fq.gz \
             {out}/output_demultiplex/Crick_R1.fq.gz \
-            {out}/multiQC_report.html \
-            {out}/fastqc/ \
-            {out}/trimmed/Watson_R1_trim_fastqc.html \
-            {out}/trimmed/Crick_R2_trim_fastqc.html \
-            {out}/report.html \
-            {out}/mapping/watson.bam \
-            {out}/mapping/crick.bam \
-            {out}/mapping/methylation.bed \
-            {out}/mapping/snp.vcf.gz".split(),out=config["output_dir"])
+		    {out}/log/{sample}_read-info.txt \
+		    {out}/log/{sample}_untrimmed_filt_read-info.txt \
+		    {out}/log/{sample}_trimmed_three_read-info.txt \
+		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
+		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
+		    {out}/methylation_calling/{sample}_bismark.cov.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
 if config["mode"]== "denovo":
     rule all:
@@ -52,8 +53,7 @@ if config["mode"]== "denovo":
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
 		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
-		    {out}/methylation_calling/{sample}_bismark.cov \
-            {out}/snp_calling/{sample}.vcf.gz.csi \
+		    {out}/methylation_calling/{sample}_bismark.cov.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
 
