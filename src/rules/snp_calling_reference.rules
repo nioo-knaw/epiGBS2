@@ -34,9 +34,9 @@ rule referenceDict:
 #Index the reference with NNNNs. If we don't this it skips the last line due to there not being an \n
 rule faidx_ref:
     input:
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+        reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"])
     output:
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
     conda:
         "../env/samtools.yaml"
     shell:
