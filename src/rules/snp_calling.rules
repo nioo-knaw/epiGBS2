@@ -78,6 +78,7 @@ rule call_SNPs_denovo:
 
 #Attempts to combine all different output files
 #Order / zip vcf files
+#bcftools annotate -x FORMAT/GP Removes a field which causes issues when merging
 rule zip_vcfs_denovo:
     input:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
@@ -88,7 +89,7 @@ rule zip_vcfs_denovo:
     conda:
         "../env/bcftools.yaml"
     shell:
-        "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bgzip -c > {output.perIndvcfGZ}"
+        "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bcftools annotate -x FORMAT/GP | bgzip -c > {output.perIndvcfGZ}"
 #index them so we can use bcftools merge
 rule index_vcfs_denovo:
     input:
