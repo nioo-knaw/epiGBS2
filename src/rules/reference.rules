@@ -3,7 +3,7 @@ rule genome_prep_for_bismark_denovo_bismark:
     input:
         reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
     output:
-        preparedReference=expand("{path}/output/output_denovo/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["output_dir"])
+        preparedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
     params:
         refDir=expand("{path}/",path=config["ref_dir"])
     conda:
