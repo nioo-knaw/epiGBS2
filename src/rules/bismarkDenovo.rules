@@ -1,7 +1,3 @@
-#TODO Make conda environments
-#TODO adde bismark_prepare_genome to pipeline
-
-
 #This rule adds the NNNN's at the start and end of the denovo sequences 
 #otherwise bismark can't call context at these sites and breaks
 rule genome_prep_for_bismark_denovo_bismark:
@@ -21,9 +17,9 @@ rule genome_prep_for_bismark_denovo_bismark:
 
 #Align the trimmed reads to the denovo clusters
 # --un outputs  unmapped reads to the output directory #Needed?
-# --outputs ambigious writes the ambigiuos reads #Needed?
+# --ambigious outputs ambigious writes the ambigiuos reads #Needed?
 # --non_directional: sequencing library not in a specific direction
-# --rg_tag --rg_id adds sample names to the bam file
+# --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
 
 rule alignment_denovo_bismark:
     input:

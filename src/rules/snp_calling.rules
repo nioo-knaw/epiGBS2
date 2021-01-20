@@ -1,6 +1,5 @@
 
 #Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
-
 rule sort_bam:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
@@ -88,14 +87,13 @@ rule call_SNPs_denovo:
         referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
     output:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
-        bisSNP_meth=expand("{path}/methylation_calling/bis-SNP/{{sample}}_cpg.raw.vcf",path=config["output_dir"])
     log:
         expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir"])
     conda:
         "../env/bisSNP.yaml"
     threads: 4
     shell:
-        "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.bisSNP_meth} -vfn2 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf 20 -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
+        "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf 20 -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
 
 #Attempts to combine all different output files
 #Order / zip vcf files
@@ -120,3 +118,16 @@ rule index_vcfs_denovo:
         "../env/bcftools.yaml"
     shell:
         "bcftools index {input.perIndvcfGZ}"
+
+rule merge_vcfs_denovo:
+    input:
+        perIndVCFTBI=expand("{path}/snp_calling/{{sample}}.vcf.gz.csi",path=config["output_dir"]),
+        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+    output:
+        finalVCF=expand("{path}/snp_calling/snp.vcf.gz",path=config["output_dir"])
+    params:
+        outDir=expand("{path}/snp_calling/",path=config["output_dir"])
+    conda:
+        "../env/bcftools.yaml"
+    shell:
+        "bcftools merge {params.outdir}/* | bgzip -c > {output.finalVCF}"
