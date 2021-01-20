@@ -20,35 +20,16 @@ rule index_bam:
     shell:
         "samtools index {input.alignmentSorted}"
 #CreateSequenceDirectory does not allow for NNNN's to be present in the genome thus they need to be replaced        
-rule replaceNsWithAsRef:
-    input:
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
-    output:
-        AsReference=expand("{path}/AAAAref.fa",path=config["tmpdir"])
-    shell:
-        "cat {input.reference} | sed 's/N/A/g' > {output.AsReference}"
-
 #Create the reference dictionary
 rule referenceDict:
     input:
-        AsReference=expand("{path}/AAAAref.fa",path=config["tmpdir"])
+        AsReference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
-        AsReferenceDict=expand("{path}AAAAref.dict",path=config["tmpdir"])
+        AsReferenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
     conda:
         "../env/picard.yaml"
     shell: 
         "picard CreateSequenceDictionary R={input.AsReference} O={output.AsReferenceDict}"
-
-#Here I attempted to replace the paths but it seems functional without replacing the paths???
-#TODO there cannot be a double // in the in or output. To ensure the sed command works but I'm not to sure how to enforce this
-rule dictionaryHack:
-    input:
-        AsReferenceDict=expand("{path}AAAAref.dict",path=config["tmpdir"]),
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
-    output:
-        referenceDictReal=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
-    shell:
-        "cat {input.AsReferenceDict} | sed 's|{input.AsReferenceDict}|{input.reference}|' > {output.referenceDictReal}"
 
 #Index the reference with NNNNs. If we don't this it skips the last line due to there not being an \n
 rule faidx_ref:
