@@ -101,6 +101,8 @@ rule index_vcfs_denovo:
     shell:
         "bcftools index {input.perIndvcfGZ}"
 
+#Merges the individual vcf files
+# bcftools view -i 'GT[*]="alt"&&REF!="N"'. Filters site which do not have an alt allele in any individual + sites for which the ref = N
 rule merge_vcfs_denovo:
     input:
         perIndVCFTBI=expand("{path}/snp_calling/{sample}.vcf.gz.csi",path=config["output_dir"],sample=SAMPLES),
@@ -112,4 +114,4 @@ rule merge_vcfs_denovo:
     conda:
         "../env/bcftools.yaml"
     shell:
-        "bcftools merge {params.outDir}/*.gz | bgzip -c > {output.finalVCF}"
+        """bcftools merge {params.outDir}/*.gz | bcftools view -i 'GT[*]="alt"&&REF!="N"' |  bgzip -c > {output.finalVCF}"""
