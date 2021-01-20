@@ -111,4 +111,4 @@ rule merge_vcfs_denovo:
     conda:
         "../env/bcftools.yaml"
     shell:
-        "bcftools merge {params.outdir}/* | bgzip -c > {output.finalVCF}"
+        "bcftools merge {params.outDir}/* | bgzip -c > {output.finalVCF}"
