@@ -20,7 +20,7 @@ tmpdir        : "/tmp"
 # some of the steps can be run in parallel. Please set the number of available computing threads on your system
 threads: "12"
 
-# mode of running pipeline (set denovo or reference)
+# mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
 
 # genome directory (leaave it blank in denovo mode)
@@ -40,12 +40,11 @@ param_denovo:
   min-depth: ""
   max-depth: ""
 
-# parameters in the mpileup step (variant callin)
-# max-depth: At a position, read maximally INT reads per input file, default 10000000, check if mpileup automatically reduced the maximal depth even more. You might have to re-run your analysis with a lower max-depth value to avoid this.
-# min-MQ: Minimum mapping quality for an alignment to be used, default 0
-# min-BQ: Minimum base quality for a base to be considered, default 15
-
+# parameter for the snp calling (variant callin)
+# stand_call_conf: defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
+# Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
+# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
+# 50X, you could specify higher threshold to obtain higher accuracy.
+# We use a default value of 10
 param_SNPcalling:
-  max-depth: ""
-  min-MQ: ""
-  min-BQ: ""
+  stand_call_conf: "10"

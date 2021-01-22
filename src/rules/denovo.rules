@@ -158,7 +158,7 @@ rule gunzip:
         "mv {input.coveragecompr} {output.coverageuncompr}"
 
 
-##SNP_calling
+##SNP_calling ##########################
 
 #Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
 rule sort_bam:
@@ -209,12 +209,22 @@ rule faidx_ref:
 # call SNPs from recalibrated alignments
 # -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessary...)
 # -out_modes EMIT_ALL_CONFIDENT_SITES (Work in progress (default only outputs SNP sites so when combining you do not find coverage on homozygous ref alleles))
-# #TODO We could perhaps also combine the bam file before SNP_calling??
 
-# -stand_call_conf 20 defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
+# -stand_call_conf defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
 # #TODO Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
 # threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
 # 50X, you could specify higher threshold to obtain higher accuracy. (So maybe play with this value?)
+
+stand_call_conf=config["param_SNPcalling"]["stand_call_conf"]
+
+
+def getStand_call_conf(stand_call_conf):
+    if stand_call_conf == "default" or stand_call_conf == "":
+        print(param_mq)
+        mq = 20
+    else:
+        mq = stand_call_conf
+    return mq
 
 # -toCoverage 1000 maximum read coverage allowed
 #-mmq 20 minimal mapping quality
@@ -228,14 +238,16 @@ rule call_SNPs_denovo:
         referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
         referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
     output:
-        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
+        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
+    params:
+        stand_call_conf=getStand_call_conf(stand_call_conf)
     log:
         expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir"])
     conda:
         "../env/bisSNP.yaml"
     threads: 6
     shell:
-        "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf 20 -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
+        "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf {params.stand_call_conf} -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
 
 #Attempts to combine all different output files
 #Order / zip vcf files
