@@ -29,6 +29,8 @@ if config["mode"]== "reference":
             {out}/output_demultiplex/Crick_R2.fq.gz \
             {out}/output_demultiplex/Crick_R1.fq.gz \
             {out}/fastqc/ \
+            {out}/multiQC_report.html \
+            {out}/report.html \
 		    {out}/log/{sample}_read-info.txt \
 		    {out}/log/{sample}_untrimmed_filt_read-info.txt \
 		    {out}/log/{sample}_trimmed_three_read-info.txt \
@@ -46,6 +48,8 @@ if config["mode"]== "denovo":
             {out}/output_demultiplex/Crick_R2.fq.gz \
             {out}/output_demultiplex/Crick_R1.fq.gz \
             {out}/fastqc/ \
+            {out}/multiQC_report.html \
+            {out}/report.html \
             {out}/output_denovo/consensus_cluster.renamed.fa \
 		    {out}/log/{sample}_read-info.txt \
 		    {out}/log/{sample}_untrimmed_filt_read-info.txt \
