@@ -100,7 +100,7 @@ rule referenceDict:
     input:
         AsReference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"])
     output:
-        AsReferenceDict=expand("{path}/{genome}.dict",path=config["output_dir"],genome=genomePlaceHolder)
+        AsReferenceDict=expand("{path}/{genome}.dict",path=config["ref_dir"],genome=genomePlaceHolder)
     conda:
         "../env/picard.yaml"
     shell: 
@@ -139,7 +139,7 @@ rule call_SNPs_denovo:
         alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
         aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"]),
-        AsReferenceDict=expand("{path}/{genome}.dict",path=config["output_dir"],genome=genomePlaceHolder),
+        AsReferenceDict=expand("{path}/{genome}.dict",path=config["ref_dir"],genome=genomePlaceHolder),
         referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
     output:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
