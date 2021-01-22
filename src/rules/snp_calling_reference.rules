@@ -1,4 +1,6 @@
 
+
+genomePlaceHolder = config["genome"].split(".")[0]
 #Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
 rule sort_bam:
     input:
@@ -25,7 +27,7 @@ rule referenceDict:
     input:
         AsReference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"])
     output:
-        AsReferenceDict=expand("{path}/{genome}",path=config["output_dir"])
+        AsReferenceDict=expand("{path}/{genome}.dict",path=config["output_dir"],genome=genomePlaceHolder)
     conda:
         "../env/picard.yaml"
     shell: 
@@ -63,9 +65,9 @@ rule call_SNPs_denovo:
     input:
         alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
         aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
-        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"])
+        AsReferenceDict=expand("{path}/{genome}.dict",path=config["output_dir"],genome=genomePlaceHolder)
+        referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
     output:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
     log:

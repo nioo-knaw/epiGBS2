@@ -1,3 +1,84 @@
+#Get parameters from the config file
+param_id=config["param_denovo"]["identity"]
+param_mind=config["param_denovo"]["min-depth"]
+param_maxd=config["param_denovo"]["max-depth"]
+
+def getParam_id(param_id):
+    if param_id == "default" or param_id == "":
+        id = 0.95
+    else:
+        id = param_id
+    return id
+def getParam_mind(param_mind):
+    if param_mind=="default" or param_mind == "":
+        mind = 10
+    else:
+        mind = param_mind
+    return mind
+def getParam_maxd(param_maxd):
+    if param_maxd=="default" or param_maxd == "":
+        dep = 0
+    else:
+        dep = param_maxd
+    return dep
+
+#Run the denovo creation python script
+
+rule denovo_reference:
+    input:
+        #R1=config["output_dir"] + "/output_demultiplex/demultiplex_1_fastq.txt.gz",
+        #R2=config["output_dir"] + "/output_demultiplex/demultiplex_2_fastq.txt.gz",
+        #dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+        CrickR1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+        CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
+        WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+        WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
+    output:
+        #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa",
+        #config["output_dir"] + "/output_denovo/consensus_cluster.fa",
+        #config["output_dir"] + "/output_denovo/consensus.fa",
+        #config["output_dir"] + "/output_denovo/Assembled.fq.gz",
+        #config["output_dir"] + "/output_denovo/Unassembled.R2.fq.gz",
+        #config["output_dir"] + "/output_denovo/Unassembled.R1.fq.gz",
+        #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa.fai"
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        consensus_cluster=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa"),
+        consensus=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus.fa"),
+        assemble=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
+        unass_R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
+        index_ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai")
+
+
+    params:
+        cycles=config["cycles"],
+        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        tmp=expand("{tmp}", tmp=config["tmpdir"]),
+        identity=getParam_id(param_id),
+        min_depth=getParam_mind(param_mind),
+        max_depth=getParam_maxd(param_maxd),
+        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+        outdir= expand("{path}{dir}", path=config["output_dir"], dir="/output_denovo")
+
+    log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
+    conda:
+        "../env/environment.yaml"
+    threads: 12
+    shell:
+        "python src/de_novo_reference_creation/make_reference.py "
+        "--inputdir {params.indir} "
+        "--barcodes {input.bar} "
+        "--threads {threads} "
+        "--outputdir {params.outdir} "
+        "--cycles {params.cycles} "
+        "--clustering_treshold {params.identity} "
+        "--max_unique_size {params.max_depth} "
+        "--min_unique_size {params.min_depth} "
+        "--tmpdir {params.tmp} "
+        "--log {log} "
+
+
 #This rule adds the NNNN's at the start and end of the denovo sequences 
 #otherwise bismark can't call context at these sites and breaks
 rule genome_prep_for_bismark_denovo_bismark:
@@ -75,3 +156,123 @@ rule gunzip:
     threads: 1
     shell:
         "mv {input.coveragecompr} {output.coverageuncompr}"
+
+
+##SNP_calling
+
+#Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
+rule sort_bam:
+    input:
+        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
+    output:
+        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools sort {input.alignment} > {output.alignmentSorted}"
+#Index the sorted bam files
+rule index_bam:
+    input:
+        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
+    output:
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.alignmentSorted}"
+#CreateSequenceDirectory does not allow for NNNN's to be present in the genome thus they need to be replaced        
+#Create the reference dictionary
+rule referenceDict:
+    input:
+        AsReference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        AsReferenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
+    conda:
+        "../env/picard.yaml"
+    shell: 
+        "picard CreateSequenceDictionary R={input.AsReference} O={output.AsReferenceDict}"
+
+#Index the reference with NNNNs. If we don't this it skips the last line due to there not being an \n
+rule faidx_ref:
+    input:
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        """
+        samtools faidx {input.reference}
+        """
+
+
+# call SNPs from recalibrated alignments
+# -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessary...)
+# -out_modes EMIT_ALL_CONFIDENT_SITES (Work in progress (default only outputs SNP sites so when combining you do not find coverage on homozygous ref alleles))
+# #TODO We could perhaps also combine the bam file before SNP_calling??
+
+# -stand_call_conf 20 defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
+# #TODO Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
+# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
+# 50X, you could specify higher threshold to obtain higher accuracy. (So maybe play with this value?)
+
+# -toCoverage 1000 maximum read coverage allowed
+#-mmq 20 minimal mapping quality
+#-mbq 20 minimal base quality
+#-nt 1 "Number of threads" actually number of gatk instances started.
+rule call_SNPs_denovo:
+    input:
+        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
+        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+    output:
+        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
+    log:
+        expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir"])
+    conda:
+        "../env/bisSNP.yaml"
+    threads: 6
+    shell:
+        "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf 20 -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
+
+#Attempts to combine all different output files
+#Order / zip vcf files
+#bcftools annotate -x FORMAT/GP Removes a field which causes issues when merging
+rule zip_vcfs_denovo:
+    input:
+        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
+    output:
+        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+    params:
+        sample="{sample}"
+    conda:
+        "../env/bcftools.yaml"
+    shell:
+        "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bcftools annotate -x FORMAT/GP | bgzip -c > {output.perIndvcfGZ}"
+#index them so we can use bcftools merge
+rule index_vcfs_denovo:
+    input:
+        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+    output:
+        perIndVCFTBI=expand("{path}/snp_calling/{{sample}}.vcf.gz.csi",path=config["output_dir"])
+    conda:
+        "../env/bcftools.yaml"
+    shell:
+        "bcftools index {input.perIndvcfGZ}"
+
+#Merges the individual vcf files
+# bcftools view -i 'GT[*]="alt"&&REF!="N"'. Filters site which do not have an alt allele in any individual + sites for which the ref = N
+rule merge_vcfs_denovo:
+    input:
+        perIndVCFTBI=expand("{path}/snp_calling/{sample}.vcf.gz.csi",path=config["output_dir"],sample=SAMPLES),
+        perIndvcfGZ=expand("{path}/snp_calling/{sample}.vcf.gz",path=config["output_dir"],sample=SAMPLES)
+    output:
+        finalVCF=expand("{path}/snp_calling/snp.vcf.gz",path=config["output_dir"])
+    params:
+        outDir=expand("{path}/snp_calling/",path=config["output_dir"])
+    conda:
+        "../env/bcftools.yaml"
+    shell:
+        """bcftools merge {params.outDir}/*.gz | bcftools view -i 'GT[*]="alt"&&REF!="N"' |  bgzip -c > {output.finalVCF}"""
