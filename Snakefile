@@ -1,5 +1,13 @@
 
 configfile: "config.yaml"
+import pandas as pd
+import os
+import random
+df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', dtype="object").set_index('Sample')
+SAMPLES = df.index
+flowCell = df.Flowcell[0]
+lane = df.Lane[0]
+projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 
 if config["mode"] == "reference":
     include: "src/rules/fastqc-ref.rules"
