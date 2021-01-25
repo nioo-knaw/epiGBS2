@@ -33,6 +33,7 @@ rule denovo_reference:
         CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
         WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
         WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
+
     output:
         #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa",
         #config["output_dir"] + "/output_denovo/consensus_cluster.fa",
@@ -62,7 +63,7 @@ rule denovo_reference:
 
     log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
     conda:
-        "../env/environment.yaml"
+        "../env/de-novo.yaml"
     threads: 40
     shell:
         "python src/de_novo_reference_creation/make_reference.py "
@@ -118,7 +119,7 @@ rule run_star:
         tmp=expand("{tmp}", tmp=config["tmpdir"])
     threads: 40
     conda:
-        "../env/environment.yaml"
+        "../env/mapping.yaml"
     log:
         config["output_dir"] + "/log/log_STAR.txt"
     shell:
@@ -144,7 +145,7 @@ rule run_mpileup_watson:
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq)
     conda:
-        "../env/environment.yaml"
+        "../env/samtools-1.3.1.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -164,7 +165,7 @@ rule run_mpileup_crick:
         mq=getParam_mq(param_mq),
         bq=getParam_bq(param_bq)
     conda:
-        "../env/environment.yaml"
+        "../env/samtools-1.3.1.yaml"
     shell:
         "samtools mpileup --reference {input.ref} "
         "-gt DP,AD,INFO/AD  --max-depth {params.depth} "
@@ -181,7 +182,7 @@ rule merge_watson_crick:
     params:
         mergedtsv=expand("{path}/mapping/merged.tsv", path=config["output_dir"])
     conda:
-        "../env/environment.yaml"
+        "../env/merge.yaml"
     shell:
         "python src/mapping_varcall/merge_watson_crick-old.py "
         "-w {input.watsonVCF} "
@@ -197,7 +198,7 @@ rule SNP_calling:
     params:
         snpvcf=expand("{path}/mapping/snp.vcf", path=config["output_dir"])
     conda:
-        "../env/environment.yaml"
+        "../env/SNP-calling.yaml"
     shell:
         "python src/mapping_varcall/SNP_calling.py "
         "-m {input.mergedTSV} "
@@ -213,7 +214,7 @@ rule methylation_calling:
         methylationBed=expand("{path}/mapping/methylation.bed", path=config["output_dir"]),
         methylationIGV=expand("{path}/mapping/heatmap.igv", path=config["output_dir"])
     conda:
-        "../env/environment.yaml"
+        "../env/methylation-calling.yaml"
     shell:
         "python src/mapping_varcall/methylation_calling.py "
         "-r {input.ref} "
