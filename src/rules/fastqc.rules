@@ -16,7 +16,7 @@ rule fastqc:
 rule MultiqcFastqc:
     input:
       before=expand("{path}/fastqc/", path=config["output_dir"]),
-      map=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
+      map=expand("{path}/snp_calling/snp.vcf.gz", path=config["output_dir"])
     output:
       report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
     params:
