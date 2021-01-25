@@ -16,7 +16,11 @@ rule barcode_stacks:
         tmpdir=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
         outputdir=expand("{path}/output_demultiplex",  path=config["output_dir"])
     output:
-        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+        output_BarcodeFile=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"]),
+        output_WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.1.fq.gz",path=config["output_dir"]),
+        output_WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.2.fq.gz",path=config["output_dir"]),
+        output_CrickR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.1.fq.gz",path=config["output_dir"]),
+        output_CrickR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.2.fq.gz",path=config["output_dir"])
     conda:
         "../env/stacks.yaml"
     shell:
