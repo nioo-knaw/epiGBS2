@@ -20,7 +20,7 @@ if config["mode"] == "denovo":
     include: "src/rules/demultiplex.rules"
     include: "src/rules/denovo.rules"
     include: "src/rules/trimming.rules"
-    include: "src/fastqc.rules"
+    include: "src/rules/fastqc.rules"
 
 if config["mode"]== "reference":
     rule all:
