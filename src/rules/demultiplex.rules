@@ -8,10 +8,10 @@ rule barcode_stacks:
         outputdir=expand("{path}/output_demultiplex",  path=config["output_dir"])
     output:
         output_BarcodeFile=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"]),
-        output_WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.1.fq.gz",path=config["output_dir"]),
-        output_WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.2.fq.gz",path=config["output_dir"]),
-        output_CrickR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.1.fq.gz",path=config["output_dir"]),
-        output_CrickR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz",path=config["output_dir"])
+        output_WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
+        output_WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
+        output_CrickR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
+        output_CrickR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz",path=config["output_dir"],sample=SAMPLES)
     conda:
         "../env/stacks.yaml"
     shell:
