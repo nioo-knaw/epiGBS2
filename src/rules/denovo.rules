@@ -17,7 +17,7 @@ def getParam_mind(param_mind):
     return mind
 def getParam_maxd(param_maxd):
     if param_maxd=="default" or param_maxd == "":
-        dep = 0
+        dep = 10000
     else:
         dep = param_maxd
     return dep
