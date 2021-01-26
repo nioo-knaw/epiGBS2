@@ -377,7 +377,7 @@ def make_binary_output(in_files,args):
     #joined entries
     watson_handle_join = open(in_files['watson']['demethylated_joined_derep'],'r')
     crick_handle_join = open(in_files['crick']['demethylated_joined_derep'],'r')
-    uc_input_fa = tempfile.NamedTemporaryFile(suffix=".fa", prefix='uc_input', dir=args.tmpdir, delete=True)
+    uc_input_fa = tempfile.NamedTemporaryFile(suffix=".fa", prefix='uc_input', dir=args.tmpdir, delete=False)
     in_files['combined'] = {'uc_input_fa':uc_input_fa.name}
     output = open(in_files['combined']['uc_input_fa'],'w')
     for i,handle in enumerate([watson_handle,crick_handle,watson_handle_join,crick_handle_join]):
@@ -404,7 +404,7 @@ def make_uc(in_files,args):
     """run usearch to create uc file"""
     #run usearch to create uc file
     fasta_input = in_files['combined']['uc_input_fa']
-    uc_out = tempfile.NamedTemporaryFile(suffix=".uc",prefix='combined_out',dir=args.tmpdir,delete=True)
+    uc_out = tempfile.NamedTemporaryFile(suffix=".uc",prefix='combined_out',dir=args.tmpdir,delete=False)
     cmd = [vsearch + ' -derep_fulllength %s -strand both -uc %s'%(fasta_input,uc_out.name)]
     log = "Make uc output for reads with original sequences in read header"
     run_subprocess(cmd,args,log)
