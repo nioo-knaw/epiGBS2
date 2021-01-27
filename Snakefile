@@ -73,8 +73,6 @@ if config["mode"]== "legacy":
             {out}/output_demultiplex/Watson_R1.fq.gz \
             {out}/output_demultiplex/Crick_R2.fq.gz \
             {out}/output_demultiplex/Crick_R1.fq.gz \
-            {out}/fastqc/ \
-            {out}/multiQC_report.html \
             {out}/report.html \
             {out}/mapping/watson.bam \
             {out}/mapping/crick.bam \
