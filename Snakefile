@@ -63,7 +63,6 @@ if config["mode"]== "denovo":
 if config["mode"] == "legacy":
     include: "src/rules/legacy.rules"
     include: "src/rules/demultiplex.rules"
-    include: "src/rules/fastqc.rules"
     include: "src/rules/report.rules"
 
 
