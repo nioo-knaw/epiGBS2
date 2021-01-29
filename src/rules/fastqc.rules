@@ -19,9 +19,13 @@ rule logparse:
       demultiplex=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
       denovo=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
   output: expand("{path}/log/demultiplexing.log", path=config["output_dir"])
+  params:
+      process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
+      demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
+      denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"])
   conda:
     "../env/python3.yaml"
-  shell: "python ./src/report/parse-logs.py -p {input.process} -m {input.denovo} -d {input.demultiplex} -o {output}"
+  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {output}"
 
 rule Multiqc:
     input:
