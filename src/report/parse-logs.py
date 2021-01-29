@@ -24,7 +24,6 @@ def parse_stacks_bc(args):
             for _ in range(21):
                 # first put next() instead of readline(), next() is python 2.7!
                 output_stacks_bc.write(input_stacks_bc.readline())
-​
     output_stacks_bc.close()
 
 def parse_stacks(args):
@@ -58,7 +57,6 @@ def parse_stacks(args):
                 string = input_stacks.readline()
                 list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
                 output_clones.write("input read pairs, output read pairs, discarded read pairs, % clone reads\n" + ", ".join(list)) 
-​
     output.close()   
     output_clones.close()
 
