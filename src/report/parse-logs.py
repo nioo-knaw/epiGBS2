@@ -1,9 +1,8 @@
 import argparse
 import os 
 import re
-​
 def parse_args():
-    """Parse command line arguments"""
+    #"""Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Parse input for MultiQC, e.g. python ./src/report/parse-logs.py -p ./output/output_demultiplex/clone-stacks/process_radtags.clone.log -m ./output/output_denovo/make_reference.log -d ./output/output_demultiplex/demultiplex.log -o output/log')
     parser.add_argument('-p', '--input_stacks_bc', type=str, default='process_radtags.clone.log',
                         help='process_radtags.clone.log')
