@@ -16,9 +16,10 @@ rule fastqc:
 
 rule logparse:
   input:
-      demultiplex=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
-      denovo=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
-  output: expand("{path}/log/demultiplexing.log", path=config["output_dir"])
+      process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
+      demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
+      denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"])
+  output: expand("{path}/log", path=config["output_dir"])
   conda:
     "../env/python3.yaml"
   shell: "python ./src/report/parse-logs.py -p {input.process} -m {input.denovo} -d {input.demultiplex} -o {output}"
@@ -27,7 +28,7 @@ rule Multiqc:
     input:
       before=expand("{path}/fastqc/", path=config["output_dir"]),
       demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
-      map=expand("{path}/snp_calling/snp.vcf.gz", path=config["output_dir"])
+      map=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
     output:
       report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
     params:

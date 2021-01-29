@@ -14,7 +14,7 @@ def parse_args():
                         help='output directory')
     args = parser.parse_args()
     return args
-​
+
 def parse_stacks_bc(args):
     outdir = args.output_dir
     output_stacks_bc = open(os.path.join(outdir, "stacks_denovo_barcodes.log"), "w")
@@ -26,7 +26,7 @@ def parse_stacks_bc(args):
                 output_stacks_bc.write(input_stacks_bc.readline())
 ​
     output_stacks_bc.close()
-​
+
 def parse_stacks(args):
     outdir = args.output_dir
     output = open(os.path.join(outdir, "demultiplexing.log"), "w")
@@ -61,7 +61,7 @@ def parse_stacks(args):
 ​
     output.close()   
     output_clones.close()
-​
+
 def parse_denovo(args):
     outdir = args.output_dir
     output_denovo = open(os.path.join(outdir, "denovo.log"), "w")
@@ -117,17 +117,14 @@ def parse_denovo(args):
                 clusters.extend([str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string))
     #print(clusters)
     output_denovo.write(", ".join(clusters))
-​
-​
     output_denovo.close()
     output_merge.close()
-​
-​
+
 def main():
     args = parse_args()
     parse_stacks_bc(args)
     parse_stacks(args)
     parse_denovo(args)
-​
+
 if __name__ == "__main__":
     main()
