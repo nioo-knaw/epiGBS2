@@ -22,10 +22,11 @@ rule logparse:
   params:
       process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
       demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
-      denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"])
+      denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
+      outdir=expand("{path}/log/",path=config["output_dir"])
   conda:
     "../env/python3.yaml"
-  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {output}"
+  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir}"
 
 rule Multiqc:
     input:
