@@ -223,6 +223,49 @@ rule methylation_calling:
         "-s {input.snpVCF}  "
         "-heat {output.methylationIGV}"
 
+rule fastqc:
+  input:
+      expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"])
+  output:
+      dir=directory(expand("{path}/fastqc/", path=config["output_dir"]))
+
+  conda:
+       "../env/fastqc.yaml"
+  threads: 8
+  params:
+       q="--quiet",
+       threads=8,
+       dir=expand("{path}/fastqc/", path=config["output_dir"]),
+       reads=expand("{path}/output_demultiplex/clone-stacks/*.fq.gz", path=config["output_dir"])
+  shell: "fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}"
+
+rule logparse:
+  input:
+      demultiplex=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+      denovo=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
+  output: expand("{path}/log/demultiplexing.log", path=config["output_dir"])
+  params:
+      process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
+      demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
+      denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
+      outdir=expand("{path}/log/",path=config["output_dir"])
+  conda:
+    "../env/python3.yaml"
+  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir}"
+
+rule Multiqc:
+    input:
+      before=expand("{path}/fastqc/", path=config["output_dir"]),
+      demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
+      map=expand("{path}/mapping/snp.vcf.gz", path=config["output_dir"])
+    output:
+      report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
+    params:
+        dir=expand("{path}/", path=config["output_dir"]),
+        config="src/env/multiqc_config.yaml"
+    conda:
+      "../env/multiqc.yaml"
+    shell: "multiqc  {params.dir} -c {params.config} --interactive --filename {output.report1}"
 
 
 onerror:
