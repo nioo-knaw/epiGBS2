@@ -1,0 +1,52 @@
+custom_data:
+    clones:
+        id: 'clones'
+        section_name: 'Clone Removal Statistics'
+        description: 'Stacks removes PCR duplicates (clones) from your data by using the Wobble (UMI). If your % removed sequences due to PCR duplicates is very high, you might consider to reduce the number of PCR cycles during library preparation or re-check the amount of library loaded to a sequencing lane.'
+        plot_type: 'table'   
+        pconfig:
+            id: 'clones'
+            namespace: 'Clone Removal Statistics'    
+    demultiplexing:
+        id: 'demultiplexing'
+        section_name: 'Demultiplexing Statistics'
+        description: 'During Demultiplexing the barcode and the control nucleotide are used to annotate each read with information about sample and strand (Watson/Crick). The program also checks for the presence of the expected restriction enzyme overhang (RAD-tag). Low demultiplexing % can be caused by mistakes in the bar code file. Check the de novo identified barcodes.'
+        plot_type: 'table'
+        pconfig:
+            id: 'demultiplexing'
+            namespace: 'Demultiplexing Statistics'
+    denovo_barcodes:
+        id: 'denovo_barcodes'
+        section_name: 'De novo Barcodes'
+        description: 'During demultiplexing stacks can also identify "de novo" barcodes that are found in your dataset. These de novo barcodes can help you to identify bad performing barcodes (e.g. to frequently occuring frame shifts), mistakes in your barcode file (e.g. by misspelling a barcode) or during lab work (e.g. pipetting a wrong barcode). The top 20 de novo barcodes are shown.'
+        plot_type: 'table'
+        pconfig:
+            id: 'denovo_barcodes'
+            namespace: 'De novo Barcodes'
+    merge:
+        id: 'merge'
+        section_name: 'Read Assembly Statistics'
+        description: 'Before creating a de novo reference sequence read pairs are assembled. The Assembly % will depend from your average fragment size. First crick sequences (Assembled, '
+        plot_type: 'table'
+        pconfig:
+            id: 'merge'
+            namespace: 'Read Assembly Statistics'
+    denovo:
+        id: 'denovo'
+        section_name: 'De novo Identity Clustering'
+        description: 'Creating the de novo reference is based on three clustering steps (1) Deduplication, (2) Pairing Watson and Crick, (3) Clustering Consensus based on Identity. The following statistics show clustering statistics of (3). You can tweak the results by changing the %identity paramter in the contig file.'
+        plot_type: 'table'
+        pconfig:
+            id: 'denovo'
+            namespace: 'De novo Identity Clustering'
+sp:
+    denovo_barcodes:
+        fn: 'stacks_denovo_barcodes.log'
+    clones:
+        fn: 'clones.log'
+    demultiplexing:
+        fn: 'demultiplexing.log'
+    merge:
+        fn: 'merge.log'
+    denovo:
+        fn: 'denovo.log'
