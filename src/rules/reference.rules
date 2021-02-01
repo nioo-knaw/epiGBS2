@@ -51,7 +51,7 @@ rule methylation_calling_denovo_bismark:
         refNN=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
         preparedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
     output:
-        calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"]),
+        calling=temp(expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])),
         coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
     params:
         out=expand("{path}",path=config["output_dir"]),
@@ -64,12 +64,12 @@ rule methylation_calling_denovo_bismark:
 
 rule gunzip:
     input: 
-        coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
+        calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])
     output:
-        coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark.cov.gz",out=config["output_dir"])
+        coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
     threads: 1
     shell:
-        "mv {input.coveragecompr} {output.coverageuncompr}"
+        "gzip -c {input.coveragecompr} > {output.coverageuncompr}"
 
 ##SNP_calling
 
@@ -87,7 +87,7 @@ rule sort_bam:
 #Index the sorted bam files
 rule index_bam:
     input:
-        alignmentSorted=temp(expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]))
+        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
     output:
         aligmentIndex=temp(expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]))
     conda:
@@ -148,8 +148,8 @@ def getStand_call_conf(stand_call_conf):
 #-nt 1 "Number of threads" actually number of gatk instances started.
 rule call_SNPs_denovo:
     input:
-        alignment=temp(expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])),
-        aligmentIndex=temp(expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"])),
+        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"]),
         AsReferenceDict=expand("{path}/{genome}.dict",path=config["ref_dir"],genome=genomePlaceHolder),
         referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
@@ -165,7 +165,7 @@ rule call_SNPs_denovo:
     shell:
         "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf {params.stand_call_conf} -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
 
-#Attempts to combine all different output files
+#Combines all different output files
 #Order / zip vcf files
 #bcftools annotate -x FORMAT/GP Removes a field which causes issues when merging
 rule zip_vcfs_denovo:

@@ -36,8 +36,7 @@ if config["mode"]== "reference":
 		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
-		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
-		    {out}/methylation_calling/{sample}_bismark.cov.gz \
+		    {out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
 if config["mode"]== "denovo":
@@ -55,8 +54,7 @@ if config["mode"]== "denovo":
 		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
-		    {out}/methylation_calling/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt \
-		    {out}/methylation_calling/{sample}_bismark.cov.gz \
+		    {out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
 
