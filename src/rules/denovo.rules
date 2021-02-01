@@ -160,7 +160,7 @@ rule gunzip:
         coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
     threads: 1
     shell:
-        "gzip -c {input.coveragecompr} > {output.coverageuncompr}"
+        "gzip -c {input.calling} > {output.coverageuncompr}"
 
 
 
