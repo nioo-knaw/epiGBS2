@@ -54,7 +54,7 @@ rule denovo_reference:
     params:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
-        tmp=expand("{tmp}", tmp=config["tmpdir"]),
+        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
         identity=getParam_id(param_id),
         min_depth=getParam_mind(param_mind),
         max_depth=getParam_maxd(param_maxd),
@@ -66,17 +66,22 @@ rule denovo_reference:
         "../env/de-novo.yaml"
     threads: 12
     shell:
-        "python src/de_novo_reference_creation/make_reference.py "
-        "--inputdir {params.indir} "
-        "--barcodes {input.bar} "
-        "--threads {threads} "
-        "--outputdir {params.outdir} "
-        "--cycles {params.cycles} "
-        "--clustering_treshold {params.identity} "
-        "--max_unique_size {params.max_depth} "
-        "--min_unique_size {params.min_depth} "
-        "--tmpdir {params.tmp} "
-        "--log {log} "
+        """
+        mkdir -p {params.tmp}
+        python src/de_novo_reference_creation/make_reference.py \
+        --inputdir {params.indir} \
+        --barcodes {input.bar} \
+        --threads {threads} \
+        --outputdir {params.outdir} \
+        --cycles {params.cycles} \
+        --clustering_treshold {params.identity} \
+        --max_unique_size {params.max_depth} \
+        --min_unique_size {params.min_depth} \
+        --tmpdir {params.tmp} \
+        --log {log} 
+        rm -r {params.tmp}
+        """
+
 
 
 #This rule adds the NNNN's at the start and end of the denovo sequences 

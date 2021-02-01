@@ -111,9 +111,9 @@ def merge_reads(args):
     #TODO: run only once for both watson and crick at same time
     out_files = {}
     for strand in ['crick','watson']:
-        fwd_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir,delete=True)
-        rev_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir,delete=True)
-        join_out = tempfile.NamedTemporaryFile(prefix="join_%s"%strand,dir=args.tmpdir,delete=True)
+        fwd_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir)
+        rev_out = tempfile.NamedTemporaryFile(suffix=".fastq.gz",prefix=strand,dir=args.tmpdir)
+        join_out = tempfile.NamedTemporaryFile(prefix="join_%s"%strand,dir=args.tmpdir)
         if args.sequences:
             head = '| head -n %s'%(int(args.sequences)*4)
             if strand == 'watson':
@@ -404,7 +404,7 @@ def make_uc(in_files,args):
     """run usearch to create uc file"""
     #run usearch to create uc file
     fasta_input = in_files['combined']['uc_input_fa']
-    uc_out = tempfile.NamedTemporaryFile(suffix=".uc",prefix='combined_out',dir=args.tmpdir,delete=True)
+    uc_out = tempfile.NamedTemporaryFile(suffix=".uc",prefix='combined_out',dir=args.tmpdir,delete=False)
     cmd = [vsearch + ' -derep_fulllength %s -strand both -uc %s'%(fasta_input,uc_out.name)]
     log = "Make uc output for reads with original sequences in read header"
     run_subprocess(cmd,args,log)
