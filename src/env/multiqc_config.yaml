@@ -50,3 +50,15 @@ sp:
         fn: 'merge.log'
     denovo:
         fn: 'denovo.log'
+fn_ignore_files:
+    - '*.rem.*'
+module_order:
+    # MultiQC general module for catching output from custom scripts
+    - fastqc:
+        module_tag:
+            - RNA
+            - DNA
+    - 'custom_content'
+    - star:
+        module_tag:
+            - RNA

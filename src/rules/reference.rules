@@ -79,7 +79,7 @@ rule sort_bam:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
     output:
-        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
+        alignmentSorted=temp(expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     shell:
@@ -87,9 +87,9 @@ rule sort_bam:
 #Index the sorted bam files
 rule index_bam:
     input:
-        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
+        alignmentSorted=temp(expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]))
     output:
-        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"])
+        aligmentIndex=temp(expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     shell:
@@ -148,13 +148,13 @@ def getStand_call_conf(stand_call_conf):
 #-nt 1 "Number of threads" actually number of gatk instances started.
 rule call_SNPs_denovo:
     input:
-        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
-        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
+        alignment=temp(expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])),
+        aligmentIndex=temp(expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"])),
         reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"]),
         AsReferenceDict=expand("{path}/{genome}.dict",path=config["ref_dir"],genome=genomePlaceHolder),
         referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
     output:
-        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"]),
+        perIndVCF=temp(expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])),
     params:
         stand_call_conf=getStand_call_conf(stand_call_conf)
     log:
@@ -170,9 +170,9 @@ rule call_SNPs_denovo:
 #bcftools annotate -x FORMAT/GP Removes a field which causes issues when merging
 rule zip_vcfs_denovo:
     input:
-        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["output_dir"])
+        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])
     output:
-        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
+        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["out_dir"])
     params:
         sample="{sample}"
     conda:

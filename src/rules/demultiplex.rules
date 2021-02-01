@@ -16,6 +16,7 @@ rule barcode_stacks:
         "../env/stacks.yaml"
     shell:
          """
+         mkdir -p {params.tmpdir}
          python src/demultiplex/barcode_stacks.py --r1_in {input.R1} --r2_in {input.R2} --output-dir {params.outputdir} -b {input.barcodes} --tmpdir {params.tmpdir}
          """
 
@@ -29,7 +30,7 @@ rule header_Watson_R1:
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     output:
-        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName)
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName))
     conda:
         "../env/python3.yaml"
     shell:
@@ -59,7 +60,7 @@ rule header_Watson_R2:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
 
     output:
-        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName)
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName))
     conda:
         "../env/python3.yaml"
     shell:
@@ -89,7 +90,7 @@ rule header_Crick_R1:
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     output:
-        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName)
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName))
     conda:
         "../env/python3.yaml"
     shell:
@@ -118,7 +119,7 @@ rule header_Crick_R2:
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     output:
-        header=expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName)
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName))
     conda:
         "../env/python3.yaml"
     shell:
