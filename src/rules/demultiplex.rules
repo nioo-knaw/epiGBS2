@@ -18,6 +18,7 @@ rule barcode_stacks:
          """
          mkdir -p {params.tmpdir}
          python src/demultiplex/barcode_stacks.py --r1_in {input.R1} --r2_in {input.R2} --output-dir {params.outputdir} -b {input.barcodes} --tmpdir {params.tmpdir}
+         rm -r {params.tmpdir}
          """
 
 rule header_Watson_R1:
@@ -26,11 +27,11 @@ rule header_Watson_R1:
         flowcell=flowCell,
         lane=lane,
         outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+        tmpdir=expand("{path}/demultiplex/", path=config["tmpdir"])
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName))
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
     conda:
         "../env/python3.yaml"
     shell:
@@ -38,11 +39,11 @@ rule header_Watson_R1:
 
 rule cat_watson_R1:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.1.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
     output:
         outFile=expand("{path}/output_demultiplex/Watson_R1.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir="demultiplex"),
     conda:
         "../env/python3.yaml"
     shell:
@@ -55,12 +56,12 @@ rule header_Watson_R2:
         flowcell=flowCell,
         lane=lane,
         outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
 
     output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName))
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
     conda:
         "../env/python3.yaml"
     shell:
@@ -68,11 +69,11 @@ rule header_Watson_R2:
 
 rule cat_watson_R2:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.2.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
     output:
         outFile=expand("{path}/output_demultiplex/Watson_R2.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName),
+        tmp=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex"),
     conda:
         "../env/python3.yaml"
     shell:
@@ -86,11 +87,11 @@ rule header_Crick_R1:
         flowcell=flowCell,
         lane=lane,
         outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName))
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
     conda:
         "../env/python3.yaml"
     shell:
@@ -98,11 +99,11 @@ rule header_Crick_R1:
 
 rule cat_Crick_R1:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.1.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
     output:
         outFile=expand("{path}/output_demultiplex/Crick_R1.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir="demultiplex"),
     conda:
         "../env/python3.yaml"
     shell:
@@ -115,11 +116,11 @@ rule header_Crick_R2:
         flowcell=flowCell,
         lane=lane,
         outputdir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName)
+        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
     input:
         output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
     output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName))
+        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
     conda:
         "../env/python3.yaml"
     shell:
@@ -127,11 +128,11 @@ rule header_Crick_R2:
 
 rule cat_Crick_R2:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.2.fq.gz",tmp=config["tmpdir"],dir=projectName,sample=SAMPLES)
+        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
     output:
         outFile=expand("{path}/output_demultiplex/Crick_R2.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir=projectName),
+        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir="demultiplex"),
     conda:
         "../env/python3.yaml"
     shell:
@@ -139,7 +140,7 @@ rule cat_Crick_R2:
 
 #rule remove_tmp_files:
 #    params:
-#          tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir=projectName),
+#          tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex"),
 #          outputdir= expand("{path}", path=config["output_dir"])
 #    input:
 #          outFile1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
