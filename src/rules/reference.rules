@@ -155,6 +155,7 @@ rule call_SNPs_denovo:
         referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
     output:
         perIndVCF=temp(expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])),
+        perIndMethStats=temp(expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out.MethySummarizeList.txt",path=config["tmpdir"]))
     params:
         stand_call_conf=getStand_call_conf(stand_call_conf)
     log:
