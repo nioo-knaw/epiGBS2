@@ -79,29 +79,6 @@ rule denovo_reference:
         "--log {log} "
 
 
-param_mq=config["param_SNPcalling"]["min-MQ"]
-param_bq=config["param_SNPcalling"]["min-BQ"]
-param_depth=config["param_SNPcalling"]["max-depth"]
-
-def getParam_mq(param_mq):
-    if param_mq == "default" or param_mq == "":
-        print(param_mq)
-        mq = 0
-    else:
-        mq = param_mq
-    return mq
-def getParam_bq(param_bq):
-    if param_bq=="default" or param_bq == "":
-        bq = 15
-    else:
-        bq = param_bq
-    return bq
-def getParam_dp(param_depth):
-    if param_depth=="default" or param_depth == "":
-        dep = 10000000
-    else:
-        dep = param_depth
-    return dep
 
 
 rule run_star:
@@ -141,9 +118,9 @@ rule run_mpileup_watson:
         watsonVCF=expand("{path}/mapping/watson.vcf.gz", path=config["output_dir"])
     params:
         out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
-        depth=getParam_dp(param_depth),
-        mq=getParam_mq(param_mq),
-        bq=getParam_bq(param_bq)
+        depth=100000,
+        mq=15,
+        bq=0
     conda:
         "../env/samtools-1.3.1.yaml"
     shell:
@@ -161,9 +138,9 @@ rule run_mpileup_crick:
         crickVCF=expand("{path}/mapping/crick.vcf.gz", path=config["output_dir"])
     params:
         out_dir=expand("{path}{file}", path=config["output_dir"], file="/mapping"),
-        depth=getParam_dp(param_depth),
-        mq=getParam_mq(param_mq),
-        bq=getParam_bq(param_bq)
+        depth=100000,
+        mq=15,
+        bq=0
     conda:
         "../env/samtools-1.3.1.yaml"
     shell:
