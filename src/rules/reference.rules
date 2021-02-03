@@ -1,5 +1,5 @@
 #prepares the genome for bismark
-rule genome_prep_for_bismark_denovo_bismark:
+rule genome_prep_for_bismark_reference_bismark:
     input:
         reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
     output:
@@ -13,13 +13,13 @@ rule genome_prep_for_bismark_denovo_bismark:
          bismark_genome_preparation {params.refDir}
          '''
 
-#Align the trimmed reads to the denovo clusters
+#Align the trimmed reads to the reference clusters
 # --un outputs  unmapped reads to the output directory #Needed?
 # --ambigious outputs ambigious writes the ambigiuos reads #Needed?
 # --non_directional: sequencing library not in a specific direction
 # --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
 
-rule alignment_denovo_bismark:
+rule alignment_reference_bismark:
     input:
         R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
         R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
@@ -45,7 +45,7 @@ rule alignment_denovo_bismark:
 # --bedGraph outputs a bedGraph file 
 # --cytosine_report produces a genome-wide methylation report for all cytosines in the genome. (Not sure how this interacts with bedGraph)
 # 
-rule methylation_calling_denovo_bismark:
+rule methylation_calling_reference_bismark:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
         refNN=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
@@ -146,7 +146,7 @@ def getStand_call_conf(stand_call_conf):
 #-mmq 20 minimal mapping quality
 #-mbq 20 minimal base quality
 #-nt 1 "Number of threads" actually number of gatk instances started.
-rule call_SNPs_denovo:
+rule call_SNPs_reference:
     input:
         alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
         aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
@@ -169,7 +169,7 @@ rule call_SNPs_denovo:
 #Combines all different output files
 #Order / zip vcf files
 #bcftools annotate -x FORMAT/GP Removes a field which causes issues when merging
-rule zip_vcfs_denovo:
+rule zip_vcfs_reference:
     input:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])
     output:
@@ -181,7 +181,7 @@ rule zip_vcfs_denovo:
     shell:
         "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bcftools annotate -x FORMAT/GP | bgzip -c > {output.perIndvcfGZ}"
 #index them so we can use bcftools merge
-rule index_vcfs_denovo:
+rule index_vcfs_reference:
     input:
         perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
     output:
@@ -193,7 +193,7 @@ rule index_vcfs_denovo:
 
 #Merges the individual vcf files
 # bcftools view -i 'GT[*]="alt"&&REF!="N"'. Filters site which do not have an alt allele in any individual + sites for which the ref = N
-rule merge_vcfs_denovo:
+rule merge_vcfs_reference:
     input:
         perIndVCFTBI=expand("{path}/snp_calling/{sample}.vcf.gz.csi",path=config["output_dir"],sample=SAMPLES),
         perIndvcfGZ=expand("{path}/snp_calling/{sample}.vcf.gz",path=config["output_dir"],sample=SAMPLES)
