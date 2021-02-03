@@ -11,7 +11,11 @@ rule FastQCRef:
       threads=config["threads"],
       dir=expand("{path}/fastqc/", path=config["output_dir"]),
       reads=expand("{path}/output_demultiplex/clone-stacks/*.fq.gz", path=config["output_dir"])
-  shell: "fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}"
+  shell: 
+        """
+        mkdir -p {output.dir}
+        fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}
+        """
 
 #rule FastqcRefBefMerged:
 #  input:
