@@ -24,10 +24,10 @@ if config["mode"] == "denovo":
 
 if config["mode"]== "reference":
     rule all:
-        input: expand("{out}/output_demultiplex/clone-stacks/{sample}.Watson.1.fq.gz \
-            {out}/output_demultiplex/clone-stacks/{sample}.Watson.2.fq.gz \
-            {out}/output_demultiplex/clone-stacks/{sample}.Crick.1.fq.gz \
-            {out}/output_demultiplex/clone-stacks/{sample}.Crick.2.fq.gz \
+        input: expand("{out}/output_demultiplex/clone-stacks/{sample}-Watson.1.fq.gz \
+            {out}/output_demultiplex/clone-stacks/{sample}-Watson.2.fq.gz \
+            {out}/output_demultiplex/clone-stacks/{sample}-Crick.1.fq.gz \
+            {out}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz \
             {out}/fastqc/ \
             {out}/multiQC_report.html \
 		    {out}/log/{sample}_read-info.txt \
