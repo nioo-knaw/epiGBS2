@@ -173,7 +173,7 @@ rule zip_vcfs_denovo:
     input:
         perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])
     output:
-        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["out_dir"])
+        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
     params:
         sample="{sample}"
     conda:
