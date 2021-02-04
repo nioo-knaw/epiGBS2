@@ -91,7 +91,7 @@ rule indexRecalc:
     output:
         recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bai",out=config["tmpdir"]))
     conda:
-        "src/env/bcftools"
+        "src/env/bcftools.yaml"
     shell:
         "samtools index {input.recalcedBam}"
 
