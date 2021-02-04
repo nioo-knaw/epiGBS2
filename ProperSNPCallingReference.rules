@@ -61,7 +61,6 @@ rule countCovariates:
         -cov CycleCovariate\
         -recalFile {output.recalc} \
         -nt 1
-        -XX:ActiveProcessorCount=1 
         """
 rule recalc:
     input:
