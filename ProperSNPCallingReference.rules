@@ -70,7 +70,7 @@ rule recalc:
         reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"]),
         AsReferenceDict=expand("{path}/{genome}.dict",path=config["ref_dir"],genome=genomePlaceHolder),
         referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"]),
-        knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"])
+        knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]),
         recalc=expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"])
     output:
         recalcedBam=temp(expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]))
