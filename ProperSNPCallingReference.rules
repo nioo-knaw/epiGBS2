@@ -90,7 +90,7 @@ rule indexRecalc:
     input:
         recalcedBam=expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"])
     output:
-        recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bai",out=config["tmpdir"]))
+        recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]))
     conda:
         "src/env/samtools.yaml"
     shell:
