@@ -53,7 +53,7 @@ rule countCovariates:
         "../env/bisSNP.yaml"
     shell:
         """
-        bis-snp -R {input.ref} \
+        bis-snp -R {input.reference} \
         -I {input.alignment} \
         -T BisulfiteCountCovariates -knownSites {input.knownSNPs} \
         -cov ReadGroupCovariate \
