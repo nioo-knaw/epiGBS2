@@ -93,7 +93,7 @@ rule indexRecalc:
     conda:
         "../env/bcftools"
     shell:
-        "samtools index {input.recalced.bam}"
+        "samtools index {input.recalcedBam}"
 
 # call SNPs from recalibrated alignments
 # -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessary...)
