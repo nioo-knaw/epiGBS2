@@ -124,7 +124,7 @@ def getStand_call_conf(stand_call_conf):
 rule call_SNPs_reference:
     input:
         alignment=expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]),
-        recalcedBai=expand("{out}/alignment/{{sample}}_recalc.bai",out=config["tmpdir"]),
+        recalcedBai=expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"]),
         AsReferenceDict=expand("{path}/{genome}.dict",path=config["ref_dir"],genome=genomePlaceHolder),
         referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
