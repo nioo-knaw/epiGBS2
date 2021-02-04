@@ -60,8 +60,7 @@ rule countCovariates:
         -cov QualityScoreCovariate \
         -cov CycleCovariate\
         -recalFile {output.recalc} \
-        -nt 1 \
-        -XX:ActiveProcessorCount=1
+        -nt 1 
         """
 rule recalc:
     input:
@@ -83,8 +82,7 @@ rule recalc:
         -o {output.recalcedBam} \
         -T BisulfiteTableRecalibration \
         -recalFile {input.recalc} \
-        -maxQ 40 \
-        -XX:ActiveProcessorCount=1
+        -maxQ 40 
         """
 rule indexRecalc:
     input:
