@@ -60,7 +60,8 @@ rule countCovariates:
         -cov QualityScoreCovariate \
         -cov CycleCovariate\
         -recalFile {output.recalc} \
-        -nt 1
+        -nt 1 \
+        -XX:ActiveProcessorCount=1
         """
 rule recalc:
     input:
@@ -82,7 +83,8 @@ rule recalc:
         -o {output.recalcedBam} \
         -T BisulfiteTableRecalibration \
         -recalFile {input.recalc} \
-        -maxQ 40
+        -maxQ 40 \
+        -XX:ActiveProcessorCount=1
         """
 rule indexRecalc:
     input:
@@ -90,7 +92,7 @@ rule indexRecalc:
     output:
         recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bai",out=config["tmpdir"]))
     conda:
-        "src/env/bcftools.yaml"
+        "src/env/samtools.yaml"
     shell:
         "samtools index {input.recalcedBam}"
 
