@@ -241,7 +241,7 @@ rule countCovariates:
         aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
         referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"]),
         knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"])
     output:
         recalc=temp(expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"]))
@@ -264,7 +264,7 @@ rule recalc:
         aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
         referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"]),
         knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]),
         recalc=expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"])
     output:
