@@ -227,7 +227,7 @@ rule vcfHeader:
     output:
         knownSNPs=temp(expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]))
     conda:
-        "src/env/bcftools.yaml"
+        "../env/bcftools.yaml"
     shell:
         """
         bcftools mpileup {input.alignment} \
@@ -246,7 +246,7 @@ rule countCovariates:
     output:
         recalc=temp(expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"]))
     conda:
-        "src/env/env_bis-snp0.82.yaml"
+        "../env/env_bis-snp0.82.yaml"
     shell:
         """
         bis-snp -R {input.reference} \
@@ -270,7 +270,7 @@ rule recalc:
     output:
         recalcedBam=temp(expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]))
     conda:
-        "src/env/env_bis-snp0.82.yaml"
+        "../env/env_bis-snp0.82.yaml"
     shell:
         """
         bis-snp -R {input.reference}   \

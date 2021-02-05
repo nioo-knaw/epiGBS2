@@ -133,7 +133,7 @@ rule vcfHeader:
     output:
         knownSNPs=temp(expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]))
     conda:
-        "src/env/bcftools.yaml"
+        "../env/bcftools.yaml"
     shell:
         """
         bcftools mpileup {input.alignment} \
@@ -152,7 +152,7 @@ rule countCovariates:
     output:
         recalc=temp(expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"]))
     conda:
-        "src/env/env_bis-snp0.82.yaml"
+        "../env/env_bis-snp0.82.yaml"
     shell:
         """
         bis-snp -R {input.reference} \
@@ -176,7 +176,7 @@ rule recalc:
     output:
         recalcedBam=temp(expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]))
     conda:
-        "src/env/env_bis-snp0.82.yaml"
+        "../env/env_bis-snp0.82.yaml"
     shell:
         """
         bis-snp -R {input.reference}   \
@@ -192,7 +192,7 @@ rule indexRecalc:
     output:
         recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]))
     conda:
-        "src/env/samtools.yaml"
+        "../env/samtools.yaml"
     shell:
         "samtools index {input.recalcedBam}"
 
@@ -238,7 +238,7 @@ rule call_SNPs_reference:
     log:
         expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir"])
     conda:
-        "src/env/bisSNP.yaml"
+        "../env/bisSNP.yaml"
     threads: 6
     shell:
         "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf {params.stand_call_conf} -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
@@ -254,7 +254,7 @@ rule zip_vcfs_reference:
     params:
         sample="{sample}"
     conda:
-        "src/env/bcftools.yaml"
+        "../env/bcftools.yaml"
     shell:
         "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bcftools annotate -x FORMAT/GP | bgzip -c > {output.perIndvcfGZ}"
 #index them so we can use bcftools merge
@@ -264,7 +264,7 @@ rule index_vcfs_reference:
     output:
         perIndVCFTBI=expand("{path}/snp_calling/{{sample}}.vcf.gz.csi",path=config["output_dir"])
     conda:
-        "src/env/bcftools.yaml"
+        "../env/bcftools.yaml"
     shell:
         "bcftools index {input.perIndvcfGZ}"
 
@@ -279,6 +279,6 @@ rule merge_vcfs_reference:
     params:
         outDir=expand("{path}/snp_calling/",path=config["output_dir"])
     conda:
-        "src/env/bcftools.yaml"
+        "../env/bcftools.yaml"
     shell:
         """bcftools merge {params.outDir}/*.gz | bcftools view -i 'GT[*]="alt"&&REF!="N"' |  bgzip -c > {output.finalVCF}"""
