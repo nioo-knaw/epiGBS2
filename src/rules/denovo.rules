@@ -212,14 +212,84 @@ rule faidx_ref:
         """
 
 
-# call SNPs from recalibrated alignments
-# -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessary...)
-# -out_modes EMIT_ALL_CONFIDENT_SITES (Work in progress (default only outputs SNP sites so when combining you do not find coverage on homozygous ref alleles))
+#Bis snps needs a file of known snps to calibrate, which ensures that there it creates proper output and improves prescision. However,
+#Since our pipeline is mostly denovo focused, we do not have known SNPS (#TODO allow knownSNPs in config reference branch). 
+#We can however trick bis-snp in to improving the output by inputting an empty V4.1 vcf 
+#file which has all the contigs in the header. (We don't know why this works)
 
-# -stand_call_conf defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
-# #TODO Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
-# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
-# 50X, you could specify higher threshold to obtain higher accuracy. (So maybe play with this value?)
+rule vcfHeader:
+    input:
+        alignment=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES[0]),
+        aligmentIndex=expand("{out}/alignment/{sample}_sorted.bam.bai",out=config["tmpdir"],sample=SAMPLES[0]),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
+        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+    output:
+        knownSNPs=temp(expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]))
+    conda:
+        "src/env/bcftools.yaml"
+    shell:
+        """
+        bcftools mpileup {input.alignment} \
+        --fasta-ref {input.reference} -r 1 | \
+        grep "#" | sed "s/4.2/4.1/" | grep -v "##FORMAT" | grep -v "##INFO" > {output.knownSNPs}
+        """
+
+rule countCovariates:
+    input:
+        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
+        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"])
+    output:
+        recalc=temp(expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"]))
+    conda:
+        "src/env/env_bis-snp0.82.yaml"
+    shell:
+        """
+        bis-snp -R {input.reference} \
+        -I {input.alignment} \
+        -T BisulfiteCountCovariates -knownSites {input.knownSNPs} \
+        -cov ReadGroupCovariate \
+        -cov QualityScoreCovariate \
+        -cov CycleCovariate\
+        -recalFile {output.recalc} \
+        -nt 1 
+        """
+rule recalc:
+    input:
+        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
+        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
+        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]),
+        recalc=expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"])
+    output:
+        recalcedBam=temp(expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]))
+    conda:
+        "src/env/env_bis-snp0.82.yaml"
+    shell:
+        """
+        bis-snp -R {input.reference}   \
+        -I {input.alignment} \
+        -o {output.recalcedBam} \
+        -T BisulfiteTableRecalibration \
+        -recalFile {input.recalc} \
+        -maxQ 40 
+        """
+rule indexRecalc:
+    input:
+        recalcedBam=expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"])
+    output:
+        recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]))
+    conda:
+        "src/env/samtools.yaml"
+    shell:
+        "samtools index {input.recalcedBam}"
+
 
 stand_call_conf=config["param_SNPcalling"]["stand_call_conf"]
 
@@ -232,14 +302,25 @@ def getStand_call_conf(stand_call_conf):
         mq = stand_call_conf
     return mq
 
+
+# call SNPs from recalibrated alignments
+# -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessarysrc.)
+# -out_modes EMIT_ALL_CONFIDENT_SITES (Work in progress (default only outputs SNP sites so when combining you do not find coverage on homozygous ref alleles))
+
+# -stand_call_conf defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
+# #TODO Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
+# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
+# 50X, you could specify higher threshold to obtain higher accuracy. (So maybe play with this value?)
+
+# -toCoverage 1000 maximum read coverage 
 # -toCoverage 1000 maximum read coverage allowed
 #-mmq 20 minimal mapping quality
 #-mbq 20 minimal base quality
 #-nt 1 "Number of threads" actually number of gatk instances started.
-rule call_SNPs_denovo:
+rule call_SNPs_reference:
     input:
-        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
-        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
+        alignment=expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]),
+        recalcedBai=expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]),
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
         referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
         referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
