@@ -286,7 +286,7 @@ rule indexRecalc:
     output:
         recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]))
     conda:
-        "src/env/samtools.yaml"
+        "../env/samtools.yaml"
     shell:
         "samtools index {input.recalcedBam}"
 
