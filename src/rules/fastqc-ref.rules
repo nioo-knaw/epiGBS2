@@ -39,7 +39,7 @@ rule FastQCRef:
 rule MultiQCRef:
   input:
       before=expand("{path}/fastqc/", path=config["output_dir"]),
-      coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
+      coverageuncompr=expand("{out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"],sample=SAMPLES)
   output:
       report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
   params:
