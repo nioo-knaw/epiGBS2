@@ -73,7 +73,7 @@ rule gunzip:
 
 ##SNP_calling
 
-genomePlaceHolder = config["genome"].split(".")[0]
+genomePlaceHolder = os.path.splitext(config["genome"])[0]
 #Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
 rule sort_bam:
     input:
