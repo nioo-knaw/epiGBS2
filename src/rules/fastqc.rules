@@ -1,6 +1,6 @@
 rule fastqc:
   input:
-      expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"])
+      expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
   output:
       dir=directory(expand("{path}/fastqc/", path=config["output_dir"]))
 
