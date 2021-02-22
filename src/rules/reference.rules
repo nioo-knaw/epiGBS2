@@ -34,7 +34,7 @@ rule alignment_reference_bismark:
         "../env/bismark.yaml"
     threads: 8
     shell:
-        "bismark --un --ambiguous --genome {params.refDir} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample}"
+        "bismark --un --ambiguous --genome {params.refDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample}"
 
 
 # Call methylation sites with bismark
