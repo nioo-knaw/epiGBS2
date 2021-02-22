@@ -41,7 +41,7 @@ rule cutadapt_trimmed_three:
 		R1trimmed_three=temp(expand("{tmp}/cutadapt_trimmed_three/{{sample}}-{{strand}}_trimmed_three.1.fq.gz",tmp=config["tmpdir"])),
 		R2trimmed_three=temp(expand("{tmp}/cutadapt_trimmed_three/{{sample}}-{{strand}}_trimmed_three.2.fq.gz",tmp=config["tmpdir"]))
 	log:
-		log=expand("{out}/log/{{sample}}_cutadapt_trimmed_three.log",out=config["output_dir"])
+		log=expand("{out}/log/{{sample}}-{{strand}}_cutadapt_trimmed_three.log",out=config["output_dir"])
 	conda:
 		"../env/cutadapt.yaml"
 	threads: 1
