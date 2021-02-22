@@ -116,13 +116,13 @@ rule alignment_denovo_bismark:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
     params:
         out=expand("{path}",path=config["output_dir"]),
-        sample="{{sample}}",
+        sample="{sample}",
         NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
     conda:
         "../env/bismark.yaml"
     threads: 8
     shell:
-        "bismark --un --ambiguous --genome {params.NNrefDir} --non_directional -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample}"
+        "bismark --un --ambiguous --genome {params.NNrefDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample}"
 
 
 # Call methylation sites with bismark

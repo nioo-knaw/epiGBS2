@@ -28,7 +28,7 @@ rule alignment_reference_bismark:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
     params:
         out=expand("{path}",path=config["output_dir"]),
-        sample="{{sample}}",
+        sample="{sample}",
         refDir=expand("{path}/",path=config["ref_dir"])
     conda:
         "../env/bismark.yaml"
