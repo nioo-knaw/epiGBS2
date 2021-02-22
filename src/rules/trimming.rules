@@ -1,14 +1,3 @@
-rule pigz_merge:
-	input:
-		watson=,
-		crick=
-	output:
-		merged=temp(expand("{tmp}/merged/{{sample}}.{{strand}}.fq.gz",tmp=config["tmpdir"]))
-	threads: 1
-	shell:
-		"cat {input.watson} {input.crick} > {output.merged}"
-
-
 rule cutadapt_adapter:
 	input:
 		R1=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.1.fq.gz",out=config["output_dir"]),
