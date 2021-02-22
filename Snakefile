@@ -30,11 +30,8 @@ if config["mode"]== "reference":
             {out}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz \
             {out}/fastqc/ \
             {out}/multiQC_report.html \
-		    {out}/log/{sample}_read-info.txt \
-		    {out}/log/{sample}_untrimmed_filt_read-info.txt \
-		    {out}/log/{sample}_trimmed_three_read-info.txt \
 		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
-            {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
 		    {out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
