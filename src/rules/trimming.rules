@@ -11,7 +11,7 @@ rule pigz_merge:
 
 rule cutadapt_adapter:
 	input:
-		R1=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.1.fq.gz",out=config["output_dir"])),
+		R1=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.1.fq.gz",out=config["output_dir"]),
 		R2=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.2.fq.gz",out=config["output_dir"])
 	output:
 		txt=expand("{out}/log/{{sample}}-{{strand}}_read-info.txt",out=config["output_dir"]),
