@@ -7,7 +7,7 @@ rule pigz_merge:
 	threads: 1
 	shell:
 		"cat {input.watson} {input.crick} > {output.merged}"
-
+#test
 rule cutadapt_adapter:
 	input:
 		R1=expand("{tmp}/merged/{{sample}}.1.fq.gz",tmp=config["tmpdir"]),
