@@ -180,7 +180,7 @@ rule faidx_ref:
 rule calmd_bam:
     input:
         alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-        reference=expand("{out}/output_denovo/NNNNref/ref.fa", path=config["output_dir"])
+        reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
     output:
         alignmentCalmd=temp(expand("{tmp}/tmp/{{sample}}_calmd.bam",tmp=config["tmpdir"]))
     conda:
