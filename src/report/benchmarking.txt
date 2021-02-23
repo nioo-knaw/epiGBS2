@@ -1,0 +1,43 @@
+
+#Run epiGBS Snakemake for 1 individual until alignment
+snakemake -j 16 /mnt/nfs/bioinfdata/home/NIOO/maartenp/adam/adam-ref/output/alignment/Cvi0_11_trimmed_filt_merged.1_bismark_bt2_pe.bam --use-conda
+
+#Sort the alignment .bam file
+samtools sort output/alignment/Cvi0_11_trimmed_filt_merged.*bam > epiGBS-SNPCalling/Cvi0_11.bam
+#Calmd the sorted bam file and index the bam file
+samtools calmd -b epiGBS-SNPCalling/Cvi0_11.bam /home/NIOO/maartenp/epiGBS-ref/input/TAIR_10_chr.fa 1> epiGBS-SNPCalling/Cvi0_11_calmd.bam 2> epiGBS-SNPCalling/calmd.log
+samtools index epiGBS-SNPCalling/Cvi0_11_calmd.bam 
+
+#Run change sam queries.py 
+python src/mapping_varcall/change_sam_queries.py epiGBS-SNPCalling/Cvi0_11_calmd.bam epiGBS-SNPCalling/queried.bam -t tmp/
+
+#Run freebayes using settings adam recommended
+freebayes -f /home/NIOO/maartenp/epiGBS-ref/input/TAIR_10_chr.fa epiGBS-SNPCalling/queried.bam \
+    --no-partial-observations \
+    --report-genotype-likelihood-max \
+    --genotype-qualities \
+    --min-coverage 0 \
+    --min-base-quality 1 | sed "s/SAMPLE/Cvi0_11/" | bgzip -c > epiGBS-SNPCalling/Cvi0_11.vcf.gz 
+
+
+#Prepare baseline to only include sites for which there is coverage in the data set!
+samtools depth ../adam/adam-ref/epiGBS-SNPCalling/Cvi0_11.bam  | awk '$3>0{{print $1,$2-1,$2,$3}}' | sed 's/ /\t/g' > scratch/adam.depth
+#get depth from the alignment file #Subset the reference based on the depth of the indvidual alignment file
+cat <(bcftools view -h data/snp-calls/Cvi0Reference.vcf.gz) <(bedtools intersect -a data/snp-calls/Cvi0Reference.vcf.gz -b scratch/adam.depth -u) | \
+        bgzip -c > scratch/adamRef.vcf.gz
+tabix scratch/adamRef.vcf.gz #index the reference VCF
+#Calculate high confidence bed
+bcftools view -H scratch/adamRef.vcf.gz | awk '{print $1,$2-1,$2}'| sed 's/ /\t/g' | bedtools merge -i stdin > scratch/high_confidenceAdam.bed
+
+#Normalize and filter the calls
+bcftools norm --check-ref s -f /mnt/nfs/bioinfdata/home/NIOO/maartenp/epiGBS-ref/input/TAIR_10_chr.fa /mnt/nfs/bioinfdata/home/NIOO/maartenp/adam/adam-ref/epiGBS-SNPCalling/Cvi0_11.vcf.gz  > scratch/adamNorm.vcf
+cat <(bcftools view -h -s Cvi0_11 -V indels,mnps,ref,bnd,other scratch/adamNorm.vcf) <(bcftools view -s Cvi0_11 -V indels,mnps,ref,bnd,other scratch/adamNorm.vcf | awk '$0~"^#" || ($10~"^1/1" || $10~"^1/0" || $10~"^0/1")' )| bgzip -c > scratch/Cvi0_11Adam.vcf.gz
+tabix scratch/Cvi0_11Adam.vcf.gz
+
+#Run rtg vcf evalulation
+rtg vcfeval -b scratch/adamRef.vcf.gz -c scratch/Cvi0_11Adam.vcf.gz -t /mnt/nfs/bioinfdata/home/NIOO/maartenp/epiGBS-ref/input/TAIR_10_chr.fa.sdf \
+-o ../adam/adam-ref/epiGBS-SNPCalling/RTG/ \
+--sample=Cvi0_11 \
+--squash-ploidy \
+--vcf-score-field=GQ \
+--evaluation-regions=scratch/high_confidenceAdam.bed
