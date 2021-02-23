@@ -99,7 +99,7 @@ rule calmd_bam:
 #Merge the bam files for SNP calling, sort the output
 rule merge_sort_bam:
     input:
-        alignmentCalmd=expand("{tmp}/tmp/{{sample}}_calmd.bam",tmp=config["tmpdir"])
+        alignmentCalmd=expand("{tmp}/tmp/{sample}_calmd.bam",tmp=config["tmpdir"],sample=SAMPLES)
     output:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
     conda:
