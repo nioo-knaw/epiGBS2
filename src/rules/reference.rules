@@ -126,7 +126,7 @@ rule change_sam_queries:
         tmp=config["tmpdir"]
     threads: 10
     conda:
-        "../env/snp_calling_epiDiverse.yaml"
+        "../env/SNP_calling_epiDiverse.yaml"
     shell:
         "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads}"
 #Call SNPs using freebayes
@@ -138,7 +138,7 @@ rule call_SNPs_reference:
     output:
         snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
     conda:
-        "../env/snp_calling_epiDiverse.yaml"
+        "../env/SNP_calling_epiDiverse.yaml"
     threads: 20
     shell:
         """
