@@ -124,7 +124,7 @@ rule change_sam_queries:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:
         tmp=config["tmpdir"]
-    threads: 10
+    threads: workflow.cores
     conda:
         "../env/SNP_calling_epiDiverse.yaml"
     shell:
@@ -139,7 +139,7 @@ rule call_SNPs_reference:
         snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
     conda:
         "../env/SNP_calling_epiDiverse.yaml"
-    threads: 20
+    threads: workflow.cores
     shell:
         """
         freebayes-parralel <(fasta_generate_regions.py {input.refFai} 100000) 20 -f {input.ref} {input.preparedBam} \
