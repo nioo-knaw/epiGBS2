@@ -132,7 +132,7 @@ rule change_sam_queries:
 #Call SNPs using freebayes
 rule call_SNPs_reference:
     input:
-        preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"])
+        preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]),
         ref=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
         refFai=expand("{path}/{genome}.fai", path=config["ref_dir"],genome=config["genome"]),
     output:
