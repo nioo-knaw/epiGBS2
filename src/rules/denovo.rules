@@ -165,214 +165,79 @@ rule gunzip:
 
 
 ##SNP_calling ##########################
-
-#Sort the bam files for SNP calling. (Do we put this or the non sorted in the output directory?)
-rule sort_bam:
-    input:
-        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-    output:
-        alignmentSorted=temp(expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools sort {input.alignment} > {output.alignmentSorted}"
-#Index the sorted bam files
-rule index_bam:
-    input:
-        alignmentSorted=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"])
-    output:
-        aligmentIndex=temp(expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools index {input.alignmentSorted}"
-#CreateSequenceDirectory does not allow for NNNN's to be present in the genome thus they need to be replaced        
-#Create the reference dictionary
-rule referenceDict:
-    input:
-        AsReference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
-    output:
-        AsReferenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"])
-    conda:
-        "../env/picard.yaml"
-    shell: 
-        "picard CreateSequenceDictionary R={input.AsReference} O={output.AsReferenceDict}"
-
-#Index the reference with NNNNs. If we don't this it skips the last line due to there not being an \n
 rule faidx_ref:
     input:
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        referenceFai=expand("{path}//output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
     conda:
         "../env/samtools.yaml"
     shell:
         """
         samtools faidx {input.reference}
         """
-
-
-#Bis snps needs a file of known snps to calibrate, which ensures that there it creates proper output and improves prescision. However,
-#Since our pipeline is mostly denovo focused, we do not have known SNPS (#TODO allow knownSNPs in config reference branch). 
-#We can however trick bis-snp in to improving the output by inputting an empty V4.1 vcf 
-#file which has all the contigs in the header. (We don't know why this works)
-
-rule vcfHeader:
+#Run calmd 
+rule calmd_bam:
     input:
-        alignment=expand("{out}/alignment/{sample}_sorted.bam",out=config["tmpdir"],sample=SAMPLES[0]),
-        aligmentIndex=expand("{out}/alignment/{sample}_sorted.bam.bai",out=config["tmpdir"],sample=SAMPLES[0]),
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
-        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
+        reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
     output:
-        knownSNPs=temp(expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]))
-    conda:
-        "../env/bcftools.yaml"
-    shell:
-        """
-        bcftools mpileup {input.alignment} \
-        --fasta-ref {input.reference} -r 1 | \
-        grep "#" | sed "s/4.2/4.1/" | grep -v "##FORMAT" | grep -v "##INFO" > {output.knownSNPs}
-        """
-
-rule countCovariates:
-    input:
-        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
-        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
-        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"]),
-        knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"])
-    output:
-        recalc=temp(expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"]))
-    conda:
-        "../env/env_bis-snp0.82.yaml"
-    shell:
-        """
-        bis-snp -R {input.reference} \
-        -I {input.alignment} \
-        -T BisulfiteCountCovariates -knownSites {input.knownSNPs} \
-        -cov ReadGroupCovariate \
-        -cov QualityScoreCovariate \
-        -cov CycleCovariate\
-        -recalFile {output.recalc} \
-        -nt 1 
-        """
-rule recalc:
-    input:
-        alignment=expand("{out}/alignment/{{sample}}_sorted.bam",out=config["tmpdir"]),
-        aligmentIndex=expand("{out}/alignment/{{sample}}_sorted.bam.bai",out=config["tmpdir"]),
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
-        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"]),
-        knownSNPs=expand("{out}/alignment/knownsnps.vcf",out=config["tmpdir"]),
-        recalc=expand("{out}/alignment/{{sample}}_recalc_before.csv",out=config["tmpdir"])
-    output:
-        recalcedBam=temp(expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]))
-    conda:
-        "../env/env_bis-snp0.82.yaml"
-    shell:
-        """
-        bis-snp -R {input.reference}   \
-        -I {input.alignment} \
-        -o {output.recalcedBam} \
-        -T BisulfiteTableRecalibration \
-        -recalFile {input.recalc} \
-        -maxQ 40 
-        """
-rule indexRecalc:
-    input:
-        recalcedBam=expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"])
-    output:
-        recalcedBai=temp(expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]))
+        alignmentCalmd=temp(expand("{tmp}/tmp/{{sample}}_calmd.bam",tmp=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools index {input.recalcedBam}"
+        "samtools calmd -b {input.alignment} {input.reference} > {output.alignmentCalmd}"
 
-
-stand_call_conf=config["param_SNPcalling"]["stand_call_conf"]
-
-
-def getStand_call_conf(stand_call_conf):
-    if stand_call_conf == "default" or stand_call_conf == "":
-        print(param_mq)
-        mq = 20
-    else:
-        mq = stand_call_conf
-    return mq
-
-
-# call SNPs from recalibrated alignments
-# -XX:ActiveProcessorCount=1  <- ensures not all cores are being used (although still uses more cores then necessarysrc.)
-# -out_modes EMIT_ALL_CONFIDENT_SITES (Work in progress (default only outputs SNP sites so when combining you do not find coverage on homozygous ref alleles))
-
-# -stand_call_conf defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
-# #TODO Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
-# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
-# 50X, you could specify higher threshold to obtain higher accuracy. (So maybe play with this value?)
-
-# -toCoverage 1000 maximum read coverage 
-# -toCoverage 1000 maximum read coverage allowed
-#-mmq 20 minimal mapping quality
-#-mbq 20 minimal base quality
-#-nt 1 "Number of threads" actually number of gatk instances started.
+#Merge the bam files for SNP calling, sort the output
+rule merge_sort_bam:
+    input:
+        alignmentCalmd=expand("{tmp}/tmp/{sample}_calmd.bam",tmp=config["tmpdir"],sample=SAMPLES)
+    output:
+        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools merge - {input.alignmentCalmd} | samtools sort > {output.mergedBam}"
+#index the bam file
+rule index_merged_bam:
+    input:
+        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
+    output:
+        mergedBai=expand("{out}/alignment/merged.bam.bai",out=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {output.mergedBai}"
+#Change the sam queries using the epiDiverse script
+rule change_sam_queries:
+    input:
+        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
+    output:
+        preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
+    params:
+        tmp=config["tmpdir"]
+    threads: 10
+    conda:
+        "../env/SNP_calling_epiDiverse.yaml"
+    shell:
+        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads}"
+#Call SNPs using freebayes
 rule call_SNPs_reference:
     input:
-        alignment=expand("{out}/alignment/{{sample}}_recalc.bam",out=config["tmpdir"]),
-        recalcedBai=expand("{out}/alignment/{{sample}}_recalc.bam.bai",out=config["tmpdir"]),
-        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"]),
-        referenceDict=expand("{path}/output_denovo/NNNNref/ref.dict",path=config["output_dir"]),
-        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]),
+        ref=expand("{path}/output_denovo/NNNNref/ref.fa", path=config["ref_dir"],genome=config["genome"]),
+        refFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai", path=config["ref_dir"],genome=config["genome"]),
     output:
-        perIndVCF=temp(expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])),
-        perIndMethStats=temp(expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out.MethySummarizeList.txt",path=config["tmpdir"]))
-    params:
-        stand_call_conf=getStand_call_conf(stand_call_conf)
-    log:
-        expand("{path}/log/snp_call/{{sample}}_call.log",path=config["output_dir"])
+        snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
     conda:
-        "../env/bisSNP.yaml"
-    threads: 6
+        "../env/SNP_calling_epiDiverse.yaml"
+    threads: 20
     shell:
-        "(bis-snp -XX:ActiveProcessorCount=1 -T BisulfiteGenotyper -R {input.reference} -I {input.alignment} -vfn1 {output.perIndVCF} -out_modes EMIT_ALL_CONFIDENT_SITES -stand_call_conf {params.stand_call_conf} -toCoverage 1000 -mmq 20 -mbq 20 -nt 1) 2> {log}"
-
-#Attempts to combine all different output files
-#Order / zip vcf files
-#bcftools annotate -x FORMAT/GP Removes a field which causes issues when merging
-rule zip_vcfs_denovo:
-    input:
-        perIndVCF=expand("{path}/snp_calling/{{sample}}_snp.raw.vcf.out",path=config["tmpdir"])
-    output:
-        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
-    params:
-        sample="{sample}"
-    conda:
-        "../env/bcftools.yaml"
-    shell:
-        "bcftools view {input.perIndVCF}| sed 's/SAMPLE/{params.sample}/' | bcftools sort | bcftools annotate -x FORMAT/GP | bgzip -c > {output.perIndvcfGZ}"
-#index them so we can use bcftools merge
-rule index_vcfs_denovo:
-    input:
-        perIndvcfGZ=expand("{path}/snp_calling/{{sample}}.vcf.gz",path=config["output_dir"])
-    output:
-        perIndVCFTBI=expand("{path}/snp_calling/{{sample}}.vcf.gz.csi",path=config["output_dir"])
-    conda:
-        "../env/bcftools.yaml"
-    shell:
-        "bcftools index {input.perIndvcfGZ}"
-
-#Merges the individual vcf files
-# bcftools view -i 'GT[*]="alt"&&REF!="N"'. Filters site which do not have an alt allele in any individual + sites for which the ref = N
-rule merge_vcfs_denovo:
-    input:
-        perIndVCFTBI=expand("{path}/snp_calling/{sample}.vcf.gz.csi",path=config["output_dir"],sample=SAMPLES),
-        perIndvcfGZ=expand("{path}/snp_calling/{sample}.vcf.gz",path=config["output_dir"],sample=SAMPLES)
-    output:
-        finalVCF=expand("{path}/snp_calling/snp.vcf.gz",path=config["output_dir"])
-    params:
-        outDir=expand("{path}/snp_calling/",path=config["output_dir"])
-    conda:
-        "../env/bcftools.yaml"
-    shell:
-        """bcftools merge {params.outDir}/*.gz | bcftools view -i 'GT[*]="alt"&&REF!="N"' |  bgzip -c > {output.finalVCF}"""
+        """
+        freebayes-parralel <(fasta_generate_regions.py {input.refFai} 100000) 20 -f {input.ref} {input.preparedBam} \
+        --no-partial-observations \
+        --report-genotype-likelihood-max \
+        --genotype-qualities \
+        --min-coverage 0 \
+        --min-base-quality 1 | bgzip -c > {output.snpVCF}
+        """
