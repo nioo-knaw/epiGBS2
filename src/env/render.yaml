@@ -68,6 +68,7 @@ dependencies:
   - r-knitr=1.22=r36h6115d3f_0
   - r-magrittr=1.5=r36h6115d3f_4
   - r-markdown=0.9=r36h96ca727_0
+  - r-mime=0.6=r36h96ca727_0
   - r-ggpubr=0.2.4
   - r-rcpp=1.0.1=r36h29659fb_0
   - r-rmarkdown=1.12=r36h6115d3f_0
