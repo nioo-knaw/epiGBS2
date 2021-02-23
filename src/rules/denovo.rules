@@ -169,7 +169,7 @@ rule faidx_ref:
     input:
         reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
     output:
-        referenceFai=expand("{path}//output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
     conda:
         "../env/samtools.yaml"
     shell:
@@ -222,7 +222,7 @@ rule change_sam_queries:
     shell:
         "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads}"
 #Call SNPs using freebayes
-rule call_SNPs_reference:
+rule call_snps_denovo:
     input:
         preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]),
         ref=expand("{path}/output_denovo/NNNNref/ref.fa", path=config["output_dir"],genome=config["genome"]),
