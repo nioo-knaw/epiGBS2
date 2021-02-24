@@ -184,10 +184,11 @@ rule merge_sort_bam:
         alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES)
     output:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
+    threads: workflow.cores
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools merge - {input.alignmentCalmd} | samtools sort > {output.mergedBam}"
+        "samtools merge - {input.alignmentCalmd} | samtools sort -@ {threads} > {output.mergedBam}"
 #index the bam file
 rule index_merged_bam:
     input:
@@ -197,7 +198,7 @@ rule index_merged_bam:
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools index {output.mergedBai}"
+        "samtools index {output.mergedBam}"
 
 rule calmd_bam:
     input:
@@ -206,10 +207,11 @@ rule calmd_bam:
         reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
     output:
         alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
+    threads: workflow.cores
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools calmd -b {input.alignment} {input.reference} > {output.alignmentCalmd}"
+        "samtools calmd -b {input.alignment} {input.reference} -@ {threads} > {output.alignmentCalmd}"
 
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:

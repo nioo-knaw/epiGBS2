@@ -92,8 +92,9 @@ rule merge_sort_bam:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
     conda:
         "../env/samtools.yaml"
+    threads: workflow.cores
     shell:
-        "samtools merge - {input.alignmentCalmd} | samtools sort > {output.mergedBam}"
+        "samtools merge - {input.alignmentCalmd} | samtools sort -@ {threads} > {output.mergedBam}"
 #index the bam file
 rule index_merged_bam:
     input:
@@ -103,7 +104,7 @@ rule index_merged_bam:
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools index {output.mergedBai}"
+        "samtools index {output.mergedBam}"
 #Run calmd 
 rule calmd_bam:
     input:
@@ -114,8 +115,9 @@ rule calmd_bam:
         alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
+    threads: workflow.cores
     shell:
-        "samtools calmd -b {input.mergedBam} {input.reference} > {output.alignmentCalmd}"
+        "samtools calmd -b {input.mergedBam} {input.reference}  -@ {threads}  > {output.alignmentCalmd}"
 
 
 #Change the sam queries using the epiDiverse script
