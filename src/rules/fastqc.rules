@@ -41,7 +41,7 @@ rule Multiqc:
       report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
     params:
         dir=expand("{path}/", path=config["output_dir"]),
-        config="src/env/multiqc_config.yaml"
+        config="../env/multiqc_config.yaml"
     conda:
       "../env/multiqc.yaml"
     shell: "multiqc  {params.dir} -c {params.config} --interactive --filename {output.report1}"
