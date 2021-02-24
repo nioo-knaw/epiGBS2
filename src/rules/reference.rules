@@ -141,6 +141,18 @@ rule change_sam_queries:
         "../env/SNP_calling_epiDiverse.yaml"
     shell:
         "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads}"
+
+rule index_preparation:
+    input:
+        preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"])
+    output:
+        preparedBai=expand("{tmp}/alignment/prepared.bam.bai",tmp=config["tmpdir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.preparedBam}"
+
+
 #Call SNPs using freebayes
 rule call_SNPs_reference:
     input:
