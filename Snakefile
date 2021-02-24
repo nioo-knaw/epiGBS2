@@ -45,9 +45,6 @@ if config["mode"]== "denovo":
             {out}/fastqc/ \
             {out}/multiQC_report.html \
             {out}/output_denovo/consensus_cluster.renamed.fa \
-		    {out}/log/{sample}_read-info.txt \
-		    {out}/log/{sample}_untrimmed_filt_read-info.txt \
-		    {out}/log/{sample}_trimmed_three_read-info.txt \
 		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
 		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
