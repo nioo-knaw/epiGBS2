@@ -211,7 +211,7 @@ rule calmd_bam:
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools calmd -b {input.alignment} {input.reference} -@ {threads} > {output.alignmentCalmd}"
+        "samtools calmd -b {input.mergedBam} {input.reference} -@ {threads} > {output.alignmentCalmd}"
 rule index_calmd:
     input:
         alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"])
