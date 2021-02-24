@@ -112,7 +112,7 @@ rule calmd_bam:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"]),
         reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
     output:
-        alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
+        alignmentCalmd=temp(expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     threads: workflow.cores
