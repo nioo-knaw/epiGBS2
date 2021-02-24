@@ -4,7 +4,7 @@ rule FastQCRef:
   output:
       dir=directory(expand("{path}/fastqc/", path=config["output_dir"]))
   conda:
-      "../env/fastqc.yaml"
+      "src/env/fastqc.yaml"
 #  priority: 50
   params:
       q="--quiet",
