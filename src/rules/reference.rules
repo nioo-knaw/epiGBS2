@@ -131,7 +131,7 @@ rule index_calmd:
 rule change_sam_queries:
     input:
         mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]),
-        alignmentCalmd=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
+        alignmentCalmd=expand("{tmp}/tmp/merged_calmd.bam.bai",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:

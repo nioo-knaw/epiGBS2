@@ -18,8 +18,8 @@ rule cutadapt_adapter:
 
 rule cutadapt_untrimmed:
 	input:
-		R1untrimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.1.fq.gz",tmp=config["tmpdir"])),
-		R2untrimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.2.fq.gz",tmp=config["tmpdir"])),
+		R1untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.1.fq.gz",tmp=config["tmpdir"]),
+		R2untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.2.fq.gz",tmp=config["tmpdir"]),
 	output:
 		txtuntrimmedfilt=expand("{out}/log/{{sample}}-{{strand}}_untrimmed_filt_read-info.txt",out=config["output_dir"]),
 		R1untrimmedfilt=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed_filt.1.fq.gz",tmp=config["tmpdir"])),
@@ -34,8 +34,8 @@ rule cutadapt_untrimmed:
 
 rule cutadapt_trimmed_three:
 	input:
-		R1trimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.1.fq.gz",tmp=config["tmpdir"])),
-		R2trimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.2.fq.gz",tmp=config["tmpdir"]))
+		R1trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.1.fq.gz",tmp=config["tmpdir"]),
+		R2trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.2.fq.gz",tmp=config["tmpdir"])
 	output:
 		txttrimmed_three=expand("{out}/log/{{sample}}-{{strand}}_trimmed_three_read-info.txt",out=config["output_dir"]),
 		R1trimmed_three=temp(expand("{tmp}/cutadapt_trimmed_three/{{sample}}-{{strand}}_trimmed_three.1.fq.gz",tmp=config["tmpdir"])),
