@@ -130,7 +130,7 @@ rule index_calmd:
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
     input:
-        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
+        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]),
         alignmentCalmd=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))

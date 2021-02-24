@@ -203,7 +203,7 @@ rule index_merged_bam:
 rule calmd_bam:
     input:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"]),
-        mergedBai=expand("{out}/alignment/merged.bam.bai",out=config["output_dir"])
+        mergedBai=expand("{out}/alignment/merged.bam.bai",out=config["output_dir"]),
         reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
     output:
         alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
@@ -225,7 +225,8 @@ rule index_calmd:
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
     input:
-        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
+        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]),
+        alignmentCalmdBai=expand("{tmp}/tmp/merged_calmd.bam.bai",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:
