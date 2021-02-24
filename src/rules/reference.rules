@@ -117,13 +117,21 @@ rule calmd_bam:
         "../env/samtools.yaml"
     threads: workflow.cores
     shell:
-        "samtools calmd -b {input.mergedBam} {input.reference}  -@ {threads}  > {output.alignmentCalmd}"
-
-
+        """samtools calmd -b {input.mergedBam} {input.reference}  -@ {threads}  > {output.alignmentCalmd}"""
+rule index_calmd:
+    input:
+        alignmentCalmd=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
+    output:
+        alignmentCalmdBai=temp(expand("{tmp}/tmp/merged_calmd.bam.bai",tmp=config["tmpdir"]))
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.alignmentCalmd}"
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
     input:
         mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
+        alignmentCalmd=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:
