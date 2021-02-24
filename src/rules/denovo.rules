@@ -5,7 +5,7 @@ param_maxd=config["param_denovo"]["max-depth"]
 
 def getParam_id(param_id):
     if param_id == "default" or param_id == "":
-        id = 0.95
+        id = 0.97
     else:
         id = param_id
     return id
@@ -177,21 +177,11 @@ rule faidx_ref:
         samtools faidx {input.reference}
         """
 #Run calmd 
-rule calmd_bam:
-    input:
-        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-        reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
-    output:
-        alignmentCalmd=temp(expand("{tmp}/tmp/{{sample}}_calmd.bam",tmp=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools calmd -b {input.alignment} {input.reference} > {output.alignmentCalmd}"
 
 #Merge the bam files for SNP calling, sort the output
 rule merge_sort_bam:
     input:
-        alignmentCalmd=expand("{tmp}/tmp/{sample}_calmd.bam",tmp=config["tmpdir"],sample=SAMPLES)
+        alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES)
     output:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
     conda:
@@ -208,10 +198,23 @@ rule index_merged_bam:
         "../env/samtools.yaml"
     shell:
         "samtools index {output.mergedBai}"
+
+rule calmd_bam:
+    input:
+        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"]),
+        mergedBai=expand("{out}/alignment/merged.bam.bai",out=config["output_dir"])
+        reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
+    output:
+        alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools calmd -b {input.alignment} {input.reference} > {output.alignmentCalmd}"
+
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
     input:
-        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
+        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:

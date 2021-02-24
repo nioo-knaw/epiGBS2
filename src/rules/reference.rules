@@ -84,22 +84,10 @@ rule faidx_ref:
         """
         samtools faidx {input.reference}
         """
-#Run calmd 
-rule calmd_bam:
-    input:
-        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-        reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
-    output:
-        alignmentCalmd=temp(expand("{tmp}/tmp/{{sample}}_calmd.bam",tmp=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools calmd -b {input.alignment} {input.reference} > {output.alignmentCalmd}"
-
 #Merge the bam files for SNP calling, sort the output
 rule merge_sort_bam:
     input:
-        alignmentCalmd=expand("{tmp}/tmp/{sample}_calmd.bam",tmp=config["tmpdir"],sample=SAMPLES)
+        alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",tmp=config["tmpdir"],sample=SAMPLES)
     output:
         mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
     conda:
@@ -116,10 +104,24 @@ rule index_merged_bam:
         "../env/samtools.yaml"
     shell:
         "samtools index {output.mergedBai}"
+#Run calmd 
+rule calmd_bam:
+    input:
+        mergedBai=expand("{out}/alignment/merged.bam.bai",out=config["output_dir"]),
+        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"]),
+        reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
+    output:
+        alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools calmd -b {input.mergedBam} {input.reference} > {output.alignmentCalmd}"
+
+
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
     input:
-        mergedBam=expand("{out}/alignment/merged.bam",out=config["output_dir"])
+        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:
