@@ -154,7 +154,7 @@ rule call_SNPs_reference:
     threads: workflow.cores
     shell:
         """
-        freebayes-parralel <(fasta_generate_regions.py {input.refFai} 100000) 20 -f {input.ref} {input.preparedBam} \
+        freebayes-parallel <(fasta_generate_regions.py {input.refFai} 100000) 20 -f {input.ref} {input.preparedBam} \
         --no-partial-observations \
         --report-genotype-likelihood-max \
         --genotype-qualities \
