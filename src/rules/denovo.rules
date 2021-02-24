@@ -228,7 +228,7 @@ rule change_sam_queries:
         mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
         alignmentCalmdBai=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
     output:
-        preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
+        preparedBam=temp(expand("{tmp}/snp_calling/prepared.bam",tmp=config["tmpdir"]))
     params:
         tmp=config["tmpdir"]
     threads: workflow.cores
@@ -239,9 +239,9 @@ rule change_sam_queries:
 
 rule index_preparation:
     input:
-        preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"])
+        preparedBam=expand("{tmp}/snp_calling/prepared.bam",tmp=config["tmpdir"])
     output:
-        preparedBai=expand("{tmp}/alignment/prepared.bam.bai",tmp=config["tmpdir"])
+        preparedBai=expand("{tmp}/snp_calling/prepared.bam.bai",tmp=config["tmpdir"])
     conda:
         "../env/samtools.yaml"
     shell:
@@ -250,7 +250,8 @@ rule index_preparation:
 #Call SNPs using freebayes
 rule call_snps_denovo:
     input:
-        preparedBam=expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]),
+        preparedBam=expand("{tmp}/snp_calling/prepared.bam",tmp=config["tmpdir"]),
+        preparedBai=expand("{tmp}/snp_calling/prepared.bam.bai",tmp=config["tmpdir"]),
         ref=expand("{path}/output_denovo/NNNNref/ref.fa", path=config["output_dir"],genome=config["genome"]),
         refFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai", path=config["output_dir"],genome=config["genome"]),
     output:

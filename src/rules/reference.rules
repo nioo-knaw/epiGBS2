@@ -133,7 +133,7 @@ rule change_sam_queries:
         mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
         alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
     output:
-        preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
+        preparedBam=temp(expand("{tmp}/snp_calling/prepared.bam",tmp=config["tmpdir"]))
     params:
         tmp=config["tmpdir"]
     threads: workflow.cores
@@ -157,6 +157,7 @@ rule index_preparation:
 rule call_SNPs_reference:
     input:
         preparedBam=expand("{tmp}/snp_calling/prepared.bam",tmp=config["tmpdir"]),
+        preparedBai=expand("{tmp}/snp_calling/prepared.bam.bai",tmp=config["tmpdir"]),
         ref=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
         refFai=expand("{path}/{genome}.fai", path=config["ref_dir"],genome=config["genome"]),
     output:
