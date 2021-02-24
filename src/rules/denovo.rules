@@ -206,7 +206,7 @@ rule calmd_bam:
         mergedBai=expand("{out}/alignment/merged.bam.bai",out=config["output_dir"]),
         reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
     output:
-        alignmentCalmd=temp(expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]))
+        alignmentCalmd=temp(expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]))
     threads: workflow.cores
     conda:
         "../env/samtools.yaml"
@@ -214,9 +214,9 @@ rule calmd_bam:
         "samtools calmd -b {input.alignment} {input.reference} -@ {threads} > {output.alignmentCalmd}"
 rule index_calmd:
     input:
-        alignmentCalmd=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"])
+        alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"])
     output:
-        alignmentCalmdBai=temp(expand("{tmp}/tmp/merged_calmd.bam.bai",tmp=config["tmpdir"]))
+        alignmentCalmdBai=temp(expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     shell:
@@ -225,8 +225,8 @@ rule index_calmd:
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
     input:
-        mergedBam=expand("{tmp}/tmp/merged_calmd.bam",tmp=config["tmpdir"]),
-        alignmentCalmdBai=expand("{tmp}/tmp/merged_calmd.bam.bai",tmp=config["tmpdir"])
+        mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
+        alignmentCalmdBai=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
     output:
         preparedBam=temp(expand("{tmp}/alignment/prepared.bam",tmp=config["tmpdir"]))
     params:
