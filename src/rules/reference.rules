@@ -104,7 +104,7 @@ rule index_merged_bam:
     conda:
         "../env/samtools.yaml"
     shell:
-        "samtools index {output.mergedBam}"
+        "samtools index {input.mergedBam}"
 #Run calmd 
 rule calmd_bam:
     input:
