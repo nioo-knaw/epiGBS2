@@ -47,4 +47,4 @@ rule MultiQCRef:
       config="src/env/multiqc_config.yaml"
   conda:
       "../env/multiqc.yaml"
-  shell: "multiqc {params.dir}  -c {params.config} --interactive --filename {output.report1}"
+  shell: "multiqc {params.dir}  -c {params.config} --interactive --filename {output.report1} -f"
