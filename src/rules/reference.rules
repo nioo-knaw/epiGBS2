@@ -140,7 +140,7 @@ rule change_sam_queries:
     conda:
         "../env/SNP_calling_epiDiverse.yaml"
     shell:
-        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads}"
+        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads} -Q"
 
 rule index_preparation:
     input:
