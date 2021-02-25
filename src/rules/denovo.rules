@@ -231,11 +231,11 @@ rule change_sam_queries:
         preparedBam=temp(expand("{tmp}/snp_calling/prepared.bam",tmp=config["tmpdir"]))
     params:
         tmp=config["tmpdir"]
-    threads: workflow.cores
+    threads: 1
     conda:
         "../env/SNP_calling_epiDiverse.yaml"
     shell:
-        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp} -T {threads}"
+        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.preparedBam} -t {params.tmp}"
 
 rule index_preparation:
     input:
