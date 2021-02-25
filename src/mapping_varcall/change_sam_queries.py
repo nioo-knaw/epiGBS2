@@ -433,7 +433,7 @@ def merger(TDIR,batch):
 	bam = tempfile.mktemp(dir=TDIR)
 
 	# merge bams
-	arguments = ["-f",bam]
+	arguments = ["-fcp",bam]
 	arguments = arguments + batch
 	pysam.merge(*arguments)
 
