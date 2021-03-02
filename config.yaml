@@ -43,5 +43,4 @@ param_denovo:
 # threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
 # 50X, you could specify higher threshold to obtain higher accuracy.
 # We use a default value of 10
-param_SNPcalling:
-  stand_call_conf: "10"
+mapping_quality: 10
