@@ -8,7 +8,7 @@ rule FastQCRef:
 #  priority: 50
   params:
       q="--quiet",
-      threads=config["threads"],
+      threads=8
       dir=expand("{path}/fastqc/", path=config["output_dir"]),
       reads=expand("{path}/output_demultiplex/clone-stacks/*.fq.gz", path=config["output_dir"])
   shell: 
