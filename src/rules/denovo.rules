@@ -266,5 +266,6 @@ rule call_snps_denovo:
         --report-genotype-likelihood-max \
         --genotype-qualities \
         --min-coverage 0 \
-        --min-base-quality 1 | bgzip -c > {output.snpVCF}
+        --min-base-quality 1 \
+        --min-mapping-quality 10 | bgzip -c > {output.snpVCF}
         """
