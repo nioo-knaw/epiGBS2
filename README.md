@@ -68,6 +68,9 @@ threshold could be defined lower than 10, or even 4. For ultra-high coverage seq
 
 The Flowcellname can be found in the fastq headers of the read file, e.g. `@ST-E00317:403:H53KHCCXY:5:1101:5660:1309 1:N:0:NCAATCAC` translates to `@ST-E00317:403:FLOWCELL:LANE-NUMBER:1101:5660:1309 1:N:0:NCAATCAC`. ENZ_R1/2 expects the names of the restriction enzymes and Wobble_R1/2 is the length of the unique molecular identifier ("Wobble") sequence (usually 3).
 It is important that the restriction enzyme names are spelled correctly, so the end of the restriction enzyme names are capital i (I) and not an l (lowercase L) or an 1 (number).
+
+At the moment it is not supported to process **multiple lanes** at the same time. Limiting step is the demultiplexing. If you want to analyse more than one lane, please first run demultiplexing per lane, merge demultiplexed files and then run the rest of the pipeline.
+
 ```
 # barcodes.tsv
 Flowcell        Lane    Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
@@ -139,8 +142,7 @@ cytosines in the genome. Uses 1-based chromosome coordinates, and outputs contex
 ## When not to run the pipeline?
 
 - If you want to determine methylation in restriction enzyme overhang. The original sequence will be replaced by the expected overhang during demultiplexing if a mismatch between expected and actual overhang sequence occurs. Hence, C-T conversions are replaced by a C and methylation would be artifically set to 100%.
-- The reference branch is in an experimental stage. One observed drawback is a low mapping percentage (20-30 %) but it might depend from the reference genome and organism.
-- SNP and methylation calling are not benchmarked.
+- there is no full support for running multiple lanes at one (see comment above, where barcode file is described)
 
 ## Quality control or "How to discover errors?"
 
@@ -188,6 +190,12 @@ The coverage is too low in the methylation bed file and after filtering on cover
 - The required amount of reads will depend from the expected number of DNA fragments. You can calculate this for your (or a related) species by using R packages like SimRAD (https://cran.r-project.org/package=SimRAD)
 - sequence more
 - reduce the genome representation by using a low cutting restriction enzyme
+
+#### Problem:
+The mapping percentage in de novo mode is low.
+
+#### Fix:
+- check and optimize the parameters of the de novo reference creation
 
 ## Example Config Files
 
@@ -317,12 +325,14 @@ param_SNPcalling:
 - [Python 3.7](https://www.python.org/)
 - [R + R package to render Rmd](https://www.r-project.org/)
 - [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc)
-- [Trim-galore](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore)
+- [Cutadapt](https://cutadapt.readthedocs.io/en/stable/)
 - [Pear](https://cme.h-its.org/exelixis/web/software/pear/)
 - [Seqtk](https://github.com/lh3/seqtk)
-- [STAR](https://github.com/alexdobin/STAR)
+- [Bismark](https://www.bioinformatics.babraham.ac.uk/projects/bismark/)
 - [vsearch](https://github.com/torognes/vsearch)
 - [Samtools](http://www.htslib.org/)
+- [Freebayes](https://github.com/freebayes/freebayes)
+- [epiDiverse SNP calling](https://github.com/EpiDiverse/snp)
 
 ### References
 
@@ -334,6 +344,9 @@ param_SNPcalling:
 5.	Stacks 2: Analytical Methods for Paired-end Sequencing Improve RADseq-based Population Genomics | bioRxiv. Available at: https://www.biorxiv.org/content/10.1101/615385v1. (Accessed: 27th August 2019)
 6.	Andrews, Simon. FastQC: a quality control tool for high throughput sequence data. Available online at: http://www.bioinformatics.babraham.ac.uk/projects/fastqc. (2010).
 7.	Zhang, J., Kobert, K., Flouri, T. & Stamatakis, A. PEAR: a fast and accurate Illumina Paired-End reAd mergeR. Bioinformatics 30, 614-620 (2014).
-8.	Dobin, A. et al. STAR: ultrafast universal RNA-seq aligner. Bioinformatics 29, 15-21 (2013).
 9.	Rognes, T., Flouri, T., Nichols, B., Quince, C. & Mahé, F. VSEARCH: a versatile open source tool for metagenomics. PeerJ 4, (2016).
 10.	Lepais, O. & Weir, J. T. SimRAD: an R package for simulation-based prediction of the number of loci expected in RADseq and similar genotyping by sequencing approaches. Mol. Ecol. Resour. 14, 1314-1321 (2014).
+11. Krueger F, Andrews SR. Bismark: a flexible aligner and methylation caller for Bisulfite-Seq applications. Bioinformatics. 27(11):1571-2. (2011)
+12. Garrison, E., Marth, G. Haplotype-based variant detection from short-read sequencing. arXiv:1207.3907 (2012)
+13. Martin, M. Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal 17 1, 10-1 (2011)
+14. Nunn, A., Otto, C., Stadler, P.F., Langenberger, D. Manipulating base quality scores enables variant calling from bisulfite sequencing alignments using conventional Bayesian approaches bioRxiv 2021.01.11.425926; doi: https://doi.org/10.1101/2021.01.11.425926 (2021)
