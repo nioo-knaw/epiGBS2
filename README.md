@@ -68,6 +68,9 @@ threshold could be defined lower than 10, or even 4. For ultra-high coverage seq
 
 The Flowcellname can be found in the fastq headers of the read file, e.g. `@ST-E00317:403:H53KHCCXY:5:1101:5660:1309 1:N:0:NCAATCAC` translates to `@ST-E00317:403:FLOWCELL:LANE-NUMBER:1101:5660:1309 1:N:0:NCAATCAC`. ENZ_R1/2 expects the names of the restriction enzymes and Wobble_R1/2 is the length of the unique molecular identifier ("Wobble") sequence (usually 3).
 It is important that the restriction enzyme names are spelled correctly, so the end of the restriction enzyme names are capital i (I) and not an l (lowercase L) or an 1 (number).
+
+At the moment it is not supported to process **multiple lanes** at the same time. Limiting step is the demultiplexing. If you want to analyse more than one lane, please first run demultiplexing per lane, merge demultiplexed files and then run the rest of the pipeline.
+
 ```
 # barcodes.tsv
 Flowcell        Lane    Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
