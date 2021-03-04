@@ -175,5 +175,6 @@ rule call_SNPs_reference:
         --genotype-qualities \
         --min-coverage 0 \
         --min-base-quality 1 \
-        --min-mapping-quality 10 | bgzip -c > {output.snpVCF}
+        --min-mapping-quality 10 \
+        --no-population-priors | bgzip -c > {output.snpVCF}
         """
