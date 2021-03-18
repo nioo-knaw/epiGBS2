@@ -18,7 +18,7 @@ rule FastQCRef:
         """
 rule fastqc_trimmed:
   input:
-	  trimmed_merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLE)
+	  trimmed_merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLES)
   output:
       dir=directory(expand("{path}/fastqc_trimmed/", path=config["output_dir"]))
 
