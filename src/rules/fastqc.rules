@@ -18,6 +18,28 @@ rule fastqc:
        fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}
        """
 
+
+rule fastqc_trimmed:
+  input:
+		  trimmed_merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLE)
+  output:
+      dir=directory(expand("{path}/fastqc_trimmed/", path=config["output_dir"]))
+
+  conda:
+       "../env/fastqc.yaml"
+  threads: 8
+  params:
+       q="--quiet",
+       threads=8,
+       dir=expand("{path}/fastqc_trimmed/", path=config["output_dir"]),
+       reads=expand("{path}/cutadapt/*.fq.gz", path=config["output_dir"])
+  shell: 
+       """
+       mkdir -p {output.dir}
+       fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}
+       """
+
+
 rule logparse:
   input:
       demultiplex=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
@@ -35,6 +57,7 @@ rule logparse:
 rule Multiqc:
     input:
       before=expand("{path}/fastqc/", path=config["output_dir"]),
+      trimmed=directory(expand("{path}/fastqc_trimmed/", path=config["output_dir"])),
       demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
       coverageuncompr=expand("{out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"],sample=SAMPLES)
     output:
