@@ -132,9 +132,8 @@ cytosines in the genome. Uses 1-based chromosome coordinates, and outputs contex
 	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe_splitting_report.txt: Shows stats of the methylation calling. Is summarized in the multiQC file
 
 - snp_calling:
-	- {sample}.vcf.gz : Per sample SNP calls for all sites in the genome, in vcf format.
-	- {sample}.vcf.gz.csi : index file for the per sample vcf file
-	- snp.vcf.gz: combined file containing all individuals. Only contains site with atleast one occurence of an Alt allele, and for which the reference base is not N
+	- masked.bam: Input file for freebayes. Can be used to run any SNP_caller supporting multicohort SNP_calling
+	- snp.vcf.gz: combined file containing all SNPs for all individuals. 
 - multiQC_report_data: Directory containing all log and intermediary files that are created by MultiQC
 - fastqc: Directory containing individual FastQC reports is summarized in the multiQC report
 - log: Directory containing log-files. Is summarized in the multiQC report
@@ -221,9 +220,6 @@ barcodes: "barcodes.tsv"
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
 tmpdir        : "/tmp/"
 
-# some of the steps can be run in parallel. Please set the number of available computing threads on your system
-threads: "12"
-
 # mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "denovo"
 
@@ -243,15 +239,6 @@ param_denovo:
   identity: "0.97"
   min-depth: "10"
   max-depth: "10000"
-
-# parameter for the snp calling (variant callin)
-# stand_call_conf: defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
-# Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
-# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
-# 50X, you could specify higher threshold to obtain higher accuracy.
-# We use a default value of 20
-param_SNPcalling:
-    stand_call_conf: "20"
 
 
 ```
@@ -279,9 +266,6 @@ barcodes: "barcodes.tsv"
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
 tmpdir        : "/tmp/"
 
-# some of the steps can be run in parallel. Please set the number of available computing threads on your system
-threads: "12"
-
 # mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
 
@@ -302,14 +286,6 @@ param_denovo:
   min-depth: ""
   max-depth: ""
 
-# parameter for the snp calling (variant callin)
-# stand_call_conf: defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
-# Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
-# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
-# 50X, you could specify higher threshold to obtain higher accuracy.
-# We use a default value of 20
-param_SNPcalling:
-    stand_call_conf: "20"
 
 
 ```
