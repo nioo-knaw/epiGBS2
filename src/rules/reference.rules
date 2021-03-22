@@ -89,7 +89,7 @@ rule merge_sort_bam:
     input:
         alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES)
     output:
-        mergedBam=temp(expand("{tmp}/alignment/merged.bam",out=config["tmpdir"]))
+        mergedBam=temp(expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     threads: workflow.cores
@@ -98,9 +98,9 @@ rule merge_sort_bam:
 #index the bam file
 rule index_merged_bam:
     input:
-        mergedBam=expand("{tmp}/alignment/merged.bam",out=config["tmpdir"])
+        mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"])
     output:
-        mergedBai=temp(expand("{tmp}/alignment/merged.bam.bai",out=config["tmpdir"]))
+        mergedBai=temp(expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]))
     conda:
         "../env/samtools.yaml"
     shell:
@@ -108,8 +108,8 @@ rule index_merged_bam:
 #Run calmd 
 rule calmd_bam:
     input:
-        mergedBai=expand("{tmp}/alignment/merged.bam.bai",out=config["tmpdir"]),
-        mergedBam=expand("{tmp}/alignment/merged.bam",out=config["tmpdir"]),
+        mergedBai=expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]),
+        mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]),
         reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
     output:
         alignmentCalmd=temp(expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]))
