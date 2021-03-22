@@ -154,6 +154,17 @@ rule index_preparation:
 
 
 #Call SNPs using freebayes
+#<(fasta_generate_regions.py) Splits up the reference to allow parallelisation
+#-f reference
+#--no-partial-observations causes freebayes to only consider observations that completely cover the haplotype window that's used during calling.
+#--report-genotype-likelihood-max Report genotypes using the maximum-likelihood estimate provided from genotype likelihoods.
+#--genotype-qualities output genotype qualties (GQ) for filtering
+#--min-coverage 0 Require at least this coverage to process a site. 
+#--min-base-quality 1 Exclude alleles from analysis if their supporting base quality is less than 1. 
+#--min-mapping-quality 10 Exclude alleles from analysis if their supporting mapping quality is less than 10. 
+#--no-populations-priors Equivalent to --pooled-discrete --hwe-priors-off and removal of Ewens Sampling Formula component of priors.
+#
+
 rule call_SNPs_reference:
     input:
         maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"]),
