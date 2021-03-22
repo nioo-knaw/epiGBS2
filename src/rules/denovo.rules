@@ -228,7 +228,7 @@ rule change_sam_queries:
         mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
         alignmentCalmdBai=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
     output:
-        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"]))
+        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
     params:
         tmp=config["tmpdir"]
     threads: workflow.cores
