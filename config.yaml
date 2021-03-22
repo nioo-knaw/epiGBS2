@@ -36,11 +36,3 @@ param_denovo:
   identity: ""
   min-depth: ""
   max-depth: ""
-
-# parameter for the snp calling (variant callin)
-# stand_call_conf: defines the likelihood ratio criteria between best and second best genotype for call to be considered confident
-# Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
-# threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
-# 50X, you could specify higher threshold to obtain higher accuracy.
-# We use a default value of 10
-mapping_quality: 10
