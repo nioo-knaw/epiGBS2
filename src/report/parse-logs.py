@@ -61,62 +61,70 @@ def parse_stacks(args):
     output_clones.close()
 
 def parse_denovo(args):
-    outdir = args.output_dir
-    output_denovo = open(os.path.join(outdir, "denovo.log"), "w")
-    output_merge = open(os.path.join(outdir,"merge.log"), "w")
-    output_merge.write("name, count, total count, %\n")
-    output_denovo.write("total clusters, min size, max size, avg. size, singletons, singletons % seq, singletons % clusters\n") 
-    count = 0
-    count2 = 0
-    count3 = 0
-    clusters = []
-    for line in open(args.input_denovo):
-        if "Assembled reads ." in line:
-            count += 1
-            if count == 1:
-                strand = 'crick'
-                string = line.replace(',', '')
-                list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
-                output_merge.write("Assembled reads " + strand + ", " + ", ".join(list) + '\n')
-            elif count == 2:
-                strand = 'watson'
-                string = line.replace(',', '')
-                list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
-                output_merge.write("Assembled reads " + strand + ", " + ", ".join(list) + '\n')
-        elif "Discarded reads ." in line:
-            count2 += 1
-            if count2 == 1:
-                strand = 'crick'
-                string = line.replace(',', '')
-                list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
-                output_merge.write("Discarded reads " + strand + ", " + ", ".join(list) + '\n')
-            elif count2 == 2:
-                strand = 'watson'
-                string = line.replace(',', '')
-                list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
-                output_merge.write("Discarded reads " + strand + ", " + ", ".join(list) + '\n')
-        elif "Not assembled reads ." in line:
-            count3 += 1
-            if count3 == 1:
-                strand = 'crick'
-                string = line.replace(',', '')
-                list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
-                output_merge.write("Not assembled reads " + strand + ", " + ", ".join(list) + '\n')
-            elif count3 == 2:
-                strand = 'watson'
-                string = line.replace(',', '')
-                list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
-                output_merge.write("Not assembled reads " + strand + ", " + ", ".join(list) + '\n')
-        elif "Clusters:" in line:
-                string = line.replace(',', '')
-                clusters.extend([str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string))
-        elif "Singletons:" in line:
-                string = line.replace(',', '')
-                clusters.extend([str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string))
-    #print(clusters)
-    output_denovo.write(", ".join(clusters))
-    output_denovo.close()
-    output_merge.close()
+    try:
+        outdir = args.output_dir
+        output_denovo = open(os.path.join(outdir, "denovo.log"), "w")
+        output_merge = open(os.path.join(outdir,"merge.log"), "w")
+        output_merge.write("name, count, total count, %\n")
+        output_denovo.write("total clusters, min size, max size, avg. size, singletons, singletons % seq, singletons % clusters\n") 
+        count = 0
+        count2 = 0
+        count3 = 0
+        clusters = []
+        for line in open(args.input_denovo):
+            if "Assembled reads ." in line:
+                count += 1
+                if count == 1:
+                    strand = 'crick'
+                    string = line.replace(',', '')
+                    list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
+                    output_merge.write("Assembled reads " + strand + ", " + ", ".join(list) + '\n')
+                elif count == 2:
+                    strand = 'watson'
+                    string = line.replace(',', '')
+                    list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
+                    output_merge.write("Assembled reads " + strand + ", " + ", ".join(list) + '\n')
+            elif "Discarded reads ." in line:
+                count2 += 1
+                if count2 == 1:
+                    strand = 'crick'
+                    string = line.replace(',', '')
+                    list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
+                    output_merge.write("Discarded reads " + strand + ", " + ", ".join(list) + '\n')
+                elif count2 == 2:
+                    strand = 'watson'
+                    string = line.replace(',', '')
+                    list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
+                    output_merge.write("Discarded reads " + strand + ", " + ", ".join(list) + '\n')
+            elif "Not assembled reads ." in line:
+                count3 += 1
+                if count3 == 1:
+                    strand = 'crick'
+                    string = line.replace(',', '')
+                    list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
+                    output_merge.write("Not assembled reads " + strand + ", " + ", ".join(list) + '\n')
+                elif count3 == 2:
+                    strand = 'watson'
+                    string = line.replace(',', '')
+                    list = [str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string)
+                    output_merge.write("Not assembled reads " + strand + ", " + ", ".join(list) + '\n')
+            elif "Clusters:" in line:
+                    string = line.replace(',', '')
+                    clusters.extend([str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string))
+            elif "Singletons:" in line:
+                    string = line.replace(',', '')
+                    clusters.extend([str(s) for s in string.split() if s.isdigit()] + re.findall(r'\d+\.\d+', string))
+        #print(clusters)
+        output_denovo.write(", ".join(clusters))
+        output_denovo.close()
+        output_merge.close()
+    except FileNotFoundError:
+        merge = os.path.join(outdir,"merge.log")
+        denovo = os.path.join(outdir,"denovo.log")
+        os.remove(merge)
+        os.remove(denovo)
+        print("This report seems to run in reference mode. De novo creation logs will be skipped. If this assumption is incorrect, please re-check if de novo creation run succesfully.")
+
 
 def main():
     args = parse_args()
