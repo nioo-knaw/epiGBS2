@@ -33,7 +33,7 @@ rule denovo_reference:
         WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
         WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
     output:
-        ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa", params=paramspace.instance_patterns),
+        ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="output_denovo/consensus_cluster.renamed.fa", params=paramspace.instance_patterns),
         consensus_cluster=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa", params=paramspace.instance_patterns)),
         consensus=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus.fa", params=paramspace.instance_patterns)),
         assemble=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz", params=paramspace.instance_patterns)),
