@@ -74,8 +74,8 @@ if config["mode"]== "paramTest":
             {out}/output_demultiplex/Watson_R1.fq.gz \
             {out}/output_demultiplex/Crick_R2.fq.gz \
             {out}/output_demultiplex/Crick_R1.fq.gz \
+            {out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
             {out}/paramTest/{params}/output_denovo/consensus_cluster.renamed.fa \
-            {out}/paramTest/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
 		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz".split(),out=config["output_dir"],params=paramspace.instance_patterns,sample=SAMPLE,samples=SAMPLES)
 
