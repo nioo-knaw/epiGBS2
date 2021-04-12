@@ -1,0 +1,112 @@
+#Get parameters from the config file
+param_id=config["param_denovo"]["identity"]
+param_mind=config["param_denovo"]["min-depth"]
+param_maxd=config["param_denovo"]["max-depth"]
+
+
+def getParam_id(param_id):
+    if param_id == "default" or param_id == "":
+        id = 0.97
+    else:
+        id = param_id
+    return id
+def getParam_mind(param_mind):
+    if param_mind=="default" or param_mind == "":
+        mind = 10
+    else:
+        mind = param_mind
+    return mind
+def getParam_maxd(param_maxd):
+    if param_maxd=="default" or param_maxd == "":
+        dep = 10000
+    else:
+        dep = param_maxd
+    return dep
+
+#Run the denovo creation python script
+
+rule denovo_reference:
+    input:
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+        CrickR1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+        CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
+        WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+        WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
+    output:
+        ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa", params=paramspace.instance_patterns),
+        consensus_cluster=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa", params=paramspace.instance_patterns)),
+        consensus=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus.fa", params=paramspace.instance_patterns)),
+        assemble=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz", params=paramspace.instance_patterns)),
+        unass_R2=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz", params=paramspace.instance_patterns)),
+        unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.instance_patterns)),
+        index_ref=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.instance_patterns))
+    params:
+        cycles=config["cycles"],
+        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        simulation=paramspace.instance,
+        max_depth=getParam_maxd(param_maxd),
+        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.instance_patterns)
+    log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.instance_patterns)
+    conda:
+        "../env/de-novo.yaml"
+    threads: workflow.cores*0.5
+    shell:
+        """
+        mkdir -p {params.tmp}
+        python src/de_novo_reference_creation/make_reference.py \
+        --inputdir {params.indir} \
+        --barcodes {input.bar} \
+        --threads {threads} \
+        --outputdir {params.outdir} \
+        --cycles {params.cycles} \
+        --clustering_treshold {params.identity} \
+        --max_unique_size {params.max_depth} \
+        --min_unique_size {params.min_depth} \
+        --tmpdir {params.tmp} \
+        --log {log} 
+        rm -r {params.tmp}
+        """
+
+
+
+#This rule adds the NNNN's at the start and end of the denovo sequences 
+#otherwise bismark can't call context at these sites and breaks
+rule genome_prep_for_bismark_denovo_bismark:
+    input:
+         reference=expand("{path}/paramsTest/{params}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"], params=paramspace.instance_patterns)
+    output:
+         refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.instance_patterns)
+    params:
+        NNrefDir=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.instance_patterns)
+    conda:
+        "../env/bismark.yaml"
+    shell:
+         '''
+         cat {input.reference} | tr "\\n" "X" | sed "s/X>/\\n>/g" | sed 's/$/NNNN/' | sed "s/X/\\nNNNN/"| sed 's/X//g' > {params.NNrefDir}/ref.fa
+         bismark_genome_preparation {params.NNrefDir}
+         '''
+
+#Align the trimmed reads to the denovo clusters
+# --un outputs  unmapped reads to the output directory #Needed?
+# --ambigious outputs ambigious writes the ambigiuos reads #Needed?
+# --non_directional: sequencing library not in a specific direction
+# --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
+
+rule alignment_denovo_bismark:
+    input:
+        R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
+        R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
+        refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.instance_patterns)
+    output:
+        alignment=expand("{out}/paramsTest/{params}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"], params=paramspace.instance_patterns)
+    params:
+        out=expand("{path}/paramsTest/{params}",path=config["output_dir"], params=paramspace.instance_patterns),
+        sample="{sample}",
+        NNrefDir=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.instance_patterns)
+    conda:
+        "../env/bismark.yaml"
+    threads: 8
+    shell:
+        "bismark --un --ambiguous --genome {params.NNrefDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/  --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
