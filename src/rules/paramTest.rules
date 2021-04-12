@@ -41,25 +41,32 @@ rule denovo_reference:
         unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.wildcard_pattern)),
         index_ref=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.wildcard_pattern))
     params:
-#        cycles=config["cycles"],
-#        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
-#        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        cycles=config["cycles"],
+        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
         test=paramspace.instance,
-#        max_depth=getParam_maxd(param_maxd),
-#        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
-#        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.wildcard_pattern)
+        max_depth=getParam_maxd(param_maxd),
+        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.wildcard_pattern)
     log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.wildcard_pattern)
     conda:
         "../env/de-novo.yaml"
     threads: workflow.cores*0.5
     shell:
         """
+        mkdir -p {params.tmp}
         python src/de_novo_reference_creation/make_reference.py \
+        --inputdir {params.indir} \
         --barcodes {input.bar} \
         --threads {threads} \
+        --outputdir {params.outdir} \
+        --cycles {params.cycles} \
         --clustering_treshold {wildcards.identity} \
         --min_unique_size {wildcards.min_depth} \
+        --max_unique_size {params.max_depth} \
+        --tmpdir {params.tmp} \
         --log {log} 
+        rm -r {params.tmp}
         """
 
 
