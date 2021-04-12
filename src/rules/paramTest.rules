@@ -96,11 +96,11 @@ rule genome_prep_for_bismark_denovo_bismark:
 
 rule alignment_denovo_bismark:
     input:
-        R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
-        R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
+        R1merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLE),
+        R2merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"],sample=SAMPLE),
         refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
     output:
-        alignment=expand("{out}/paramsTest/{params}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"], params=paramspace.wildcard_pattern)
+        alignment=expand("{out}/paramsTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.wildcard_pattern)
     params:
         out=expand("{path}/paramsTest/{params}",path=config["output_dir"], params=paramspace.wildcard_pattern),
         sample="{sample}",
