@@ -44,7 +44,7 @@ rule denovo_reference:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
         tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
-        simulation=paramspace.instance,
+        paramspace.instance,
         max_depth=getParam_maxd(param_maxd),
         indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
         outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.instance_patterns)
