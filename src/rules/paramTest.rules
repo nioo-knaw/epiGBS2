@@ -54,7 +54,6 @@ rule denovo_reference:
     threads: workflow.cores*0.5
     shell:
         """
-        mkdir -p {params.tmp}
         python src/de_novo_reference_creation/make_reference.py \
         --barcodes {input.bar} \
         --threads {threads} \
