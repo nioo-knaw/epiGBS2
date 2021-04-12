@@ -58,7 +58,7 @@ rule denovo_reference:
         --barcodes {input.bar} \
         --threads {threads} \
         --clustering_treshold {wildcards.identity} \
-        --min_unique_size {wildcards.identity.min_depth} \
+        --min_unique_size {wildcards.min_depth} \
         --log {log} 
         """
 
