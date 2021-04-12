@@ -100,10 +100,11 @@ rule alignment_denovo_bismark:
         R2merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"],sample=SAMPLE),
         refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
     output:
-        alignment=expand("{out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.instance_patterns)
+        alignment=expand("{out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.wildcard_pattern)
     params:
-        out=expand("{path}/paramTest/{params}",path=config["output_dir"], params=paramspace.instance_patterns
-        NNrefDir=expand("{path}/paramTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.instance_patterns)
+        out=expand("{path}/paramTest/{params}",path=config["output_dir"], params=paramspace.wildcard_pattern),
+        sample=expand("{sample}",sample=SAMPLE),
+        NNrefDir=expand("{path}/paramTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.wildcard_pattern)
     conda:
         "../env/bismark.yaml"
     threads: 8
