@@ -41,13 +41,13 @@ rule denovo_reference:
         unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.instance_patterns)),
         index_ref=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.instance_patterns))
     params:
-        cycles=config["cycles"],
-        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
-        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
-        paramspace.instance,
-        max_depth=getParam_maxd(param_maxd),
-        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
-        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.instance_patterns)
+#        cycles=config["cycles"],
+#        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+#        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        test=paramspace.instance,
+#        max_depth=getParam_maxd(param_maxd),
+#        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+#        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.instance_patterns)
     log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.instance_patterns)
     conda:
         "../env/de-novo.yaml"
@@ -56,17 +56,11 @@ rule denovo_reference:
         """
         mkdir -p {params.tmp}
         python src/de_novo_reference_creation/make_reference.py \
-        --inputdir {params.indir} \
         --barcodes {input.bar} \
         --threads {threads} \
-        --outputdir {params.outdir} \
-        --cycles {params.cycles} \
         --clustering_treshold {params.identity} \
-        --max_unique_size {params.max_depth} \
         --min_unique_size {params.min_depth} \
-        --tmpdir {params.tmp} \
         --log {log} 
-        rm -r {params.tmp}
         """
 
 
