@@ -33,13 +33,13 @@ rule denovo_reference:
         WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
         WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
     output:
-        ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="output_denovo/consensus_cluster.renamed.fa", params=paramspace.instance_patterns),
-        consensus_cluster=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa", params=paramspace.instance_patterns)),
-        consensus=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus.fa", params=paramspace.instance_patterns)),
-        assemble=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz", params=paramspace.instance_patterns)),
-        unass_R2=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz", params=paramspace.instance_patterns)),
-        unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.instance_patterns)),
-        index_ref=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.instance_patterns))
+        ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="output_denovo/consensus_cluster.renamed.fa", params=paramspace.wildcard_pattern),
+        consensus_cluster=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa", params=paramspace.wildcard_pattern)),
+        consensus=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus.fa", params=paramspace.wildcard_pattern)),
+        assemble=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz", params=paramspace.wildcard_pattern)),
+        unass_R2=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz", params=paramspace.wildcard_pattern)),
+        unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.wildcard_pattern)),
+        index_ref=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.wildcard_pattern))
     params:
 #        cycles=config["cycles"],
 #        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
@@ -47,8 +47,8 @@ rule denovo_reference:
         test=paramspace.instance,
 #        max_depth=getParam_maxd(param_maxd),
 #        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
-#        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.instance_patterns)
-    log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.instance_patterns)
+#        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.wildcard_pattern)
+    log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.wildcard_pattern)
     conda:
         "../env/de-novo.yaml"
     threads: workflow.cores*0.5
@@ -68,11 +68,11 @@ rule denovo_reference:
 #otherwise bismark can't call context at these sites and breaks
 rule genome_prep_for_bismark_denovo_bismark:
     input:
-         reference=expand("{path}/paramsTest/{params}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"], params=paramspace.instance_patterns)
+         reference=expand("{path}/paramsTest/{params}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"], params=paramspace.wildcard_pattern)
     output:
-         refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.instance_patterns)
+         refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
     params:
-        NNrefDir=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.instance_patterns)
+        NNrefDir=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.wildcard_pattern)
     conda:
         "../env/bismark.yaml"
     shell:
@@ -91,13 +91,13 @@ rule alignment_denovo_bismark:
     input:
         R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
         R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
-        refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.instance_patterns)
+        refNN=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
     output:
-        alignment=expand("{out}/paramsTest/{params}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"], params=paramspace.instance_patterns)
+        alignment=expand("{out}/paramsTest/{params}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"], params=paramspace.wildcard_pattern)
     params:
-        out=expand("{path}/paramsTest/{params}",path=config["output_dir"], params=paramspace.instance_patterns),
+        out=expand("{path}/paramsTest/{params}",path=config["output_dir"], params=paramspace.wildcard_pattern),
         sample="{sample}",
-        NNrefDir=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.instance_patterns)
+        NNrefDir=expand("{path}/paramsTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.wildcard_pattern)
     conda:
         "../env/bismark.yaml"
     threads: 8
