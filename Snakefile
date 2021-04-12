@@ -32,6 +32,7 @@ if config["mode"] == "denovo":
 if config["mode"] == "paramTest":
     include: "src/rules/demultiplex.rules"
     include: "src/rules/paramTest.rules"
+    include: "src/rules/trimming.rules"
 
 
 if config["mode"]== "reference":
