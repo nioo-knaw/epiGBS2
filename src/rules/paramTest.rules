@@ -39,11 +39,11 @@ rule denovo_reference:
         assemble=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz", params=paramspace.wildcard_pattern)),
         unass_R2=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz", params=paramspace.wildcard_pattern)),
         unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.wildcard_pattern)),
-        index_ref=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.wildcard_pattern))
+        index_ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.wildcard_pattern)
     params:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
-        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        tmp=expand("{tmp}/denovo/{params}/", tmp=config["tmpdir"], params=paramspace.wildcard_pattern),
         test=paramspace.instance,
         max_depth=getParam_maxd(param_maxd),
         indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
