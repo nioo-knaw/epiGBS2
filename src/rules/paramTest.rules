@@ -61,7 +61,7 @@ rule denovo_reference:
         --outputdir {params.outdir} \
         --cycles {params.cycles} \
         --clustering_treshold {wildcards.identity} \
-        --min_unique_size {wildcards.min-depth} \
+        --min_unique_size {wildcards.mindepth} \
         --max_unique_size {params.max_depth} \
         --tmpdir {params.tmp} \
         --log {log} 
