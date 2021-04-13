@@ -50,7 +50,7 @@ rule denovo_reference:
     log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.wildcard_pattern)
     conda:
         "../env/de-novo.yaml"
-    threads: workflow.cores*1
+    threads: workflow.cores*0.5
     shell:
         """
         mkdir -p {params.tmp}
@@ -61,7 +61,7 @@ rule denovo_reference:
         --outputdir {params.outdir} \
         --cycles {params.cycles} \
         --clustering_treshold {wildcards.identity} \
-        --min_unique_size {wildcards.min_depth} \
+        --min_unique_size {wildcards.min-depth} \
         --max_unique_size {params.max_depth} \
         --tmpdir {params.tmp} \
         --log {log} 
