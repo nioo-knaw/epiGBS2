@@ -44,8 +44,9 @@ rule denovo_reference:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
         tmp=expand("{tmp}/denovo/{params}/", tmp=config["tmpdir"], params=paramspace.wildcard_pattern),
-        test=float(paramspace.instance),
+        test=paramspace.instance,
         max_depth=getParam_maxd(param_maxd),
+        min_depth=chr({wild.cards.min_depth}),
         indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
         outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.wildcard_pattern)
     log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.wildcard_pattern)
@@ -62,7 +63,7 @@ rule denovo_reference:
         --outputdir {params.outdir} \
         --cycles {params.cycles} \
         --clustering_treshold {wildcards.identity} \
-        --min_unique_size {wildcards.min_depth} \
+        --min_unique_size {params.min_depth} \
         --max_unique_size {params.max_depth} \
         --tmpdir {params.tmp} \
         --log {log} 
