@@ -51,7 +51,7 @@ rule denovo_reference:
     log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.wildcard_pattern)
     conda:
         "../env/de-novo.yaml"
-    threads: workflow.cores*1
+    threads: workflow.cores*0.5
     shell:
         """
         mkdir -p {params.tmp}
