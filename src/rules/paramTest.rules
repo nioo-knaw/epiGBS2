@@ -44,7 +44,7 @@ rule denovo_reference:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
         tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
-        mindepth=str(str(paramspace.wildcard_pattern).split("/")[0].split("~")[1]),
+        identity="0."+(str(paramspace.wildcard_pattern).split("/")[1].split("~")[1]),
         max_depth=getParam_maxd(param_maxd),
         indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
         outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.wildcard_pattern)
@@ -61,8 +61,8 @@ rule denovo_reference:
         --threads {threads} \
         --outputdir {params.outdir} \
         --cycles {params.cycles} \
-        --clustering_treshold {wildcards.identity} \
-        --min_unique_size {params.mindepth} \
+        --clustering_treshold {params.identity} \
+        --min_unique_size {wildcards.mindepth} \
         --max_unique_size {params.max_depth} \
         --tmpdir {params.tmp} \
         --log {log} 
