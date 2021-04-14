@@ -62,7 +62,7 @@ rule denovo_reference:
         --outputdir {params.outdir} \
         --cycles {params.cycles} \
         --clustering_treshold {wildcards.identity} \
-        --min_unique_size <(sed {params.mindepth} 's/..*$//') \
+        --min_unique_size {params.mindepth} \
         --max_unique_size {params.max_depth} \
         --tmpdir {params.tmp} \
         --log {log} 
