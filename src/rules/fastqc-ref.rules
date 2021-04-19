@@ -16,6 +16,7 @@ rule FastQCRef:
         mkdir -p {output.dir}
         fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}
         """
+
 rule fastqc_trimmed:
   input:
 	  trimmed_merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLES)
@@ -54,10 +55,24 @@ rule fastqc_trimmed:
 #      dir=expand("{path}/fastqc/", path=config["output_dir"]),
 #      reads=expand("{path}/output_demultiplex/*.fq.gz", path=config["output_dir"])
 #  shell: "fastqc -t {params.threads} {params.q} --outdir {params.dir} {params.reads}"
+rule logparse:
+  input:
+      demultiplex=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+  output: expand("{path}/log/demultiplexing.log", path=config["output_dir"])
+  params:
+      process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
+      demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
+      denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
+      outdir=expand("{path}/log/",path=config["output_dir"])
+      mode=config["mode"]
+  conda:
+    "../env/python3.yaml"
+  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir} -r {params.mode}
 
 rule MultiQCRef:
   input:
       before=expand("{path}/fastqc/", path=config["output_dir"]),
+      demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
       dir=directory(expand("{path}/fastqc_trimmed/", path=config["output_dir"])),
       coverageuncompr=expand("{out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"],sample=SAMPLES)
   output:
