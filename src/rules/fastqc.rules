@@ -50,9 +50,10 @@ rule logparse:
       demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
       denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
       outdir=expand("{path}/log/",path=config["output_dir"])
+      mode=config["mode"]
   conda:
     "../env/python3.yaml"
-  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir}"
+  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir} -r {params.mode}"
 
 rule Multiqc:
     input:

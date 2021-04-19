@@ -12,6 +12,8 @@ def parse_args():
                         help='make_reference.log')
     parser.add_argument('-o', '--output_dir', type=str, default='log',
                         help='output directory')
+    parser.add_argument('-r', '--mode', type=str, default='reference',
+                        help='mode of the pipeline')
     args = parser.parse_args()
     return args
 
@@ -130,7 +132,8 @@ def main():
     args = parse_args()
     parse_stacks_bc(args)
     parse_stacks(args)
-    parse_denovo(args)
+    if args.mode=="denovo":
+        parse_denovo(args)
 
 if __name__ == "__main__":
     main()
