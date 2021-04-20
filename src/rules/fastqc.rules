@@ -49,7 +49,7 @@ rule logparse:
       process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
       demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
       denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
-      outdir=expand("{path}/log/",path=config["output_dir"])
+      outdir=expand("{path}/log/",path=config["output_dir"]),
       mode=config["mode"]
   conda:
     "../env/python3.yaml"

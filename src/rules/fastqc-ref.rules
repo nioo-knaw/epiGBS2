@@ -37,24 +37,6 @@ rule fastqc_trimmed:
        fastqc -t {params.threads} {params.q} --outdir {output.dir} {params.reads}
        """
 
-#rule FastqcRefBefMerged:
-#  input:
-#      expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
-#      expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"]),
-#      expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
-#      expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"])
-#  output:
-#     expand("{path}/fastqc/Watson_R1_fastqc.html", path=config["output_dir"]),
-#     expand("{path}/fastqc/Watson_R2_fastqc.html", path=config["output_dir"]),
-#     expand("{path}/fastqc/Crick_R1_fastqc.html", path=config["output_dir"]),
-#     expand("{path}/fastqc/Crick_R2_fastqc.html", path=config["output_dir"])
-#  conda:
-#      "../env/fastqc.yaml"
-#      q="--quiet",
-#      threads="2",
-#      dir=expand("{path}/fastqc/", path=config["output_dir"]),
-#      reads=expand("{path}/output_demultiplex/*.fq.gz", path=config["output_dir"])
-#  shell: "fastqc -t {params.threads} {params.q} --outdir {params.dir} {params.reads}"
 rule logparse:
   input:
       demultiplex=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
@@ -63,7 +45,7 @@ rule logparse:
       process=expand("{path}/output_demultiplex/clone-stacks/process_radtags.clone.log", path=config["output_dir"]),
       demultiplex=expand("{path}/output_demultiplex/demultiplex.log", path=config["output_dir"]),
       denovo=expand("{path}/output_denovo/make_reference.log", path=config["output_dir"]),
-      outdir=expand("{path}/log/",path=config["output_dir"])
+      outdir=expand("{path}/log/",path=config["output_dir"]),
       mode=config["mode"]
   conda:
     "../env/python3.yaml"
