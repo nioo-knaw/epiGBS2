@@ -150,4 +150,4 @@ rule makeDataSet:
             <(cat {params.out}*/*/alignment/*_report.txt | grep "Sequence pairs ana"| cut -f2) \
             <(cat {params.out}*/*/alignment/*_report.txt | grep "Sequence pairs did not map uniquely"| cut -f2) \
             <(cat {params.out}*/*/alignment/*_report.txt | grep "Mapping"| cut -f2) \
-            <(cat {params.out}averageDepth.txt) """
+            <(cat {params.out}averageDepth.txt) > {output.denovoData}"""
