@@ -151,3 +151,14 @@ rule makeDataSet:
             <(cat {params.out}*/*/alignment/*_report.txt | grep "Sequence pairs did not map uniquely"| cut -f2) \
             <(cat {params.out}*/*/alignment/*_report.txt | grep "Mapping"| cut -f2) \
             <(cat {params.out}averageDepth.txt) > {output.denovoData}"""
+
+
+rule makePlot:
+    input:
+        denovoData=expand("{out}/paramTest/denovoParameter.tsv",out=config["output_dir"])
+    output:
+        denovoPlot=expand("{out}/paramTest/denovoParameter.tiff",out=config["output_dir"])
+    conda:
+        "../env/paramTestR.yaml"
+    shell:
+        "Rscript src/parameter_test/paramTestPlot.R {input.denovoData} {output.denovoPlot}"

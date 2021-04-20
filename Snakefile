@@ -12,7 +12,7 @@ lane = df.Lane[0]
 projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 
 
-paramspace = Paramspace(pd.read_csv("src/paramTest.tsv", sep="\t"))
+paramspace = Paramspace(pd.read_csv("src/parameter_test/paramTest.tsv", sep="\t"))
 
 
 
@@ -79,9 +79,10 @@ if config["mode"]== "paramTest":
             {out}/paramTest/Assembled.txt \
             {out}/paramTest/averageDepth.txt \
             {out}/paramTest/denovoParameter.tsv \
+            {out}/paramTest/denovoParameter.tiff \
 		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz".split(),out=config["output_dir"],params=paramspace.instance_patterns,sample=SAMPLE,samples=SAMPLES)
-
+    
 
 if config["mode"] == "legacy":
     include: "src/rules/legacy.rules"
