@@ -121,7 +121,7 @@ rule averageDepth:
     conda:
         "../env/samtools.yaml"
     shell:
-        "for file in {params.out}/*/*/alignment/*.bam;do samtools sort $file | samtools depth - |  awk '{sum+=$3} END { print sum/NR}'; done > {params.out}/averageDepth.txt"
+        "for file in {params.out}/*/*/alignment/*.bam;do samtools sort $file | samtools depth - |  awk '{{sum+=$3}} END {{ print sum/NR}}'; done > {params.out}/averageDepth.txt"
 
 rule Assembeled:
     input:
