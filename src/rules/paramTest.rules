@@ -138,7 +138,7 @@ rule makeDataSet:
         Assembled=expand("{out}/paramTest/Assembled.txt",out=config["output_dir"]),
         averageDepth=expand("{out}/paramTest/averageDepth.txt",out=config["output_dir"])
     output:
-        denovoData=expand("{out}/paramTest/denovoParameter.tsv")
+        denovoData=expand("{out}/paramTest/denovoParameter.tsv",out=config["output_dir"])
     shell:
         """paste \
             <(cat output/paramTest/*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f2 -d "~" | sed "s|/.*$||") \
