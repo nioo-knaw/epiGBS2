@@ -113,7 +113,7 @@ rule alignment_denovo_bismark:
 
 rule averageDepth:
     input:
-        alignment=expand("{out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.wildcard_pattern)
+        alignment=expand("{out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.instance_patterns)
     output:
         averageDepth=expand("{out}/paramTest/averageDepth.txt",out=config["output_dir"])
     params:
@@ -125,7 +125,7 @@ rule averageDepth:
 
 rule Assembeled:
     input:
-        refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
+        refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.instance_patterns)
     output:
         averageDepth=expand("{out}/paramTest/Assembled.txt",out=config["output_dir"])
     params:
