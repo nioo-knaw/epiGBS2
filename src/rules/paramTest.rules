@@ -131,7 +131,7 @@ rule Assembeled:
     params:
         out=expand("{path}/paramTest/",path=config["output_dir"])
     shell:
-        "for file in {params.out}/*/*/output_denovo/*.fa; do cat $file | grep "NNNN" | wc -l ; done > {params.out}/Assembled.txt"
+        "for file in {params.out}/*/*/output_denovo/*.fa; do cat $file | grep 'NNNN' | wc -l ; done > {params.out}/Assembled.txt"
 
 rule makeDataSet:
     input:
