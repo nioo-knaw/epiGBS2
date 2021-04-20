@@ -1,7 +1,7 @@
 rm(list=ls())
 library(ggplot2)
 library(reshape2)
-args<-commandArgs()
+args<-commandArgs(trailingOnly = T)
 dataDenovo<-read.table(args[1])
 
 colorBlindBlack8  <- c("#000000", "#E69F00", "#56B4E9", "#009E73", 
