@@ -139,13 +139,15 @@ rule makeDataSet:
         averageDepth=expand("{out}/paramTest/averageDepth.txt",out=config["output_dir"])
     output:
         denovoData=expand("{out}/paramTest/denovoParameter.tsv",out=config["output_dir"])
+    params:
+        out=expand("{path}/paramTest/",path=config["output_dir"])
     shell:
         """paste \
-            <(cat output/paramTest/*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f2 -d "~" | sed "s|/.*$||") \
-            <(cat output/paramTest/*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f3 -d "~" | sed "s|/.*$||") \
-            <(cat output/paramTest/*/*/output_denovo/make_reference.log | grep "Clusters"| cut -f2 -d " ") \
-            <(cat output/paramTest/Assembled.txt) \
-            <(cat output/paramTest/*/*/alignment/*_report.txt | grep "Sequence pairs ana"| cut -f2) \
-            <(cat output/paramTest/*/*/alignment/*_report.txt | grep "Sequence pairs did not map uniquely"| cut -f2) \
-            <(cat output/paramTest/*/*/alignment/*_report.txt | grep "Mapping"| cut -f2) \
-            <(cat output/paramTest/averageDepth.txt) """
+            <(cat {out}*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f2 -d "~" | sed "s|/.*$||") \
+            <(cat {out}*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f3 -d "~" | sed "s|/.*$||") \
+            <(cat {out}*/*/output_denovo/make_reference.log | grep "Clusters"| cut -f2 -d " ") \
+            <(cat {out}Assembled.txt) \
+            <(cat {out}*/*/alignment/*_report.txt | grep "Sequence pairs ana"| cut -f2) \
+            <(cat {out}*/*/alignment/*_report.txt | grep "Sequence pairs did not map uniquely"| cut -f2) \
+            <(cat {out}*/*/alignment/*_report.txt | grep "Mapping"| cut -f2) \
+            <(cat {out}averageDepth.txt) """
