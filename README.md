@@ -59,10 +59,6 @@
 		- Identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default: "0.97"
 		- Min-depth: minimal cluster depth in the first clustering step to include a cluster, default 10
 		- Max-depth: maximal cluster depth in the first clustering step to include a cluster, default 10000
-	- param_SNPcalling:
-		- max-depth: stand_call_conf: defines the likelihood ratio criteria between best and second best genotype for call to be considered confident Default value is 20 for high depth of coverage. For multiple samples with low coverage (more than 100 samples with 4X coverage), the
-threshold could be defined lower than 10, or even 4. For ultra-high coverage sequencing, such as
- 50X, you could specify higher threshold to obtain higher accuracy.
 
 - Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Flowcell, Lane, Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. Make sure that the sample name does not only contain numbers but also letters. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession. If this is not working, and you have PC you can remove the `^M` with `dos2unix barcodes.tsv`. You can check the removal with `cat -A barcode.tsv`.
 
