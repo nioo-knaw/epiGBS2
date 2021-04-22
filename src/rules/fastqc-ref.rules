@@ -22,7 +22,6 @@ rule fastqc_trimmed:
 	  trimmed_merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLES)
   output:
       dir=directory(expand("{path}/fastqc_trimmed/", path=config["output_dir"]))
-
   conda:
        "../env/fastqc.yaml"
   threads: 8
@@ -49,7 +48,7 @@ rule logparse:
       mode=config["mode"]
   conda:
     "../env/python3.yaml"
-  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir} -r {params.mode}
+  shell: "python ./src/report/parse-logs.py -p {params.process} -m {params.denovo} -d {params.demultiplex} -o {params.outdir} -r {params.mode}"
 
 rule MultiQCRef:
   input:
