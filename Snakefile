@@ -1,13 +1,20 @@
 
 configfile: "config.yaml"
+from snakemake.utils import Paramspace
 import pandas as pd
 import os
 import random
 df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', dtype="object").set_index('Sample')
 SAMPLES = df.index
+SAMPLE = SAMPLES[0]
 flowCell = df.Flowcell[0]
 lane = df.Lane[0]
 projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
+
+
+paramspace = Paramspace(pd.read_csv("src/parameter_test/paramTest.tsv", sep="\t"))
+
+
 
 if config["mode"] == "reference":
     include: "src/rules/fastqc-ref.rules"
@@ -21,6 +28,12 @@ if config["mode"] == "denovo":
     include: "src/rules/denovo.rules"
     include: "src/rules/trimming.rules"
     include: "src/rules/fastqc.rules"
+
+if config["mode"] == "paramTest":
+    include: "src/rules/demultiplex.rules"
+    include: "src/rules/paramTest.rules"
+    include: "src/rules/trimming.rules"
+
 
 if config["mode"]== "reference":
     rule all:
@@ -51,6 +64,25 @@ if config["mode"]== "denovo":
 		    {out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
+if config["mode"]== "paramTest":
+    rule all:
+        input: expand("{out}/output_demultiplex/clone-stacks/{samples}-Watson.1.fq.gz \
+            {out}/output_demultiplex/clone-stacks/{samples}-Watson.2.fq.gz \
+            {out}/output_demultiplex/clone-stacks/{samples}-Crick.1.fq.gz \
+            {out}/output_demultiplex/clone-stacks/{samples}-Crick.2.fq.gz \
+            {out}/output_demultiplex/Watson_R2.fq.gz \
+            {out}/output_demultiplex/Watson_R1.fq.gz \
+            {out}/output_demultiplex/Crick_R2.fq.gz \
+            {out}/output_demultiplex/Crick_R1.fq.gz \
+            {out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
+            {out}/paramTest/{params}/output_denovo/consensus_cluster.renamed.fa \
+            {out}/paramTest/Assembled.txt \
+            {out}/paramTest/averageDepth.txt \
+            {out}/paramTest/denovoParameter.tsv \
+            {out}/paramTest/denovoParameter.tiff \
+		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz".split(),out=config["output_dir"],params=paramspace.instance_patterns,sample=SAMPLE,samples=SAMPLES)
+    
 
 if config["mode"] == "legacy":
     include: "src/rules/legacy.rules"

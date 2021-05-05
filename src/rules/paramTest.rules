@@ -1,0 +1,164 @@
+#Get parameters from the config file
+param_id=config["param_denovo"]["identity"]
+param_mind=config["param_denovo"]["min-depth"]
+param_maxd=config["param_denovo"]["max-depth"]
+
+
+def getParam_id(param_id):
+    if param_id == "default" or param_id == "":
+        id = 0.97
+    else:
+        id = param_id
+    return id
+def getParam_mind(param_mind):
+    if param_mind=="default" or param_mind == "":
+        mind = 10
+    else:
+        mind = param_mind
+    return mind
+def getParam_maxd(param_maxd):
+    if param_maxd=="default" or param_maxd == "":
+        dep = 10000
+    else:
+        dep = param_maxd
+    return dep
+
+#Run the denovo creation python script
+
+rule denovo_reference:
+    input:
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+        CrickR1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+        CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
+        WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+        WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
+    output:
+        ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="output_denovo/consensus_cluster.renamed.fa", params=paramspace.wildcard_pattern),
+        consensus_cluster=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa", params=paramspace.wildcard_pattern)),
+        consensus=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus.fa", params=paramspace.wildcard_pattern)),
+        assemble=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz", params=paramspace.wildcard_pattern)),
+        unass_R2=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz", params=paramspace.wildcard_pattern)),
+        unass_R1=temp(expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz", params=paramspace.wildcard_pattern)),
+        index_ref=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai", params=paramspace.wildcard_pattern)
+    params:
+        cycles=config["cycles"],
+        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        identity="0."+(str(paramspace.wildcard_pattern).split("/")[1].split("~")[1]),
+        max_depth=getParam_maxd(param_maxd),
+        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+        outdir= expand("{path}/paramTest/{params}/{dir}", path=config["output_dir"], dir="/output_denovo", params=paramspace.wildcard_pattern)
+    log: log=expand("{path}/paramTest/{params}/{file}", path=config["output_dir"], file="/output_denovo/make_reference.log", params=paramspace.wildcard_pattern)
+    conda:
+        "../env/de-novo.yaml"
+    threads: workflow.cores*0.5
+    shell:
+        """
+        mkdir -p {params.tmp}
+        python src/de_novo_reference_creation/make_reference.py \
+        --inputdir {params.indir} \
+        --barcodes {input.bar} \
+        --threads {threads} \
+        --outputdir {params.outdir} \
+        --cycles {params.cycles} \
+        --clustering_treshold {params.identity} \
+        --min_unique_size {wildcards.mindepth} \
+        --max_unique_size {params.max_depth} \
+        --tmpdir {params.tmp} \
+        --log {log} 
+        rm -r {params.tmp}
+        """
+
+
+
+#This rule adds the NNNN's at the start and end of the denovo sequences 
+#otherwise bismark can't call context at these sites and breaks
+rule genome_prep_for_bismark_denovo_bismark:
+    input:
+         reference=expand("{path}/paramTest/{params}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"], params=paramspace.wildcard_pattern)
+    output:
+         refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
+    params:
+        NNrefDir=expand("{path}/paramTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.wildcard_pattern)
+    conda:
+        "../env/bismark.yaml"
+    shell:
+         '''
+         cat {input.reference} | tr "\\n" "X" | sed "s/X>/\\n>/g" | sed 's/$/NNNN/' | sed "s/X/\\nNNNN/"| sed 's/X//g' > {params.NNrefDir}/ref.fa
+         bismark_genome_preparation {params.NNrefDir}
+         '''
+
+#Align the trimmed reads to the denovo clusters
+# --un outputs  unmapped reads to the output directory #Needed?
+# --ambigious outputs ambigious writes the ambigiuos reads #Needed?
+# --non_directional: sequencing library not in a specific direction
+# --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
+
+rule alignment_denovo_bismark:
+    input:
+        R1merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"],sample=SAMPLE),
+        R2merged=expand("{out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"],sample=SAMPLE),
+        refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
+    output:
+        alignment=expand("{out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.wildcard_pattern)
+    params:
+        out=expand("{path}/paramTest/{params}",path=config["output_dir"], params=paramspace.wildcard_pattern),
+        sample=expand("{sample}",sample=SAMPLE),
+        NNrefDir=expand("{path}/paramTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.wildcard_pattern)
+    conda:
+        "../env/bismark.yaml"
+    threads: 8
+    shell:
+        "bismark --un --ambiguous --genome {params.NNrefDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/  --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
+
+rule averageDepth:
+    input:
+        alignment=expand("{out}/paramTest/{params}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLE, params=paramspace.instance_patterns)
+    output:
+        averageDepth=expand("{out}/paramTest/averageDepth.txt",out=config["output_dir"])
+    params:
+        out=expand("{path}/paramTest/",path=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "for file in {params.out}/*/*/alignment/*.bam;do samtools sort $file | samtools depth - |  awk '{{sum+=$3}} END {{ print sum/NR}}'; done > {params.out}/averageDepth.txt"
+
+rule Assembeled:
+    input:
+        refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.instance_patterns)
+    output:
+        averageDepth=expand("{out}/paramTest/Assembled.txt",out=config["output_dir"])
+    params:
+        out=expand("{path}/paramTest/",path=config["output_dir"])
+    shell:
+        "for file in {params.out}/*/*/output_denovo/*.fa; do cat $file | grep 'NNNN' | wc -l ; done > {params.out}/Assembled.txt"
+
+rule makeDataSet:
+    input:
+        Assembled=expand("{out}/paramTest/Assembled.txt",out=config["output_dir"]),
+        averageDepth=expand("{out}/paramTest/averageDepth.txt",out=config["output_dir"])
+    output:
+        denovoData=expand("{out}/paramTest/denovoParameter.tsv",out=config["output_dir"])
+    params:
+        out=expand("{path}/paramTest/",path=config["output_dir"])
+    shell:
+        """paste \
+            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f2 -d "~" | sed "s|/.*$||") \
+            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f3 -d "~" | sed "s|/.*$||") \
+            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Clusters"| cut -f2 -d " ") \
+            <(cat {params.out}Assembled.txt) \
+            <(cat {params.out}*/*/alignment/*_report.txt | grep "Sequence pairs ana"| cut -f2) \
+            <(cat {params.out}*/*/alignment/*_report.txt | grep "Sequence pairs did not map uniquely"| cut -f2) \
+            <(cat {params.out}*/*/alignment/*_report.txt | grep "Mapping"| cut -f2) \
+            <(cat {params.out}averageDepth.txt) > {output.denovoData}"""
+
+
+rule makePlot:
+    input:
+        denovoData=expand("{out}/paramTest/denovoParameter.tsv",out=config["output_dir"])
+    output:
+        denovoPlot=expand("{out}/paramTest/denovoParameter.tiff",out=config["output_dir"])
+    conda:
+        "../env/paramTestR.yaml"
+    shell:
+        "Rscript src/parameter_test/paramTestPlot.R {input.denovoData} {output.denovoPlot}"
