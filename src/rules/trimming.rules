@@ -1,0 +1,70 @@
+rule cutadapt_adapter:
+	input:
+		R1=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.1.fq.gz",out=config["output_dir"]),
+		R2=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.2.fq.gz",out=config["output_dir"])
+	output:
+		txt=expand("{out}/log/{{sample}}-{{strand}}_read-info.txt",out=config["output_dir"]),
+		R1untrimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.1.fq.gz",tmp=config["tmpdir"])),
+		R2untrimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.2.fq.gz",tmp=config["tmpdir"])),
+		R1trimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.1.fq.gz",tmp=config["tmpdir"])),
+		R2trimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.2.fq.gz",tmp=config["tmpdir"]))
+	log:
+		log=expand("{out}/log/{{sample}}-{{strand}}_cutadapt_adapter.log",out=config["output_dir"])
+	conda:
+		"../env/cutadapt.yaml"
+	threads: 1
+	shell:
+		"cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u 1 -U 1 -m 20 --info-file {output.txt} --untrimmed-output {output.R1untrimmed} --untrimmed-paired-output {output.R2untrimmed} -o {output.R1trimmed} -p {output.R2trimmed} {input.R1} {input.R2} 2>&1 | tee {log}"
+
+rule cutadapt_untrimmed:
+	input:
+		R1untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.1.fq.gz",tmp=config["tmpdir"]),
+		R2untrimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.2.fq.gz",tmp=config["tmpdir"]),
+	output:
+		txtuntrimmedfilt=expand("{out}/log/{{sample}}-{{strand}}_untrimmed_filt_read-info.txt",out=config["output_dir"]),
+		R1untrimmedfilt=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed_filt.1.fq.gz",tmp=config["tmpdir"])),
+		R2untrimmedfilt=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed_filt.2.fq.gz",tmp=config["tmpdir"]))
+	log:
+		log=expand("{out}/log/{{sample}}-{{strand}}_cutadapt_untrimmedfilt.log",out=config["output_dir"])
+	conda:
+		"../env/cutadapt.yaml"
+	threads: 1
+	shell:
+		"cutadapt -m 20 --info-file {output.txtuntrimmedfilt} -o {output.R1untrimmedfilt} -p {output.R2untrimmedfilt} {input.R1untrimmed} {input.R2untrimmed} 2>&1 | tee {log}"
+
+rule cutadapt_trimmed_three:
+	input:
+		R1trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.1.fq.gz",tmp=config["tmpdir"]),
+		R2trimmed=expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.2.fq.gz",tmp=config["tmpdir"])
+	output:
+		txttrimmed_three=expand("{out}/log/{{sample}}-{{strand}}_trimmed_three_read-info.txt",out=config["output_dir"]),
+		R1trimmed_three=temp(expand("{tmp}/cutadapt_trimmed_three/{{sample}}-{{strand}}_trimmed_three.1.fq.gz",tmp=config["tmpdir"])),
+		R2trimmed_three=temp(expand("{tmp}/cutadapt_trimmed_three/{{sample}}-{{strand}}_trimmed_three.2.fq.gz",tmp=config["tmpdir"]))
+	log:
+		log=expand("{out}/log/{{sample}}-{{strand}}_cutadapt_trimmed_three.log",out=config["output_dir"])
+	conda:
+		"../env/cutadapt.yaml"
+	threads: 1
+	shell:
+		"cutadapt -u -10 -U -10 -m 20 --info-file {output.txttrimmed_three} -o {output.R1trimmed_three} -p {output.R2trimmed_three} {input.R1trimmed} {input.R2trimmed} 2>&1 | tee {log}"
+
+rule merge_trimmed_R1:
+	input:
+		untrimmedfiltWatsonR1=expand("{tmp}/cutadapt_adapter/{{sample}}-Watson_untrimmed_filt.1.fq.gz",tmp=config["tmpdir"]),
+		trimmed_threeWatsonR1=expand("{tmp}/cutadapt_trimmed_three/{{sample}}-Watson_trimmed_three.1.fq.gz",tmp=config["tmpdir"]),
+		untrimmedfiltCrickR2=expand("{tmp}/cutadapt_adapter/{{sample}}-Crick_untrimmed_filt.2.fq.gz",tmp=config["tmpdir"]),
+		trimmed_threeCrickR2=expand("{tmp}/cutadapt_trimmed_three/{{sample}}-Crick_trimmed_three.2.fq.gz",tmp=config["tmpdir"]),
+	output:
+		trimmed_merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"])
+	shell:
+		"cat {input.untrimmedfiltWatsonR1} {input.trimmed_threeWatsonR1} {input.untrimmedfiltCrickR2} {input.trimmed_threeCrickR2} > {output.trimmed_merged}"
+rule merge_trimmed_R2:
+	input:
+		untrimmedfiltWatsonR2=expand("{tmp}/cutadapt_adapter/{{sample}}-Watson_untrimmed_filt.2.fq.gz",tmp=config["tmpdir"]),
+		trimmed_threeWatsonR2=expand("{tmp}/cutadapt_trimmed_three/{{sample}}-Watson_trimmed_three.2.fq.gz",tmp=config["tmpdir"]),
+		untrimmedfiltCrickR1=expand("{tmp}/cutadapt_adapter/{{sample}}-Crick_untrimmed_filt.1.fq.gz",tmp=config["tmpdir"]),
+		trimmed_threeCrickR1=expand("{tmp}/cutadapt_trimmed_three/{{sample}}-Crick_trimmed_three.1.fq.gz",tmp=config["tmpdir"]),
+	output:
+		trimmed_merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"])
+	shell:
+		"cat {input.untrimmedfiltWatsonR2} {input.trimmed_threeWatsonR2} {input.untrimmedfiltCrickR1} {input.trimmed_threeCrickR1} > {output.trimmed_merged}"

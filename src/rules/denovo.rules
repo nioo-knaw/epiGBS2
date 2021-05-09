@@ -1,0 +1,281 @@
+#Get parameters from the config file
+param_id=config["param_denovo"]["identity"]
+param_mind=config["param_denovo"]["min-depth"]
+param_maxd=config["param_denovo"]["max-depth"]
+
+def getParam_id(param_id):
+    if param_id == "default" or param_id == "":
+        id = 0.97
+    else:
+        id = param_id
+    return id
+def getParam_mind(param_mind):
+    if param_mind=="default" or param_mind == "":
+        mind = 10
+    else:
+        mind = param_mind
+    return mind
+def getParam_maxd(param_maxd):
+    if param_maxd=="default" or param_maxd == "":
+        dep = 10000
+    else:
+        dep = param_maxd
+    return dep
+
+#Run the denovo creation python script
+
+rule denovo_reference:
+    input:
+        #R1=config["output_dir"] + "/output_demultiplex/demultiplex_1_fastq.txt.gz",
+        #R2=config["output_dir"] + "/output_demultiplex/demultiplex_2_fastq.txt.gz",
+        #dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        bar=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+        CrickR1=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+        CrickR2=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"]),
+        WatsonR1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+        WatsonR2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"])
+    output:
+        #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa",
+        #config["output_dir"] + "/output_denovo/consensus_cluster.fa",
+        #config["output_dir"] + "/output_denovo/consensus.fa",
+        #config["output_dir"] + "/output_denovo/Assembled.fq.gz",
+        #config["output_dir"] + "/output_denovo/Unassembled.R2.fq.gz",
+        #config["output_dir"] + "/output_denovo/Unassembled.R1.fq.gz",
+        #config["output_dir"] + "/output_denovo/consensus_cluster.renamed.fa.fai"
+        ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa"),
+        consensus_cluster=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.fa"),
+        consensus=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus.fa"),
+        assemble=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
+        unass_R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
+        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
+        index_ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai")
+
+
+    params:
+        cycles=config["cycles"],
+        dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
+        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        identity=getParam_id(param_id),
+        min_depth=getParam_mind(param_mind),
+        max_depth=getParam_maxd(param_maxd),
+        indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
+        outdir= expand("{path}{dir}", path=config["output_dir"], dir="/output_denovo")
+
+    log: log=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/make_reference.log")
+    conda:
+        "../env/de-novo.yaml"
+    threads: workflow.cores*0.5
+    shell:
+        """
+        mkdir -p {params.tmp}
+        python src/de_novo_reference_creation/make_reference.py \
+        --inputdir {params.indir} \
+        --barcodes {input.bar} \
+        --threads {threads} \
+        --outputdir {params.outdir} \
+        --cycles {params.cycles} \
+        --clustering_treshold {params.identity} \
+        --max_unique_size {params.max_depth} \
+        --min_unique_size {params.min_depth} \
+        --tmpdir {params.tmp} \
+        --log {log} 
+        rm -r {params.tmp}
+        """
+
+
+
+#This rule adds the NNNN's at the start and end of the denovo sequences 
+#otherwise bismark can't call context at these sites and breaks
+rule genome_prep_for_bismark_denovo_bismark:
+    input:
+         reference=expand("{path}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"])
+    output:
+         refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    params:
+        NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
+    conda:
+        "../env/bismark.yaml"
+    shell:
+         '''
+         cat {input.reference} | tr "\\n" "X" | sed "s/X>/\\n>/g" | sed 's/$/NNNN/' | sed "s/X/\\nNNNN/"| sed 's/X//g' > {params.NNrefDir}/ref.fa
+         bismark_genome_preparation {params.NNrefDir}
+         '''
+
+#Align the trimmed reads to the denovo clusters
+# --un outputs  unmapped reads to the output directory #Needed?
+# --ambigious outputs ambigious writes the ambigiuos reads #Needed?
+# --non_directional: sequencing library not in a specific direction
+# --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
+
+rule alignment_denovo_bismark:
+    input:
+        R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
+        R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
+        refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
+    params:
+        out=expand("{path}",path=config["output_dir"]),
+        sample="{sample}",
+        NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
+    conda:
+        "../env/bismark.yaml"
+    threads: 8
+    shell:
+        "bismark --un --ambiguous --genome {params.NNrefDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/  --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
+
+
+# Call methylation sites with bismark
+# -p paired end reads
+# --CX output all C's independent of context (if not present only CG sites)
+# --no_overlap scores overlapping methylation sites only using Read 1.
+# --report Prints out a short methylation summary as well as the parameters used to run this script. 
+# --bedGraph outputs a bedGraph file 
+# --scaffolds necessary if the genome contains more then 1024? contigs
+# --cytosine_report produces a genome-wide methylation report for all cytosines in the genome. (Not sure how this interacts with bedGraph)
+# 
+rule methylation_calling_denovo_bismark:
+    input:
+        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
+        refNN=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"]),
+        coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"])
+    params:
+        out=expand("{path}",path=config["output_dir"]),
+        NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
+    conda:
+        "../env/bismark.yaml"
+    threads: 2
+    shell:
+        "bismark_methylation_extractor -p --CX --no_overlap --report --bedGraph --scaffolds --cytosine_report --genome_folder {params.NNrefDir} {input.alignment} -o {params.out}/methylation_calling/"
+
+
+#Unzips the individuals sites?
+#Maybe add script which combines everything into an epiGBS like format???
+rule gunzip:
+    input: 
+        calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])
+    output:
+        coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
+    threads: 1
+    shell:
+        "gzip -c {input.calling} > {output.coverageuncompr}"
+
+
+
+##SNP_calling ##########################
+rule faidx_ref:
+    input:
+        reference=expand("{path}/output_denovo/NNNNref/ref.fa",path=config["output_dir"])
+    output:
+        referenceFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai",path=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        """
+        samtools faidx {input.reference}
+        """
+#Run calmd 
+
+#Merge the bam files for SNP calling, sort the output
+rule merge_sort_bam:
+    input:
+        alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES)
+    output:
+        mergedBam=temp(expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]))
+    threads: workflow.cores
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools merge - {input.alignmentCalmd} | samtools sort -@ {threads} > {output.mergedBam}"
+#index the bam file
+rule index_merged_bam:
+    input:
+        mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"])
+    output:
+        mergedBai=temp(expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]))
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.mergedBam}"
+#Run Calmd to prepare the input for the epiDiverse script
+rule calmd_bam:
+    input:
+        mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]),
+        mergedBai=expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]),
+        reference=expand("{out}/output_denovo/NNNNref/ref.fa", out=config["output_dir"])
+    output:
+        alignmentCalmd=temp(expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]))
+    threads: workflow.cores
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools calmd -b {input.mergedBam} {input.reference} -@ {threads} > {output.alignmentCalmd}"
+rule index_calmd:
+    input:
+        alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"])
+    output:
+        alignmentCalmdBai=temp(expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"]))
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.alignmentCalmd}"
+
+#Change the sam queries using the epiDiverse script
+rule change_sam_queries:
+    input:
+        mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
+        alignmentCalmdBai=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
+    output:
+        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
+    params:
+        tmp=config["tmpdir"]
+    threads: workflow.cores
+    conda:
+        "../env/SNP_calling_epiDiverse.yaml"
+    shell:
+        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.maskedBam} -t {params.tmp} -T {threads} -Q"
+
+rule index_preparation:
+    input:
+        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
+    output:
+        maskedBai=expand("{out}/snp_calling/masked.bam.bai",out=config["output_dir"])
+    conda:
+        "../env/samtools.yaml"
+    shell:
+        "samtools index {input.maskedBam}"
+
+#Call SNPs using freebayes
+#<(fasta_generate_regions.py) Splits up the reference to allow parallelisation
+#-f reference
+#--no-partial-observations causes freebayes to only consider observations that completely cover the haplotype window that's used during calling.
+#--report-genotype-likelihood-max Report genotypes using the maximum-likelihood estimate provided from genotype likelihoods.
+#--genotype-qualities output genotype qualties (GQ) for filtering
+#--min-coverage 0 Require at least this coverage to process a site. 
+#--min-base-quality 1 Exclude alleles from analysis if their supporting base quality is less than 1. 
+#--min-mapping-quality 10 Exclude alleles from analysis if their supporting mapping quality is less than 10. 
+#--no-populations-priors Equivalent to --pooled-discrete --hwe-priors-off and removal of Ewens Sampling Formula component of priors.
+#
+rule call_snps_denovo:
+    input:
+        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"]),
+        maskedBai=expand("{out}/snp_calling/masked.bam.bai",out=config["output_dir"]),
+        ref=expand("{path}/output_denovo/NNNNref/ref.fa", path=config["output_dir"],genome=config["genome"]),
+        refFai=expand("{path}/output_denovo/NNNNref/ref.fa.fai", path=config["output_dir"],genome=config["genome"]),
+    output:
+        snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
+    conda:
+        "../env/SNP_calling_epiDiverse.yaml"
+    threads: workflow.cores 
+    shell:
+        """
+        freebayes-parallel <(fasta_generate_regions.py {input.refFai} 100000) {threads} -f {input.ref} {input.maskedBam} \
+        --no-partial-observations \
+        --report-genotype-likelihood-max \
+        --genotype-qualities \
+        --min-coverage 0 \
+        --min-base-quality 1 \
+        --min-mapping-quality 10 | bgzip -c > {output.snpVCF}
+        """

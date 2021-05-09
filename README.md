@@ -1,5 +1,3 @@
-epiGBS2 is a snakemake workflow to execute the analysis of reduced representation bisulfite sequencing by creating a de novo reference based on a control nucleotide that was added during library preparation.
-
 # Manual epiGBS2
 
 - [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)
@@ -38,7 +36,7 @@ epiGBS2 is a snakemake workflow to execute the analysis of reduced representatio
 ## Preparation to run the pipeline
 
 - Make a conda environment for snakemake if snakemake is not installed globally on the server. You do not need administrator rights to do this but conda has to be installed (see [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)).
-	- `conda create -n snake snakemake=5.4.5`
+	- `conda create -n snake snakemake=6.1.1`
 	- `conda activate snake`
 - Make a copy of the pipeline
 	- `git clone https://github.com/nioo-knaw/epiGBS2.git`
@@ -54,22 +52,21 @@ epiGBS2 is a snakemake workflow to execute the analysis of reduced representatio
 	- barcodes: Filename of the barcode file (do not include the path!)
 	- tmpdir: Path to the directory where temporary files will be stored. For most systems this will be /tmp
 	- threads: number of available computing threads on your system
-	- mode: choice between "denovo" or "reference"
+	- mode: choice between "denovo", "reference" or "legacy"
 	- ref_dir: Only needed for reference-based analysis. Path to directory containing a reference genome
 	- Genome: Only needed for reference-based analysis. Name of the genome file (prefix .fa)
 	- Param_denovo: Optional and only relevant for analysis in denovo mode. To run on default choose "" or "default", otherwise enter a number
-		- Identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default: "0.95"
-		- Min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
-		- Max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
-	- param_SNPcalling:
-		- max-depth: At a position, read maximally INT reads per input file, default 10000000, check if mpileup automatically reduced the maximal depth even more. You might have to re-run your analysis with a lower max-depth value to avoid this.
-		- min-MQ: Minimum mapping quality for an alignment to be used, default 0
-		- min-BQ: Minimum base quality for a base to be considered, default 15
+		- Identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default: "0.97"
+		- Min-depth: minimal cluster depth in the first clustering step to include a cluster, default 10
+		- Max-depth: maximal cluster depth in the first clustering step to include a cluster, default 10000
 
 - Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Flowcell, Lane, Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. Make sure that the sample name does not only contain numbers but also letters. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession. If this is not working, and you have PC you can remove the `^M` with `dos2unix barcodes.tsv`. You can check the removal with `cat -A barcode.tsv`.
 
 The Flowcellname can be found in the fastq headers of the read file, e.g. `@ST-E00317:403:H53KHCCXY:5:1101:5660:1309 1:N:0:NCAATCAC` translates to `@ST-E00317:403:FLOWCELL:LANE-NUMBER:1101:5660:1309 1:N:0:NCAATCAC`. ENZ_R1/2 expects the names of the restriction enzymes and Wobble_R1/2 is the length of the unique molecular identifier ("Wobble") sequence (usually 3).
 It is important that the restriction enzyme names are spelled correctly, so the end of the restriction enzyme names are capital i (I) and not an l (lowercase L) or an 1 (number).
+
+At the moment it is not supported to process **multiple lanes** at the same time. Limiting step is the demultiplexing. If you want to analyse more than one lane, please first run demultiplexing per lane, merge demultiplexed files and then run the rest of the pipeline.
+
 ```
 # barcodes.tsv
 Flowcell        Lane    Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
@@ -90,23 +87,22 @@ H53KHCCXY       5       CCTTC   CCAG    WUR_175 SD      WUR     BUXTON_WUR_AseI_
 - everythin green? Then...
 - run the pipeline:
 	`snakemake -j <threads> -p --use-conda` Replace <threads> by number of CPU's to use on your server, e.g. `snakemake -j 12 -p --use-conda`
-
+- if you want to run without SNP calling you can add `output/path/as/in/config/multiQC_report.html` at the end of the snakemake command
 ## Explanation of files in the output directory
 
 It follows a description of all output files. Files that are important for downstream analysis are highlighted in bold. Files or Directories in italics are specific for the de-novo and reference branch respectively.
 
--  __report.html__: A report summarizing all stats from the epiGBS analysis. Absolutely crucial to determine, whether your analysis ran successfully or not. However, this file gives only a first impression and further analysis is necessary to confirm the quality of your analysis.
-- __multiQC_report.html__: A report summarizing QC stats for the input data. Can be opened in any webbrowser. This file can be very large. Hide parts of the files to make loading easier, e.g. filter out all files containing "rem"
+- __multiQC_report.html__:  report summarizing all stats from the epiGBS analysis. Absolutely crucial to determine, whether your analysis ran successfully or not. However, this file gives only a first impression and further analysis is necessary to confirm the quality of your analysis. Can be opened in any webbrowser. This file can be very large. Hide parts of the files to make loading easier, e.g. filter out all files containing "rem"
 - output_demultiplex:
 	- barcode_stacks.tsv: barcode file converted to the required stacks format  
 	- clone: Directory containing read files from which PCR duplicates were removed  
 	- clone-stacks: Directory containing demultiplexed and Watson-Crick separated read files. File names start with sample names. Files with *rem* in the name contain reads that failed the RAD-tag check.
 		- process_radtags.clone.log: Log file containing stats from demultiplexing, also contains information about eventually discovered *de novo* barcodes
-	- crick_R1.fq.gz: All filtered and demultiplexed crick forward reads, input for following steps  
-	- crick_R2.fq.gz: All filtered and demultiplexed crick reverse reads, input for the following steps  
+	- crick_R1.fq.gz: All filtered and demultiplexed crick forward reads, input for denovo creation 
+	- crick_R2.fq.gz: All filtered and demultiplexed crick reverse reads, input for denovo creation
 	- demultiplex.log: Log file containing stats from clone-removal  
-	- Watson_R1.fq.gz: All filtered and demultiplexed watson forward reads, input for the following steps    
-	- Watson_R2.fq.gz: All filtered and demultiplexed watson reverse reads, input for the following steps  
+	- Watson_R1.fq.gz: All filtered and demultiplexed watson forward reads, input for denovo creation    
+	- Watson_R2.fq.gz: All filtered and demultiplexed watson reverse reads, input for denovo creation  
 - *output_denovo*: Containing all files created during de-novo reference creation. Skipped, if running in reference-mode.
 	- Assembled.fq.gz: All read pairs (forward/R1 and reverse/R2), that were assembled/merged using Pear
 	- Unassembled.R1.fq.gz: All forward/R1 reads that could not be assembled/merged  
@@ -116,28 +112,32 @@ It follows a description of all output files. Files that are important for downs
 	- __consensus_cluster.renamed.fa__: sequences are identical to consensus_cluster.fa but fasta names were renamed. Input for mapping.
 	- consensus_cluster.renamed.fa.fai: Indexed *de novo* reference sequences.
 	- make_reference.log: Log file containing some stats about the clustering.  
-- mapping:
-	- STAR_{joined,merged}_{crick,watson}: Directory, which contains the (indexed) Crick/Watson-reference converted to a three-letter alphabet. If working with a reference genome, differentiation between joined/merged absent.
-	- {crick, watson}.bam: Alignment file of crick or watson reads against the reference, created by STAR
-	- {crick,watson}.bam.bai: indexed alignment files, used as input for samtools        
-	- {crick,watson}.vcf.gz: created by samtools, contains all variant positions in {crick,watson} reads against the reference for each sample          
-	- merged.tsv.gz: created by a custom script that merges crick.vcf.gz and watson.vcf.gz   
-	- __snp.vcf.gz__: created by a custom script that extracts all SNPs from merged.tsv.gz. You can read this file using zcat or after unzipping it using gunzip
-	- header.sam: File containing the sam header
-	- mapping_variantcalling.log: Contains the mapping statistics
-	- __methylation.bed__: created by a custom script that extracts all methylated positions for each sample
-	- heatmap.igv: Input for IGV (https://software.broadinstitute.org/software/igv/)  to visualize methylated positions in the genome
-	- {Crick,Watson}_{joined,merged}Log.final.out:   
-- *trimmed*: Directory containing adapter trimmed reads and their fastqc output files. For running in reference-mode only.
+- cutadapt: 
+	- contains the output of the trimming steps performed using cutadapt, which are used for the alignment step
+- alignment:
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam: Alignemnt file per individual of reads against the reference, created by bismark. Can be used as input for most bisulphite sensitive SNP and methylation callers.
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_PE_report.txt: report file describing mapping performance per individual.
+	- {sample}_trimmed_filter_merged{1,2}_{ambigious,unmapped}.fq.gz: contains the reads that did not map or mapped ambigiously to the reference genome.
+- methylation_calling:
+	- {sample}_bismark_bt2_pe.CX_report_txt.gz: Main output file of the bismark methylation calling,  a genome-wide methylation report for all
+cytosines in the genome. Uses 1-based chromosome coordinates, and outputs context, fraction methylated, number of methylated bases and total number of bases.
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz: Output with coverage and number of called bases.
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe.bedGraph.gz: Output that reports the position of a given cytosine and its methylation state using 0-based genomic start and 1-based end coordinates.
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe.cytosine_context_summary.txt: a file summarizing the methylation in the different cytosine contexts found within the individual.
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe.M-bias.txt: file shows the methylation proportion across each possible position in the read. Is summarized in the multiQC report.
+	- {sample}_trimmed_filt_merged.1_bismark_bt2_pe_splitting_report.txt: Shows stats of the methylation calling. Is summarized in the multiQC file
+
+- snp_calling:
+	- masked.bam: Input file for freebayes. Can be used to run any SNP_caller supporting multicohort SNP_calling
+	- snp.vcf.gz: combined file containing all SNPs for all individuals. 
 - multiQC_report_data: Directory containing all log and intermediary files that are created by MultiQC
-- fastqc: Directory containing individual FastQC reports
-- log: Directory containing log-files
+- fastqc: Directory containing individual FastQC reports is summarized in the multiQC report
+- log: Directory containing log-files. Is summarized in the multiQC report
 
 ## When not to run the pipeline?
 
 - If you want to determine methylation in restriction enzyme overhang. The original sequence will be replaced by the expected overhang during demultiplexing if a mismatch between expected and actual overhang sequence occurs. Hence, C-T conversions are replaced by a C and methylation would be artifically set to 100%.
-- The reference branch is in an experimental stage. One observed drawback is a low mapping percentage (20-30 %) but it might depend from the reference genome and organism.
-- SNP and methylation calling are not benchmarked.
+- there is no full support for running multiple lanes at one (see comment above, where barcode file is described)
 
 ## Quality control or "How to discover errors?"
 
@@ -145,25 +145,11 @@ Recommendation: Run fastq-screen in bisulphite mode on raw data to determine sou
 
 ### MultiQC report:
 
-- MultiQC wraps the FastQC, mapping and trimming (for reference-branch only) report of all samples and gives you the possibility to compare the quality plots of all or specific samples directly with each other. All functions of MultiQC are explained in a tutorial video that is provided as a link in the report.
+- MultiQC wraps the FastQC, demultiplexing, denovo creation, mapping and aligning reports of all samples and gives you the possibility to compare the quality plots of all or specific samples directly with each other. All functions of MultiQC are explained in a tutorial video that is provided as a link in the report.
 - you can consider the FastQC documentation to understand most of the FastQC plots: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/. However, epiGBS libraries have the following specific characteristics that will be reflected in the quality reports. You can also compare this with the RRBS example from the FastQC website: https://www.bioinformatics.babraham.ac.uk/projects/fastqc/RRBS_fastqc.html
 	- The sequence duplication levels will be higher than average because restriction enzymes were used to create the libraries versus random shearing for e.g. whole genome sequencing.
 	- The per base sequence content of the first nucleotides will re-construct the overhang of the used restriction enzyme after demultiplexing the reads. The "C" content is usually low and "T" is high.
 	- The 3'-end adapter content is usually high
-
-### EpiGBS-report:
-
-- Number of clones: Check the number and distributions of clones. The dominant peak should be at a number of clones = 1.
-- Demultiplexing: The number of reads per sample should be comparable and agree with the expected numbers. The amount of Watson and Crick reads for a specific sample should be similar, too. The optimal number of reads depends on the expected number of fragments (> 10 reads per fragment) and required coverage.
-- *De novo* reference:
-	- Check the number of assembled reads. Usually the percentage of assembled reads should be higher than unassembled reads. This depends from the size of the fragments that you expect. If the fragment size is greater than twice the chosen read site, the amount of assembled reads will be small.
-	- The number of consensus clusters (third clustering step) should be comparable with the number of fragments that you expected, e.g. by performing an in silico digest using R packages like SimRAD.
-- Mapping:
-	- The mapping percentage for all reads should be higher than 40%. In general, we observe a lower mapping percentage for assembled than for joined reads.
-- SNP calling:
-	- The amount of detected SNPs will depend from the used species and the diversity of samples. The SNP depth should be greater than 10 for reliable calling.
-- Methylation calling:
-	- The amount of methylated cytosines and their context will depend from the used species and used restriction enzymes. In general, the depth should be greater than 10 for reliable calling.
 
 ## Fix errors
 
@@ -200,20 +186,26 @@ The coverage is too low in the methylation bed file and after filtering on cover
 - sequence more
 - reduce the genome representation by using a low cutting restriction enzyme
 
+#### Problem:
+The mapping percentage in de novo mode is low.
+
+#### Fix:
+- check and optimize the parameters of the de novo reference creation
+
 ## Example Config Files
 
 ### De novo
 
 ```
 # path to output directory
-output_dir: "/fleurg/projects/epiGBS2/output"
+output_dir: "/home/maarten/test_data/epigbs2/output"
 
 # input directory where raw reads are
-input_dir       : "/fleurg/projects/epiGBS2/data"
+input_dir       : "/home/maarten/test_data/data"
 
 # name of sequence read files
-Read1 : "epiGBS_1.fq.gz"
-Read2 : "epiGBS_2.fq.gz"
+Read1 : "test_data_R1.fq.gz"
+Read2 : "test_data_R2.fq.gz"
 
 # number of sequencing cycles (the same as read length in Illumina sequencing)
 cycles        : 150
@@ -222,12 +214,9 @@ cycles        : 150
 barcodes: "barcodes.tsv"
 
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
-tmpdir        : "/tmp"
+tmpdir        : "/tmp/"
 
-# some of the steps can be run in parallel. Please set the number of available computing threads on your system
-threads: "12"
-
-# mode of running pipeline (set denovo or reference)
+# mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "denovo"
 
 # genome directory (leaave it blank in denovo mode)
@@ -239,23 +228,14 @@ genome: ""
 # advanced users have the possibility to change different parameter, leave them blank or write "default" to run them in default mode
 
 # parameters in the denovo reference creation:
-# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.95
-# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
-# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
+# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.97
+# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 10
+# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 10000
 param_denovo:
-  identity: ""
-  min-depth: ""
-  max-depth: ""
+  identity: "0.97"
+  min-depth: "10"
+  max-depth: "10000"
 
-# parameters in the mpileup step (variant callin)
-# max-depth: At a position, read maximally INT reads per input file, default 10000000, check if mpileup automatically reduced the maximal depth even more. You might have to re-run your analysis with a lower max-depth value to avoid this.
-# min-MQ: Minimum mapping quality for an alignment to be used, default 0
-# min-BQ: Minimum base quality for a base to be considered, default 15
-
-param_SNPcalling:
-  max-depth: ""
-  min-MQ: ""
-  min-BQ: ""
 
 ```
 
@@ -264,14 +244,14 @@ param_SNPcalling:
 
 ```
 # path to output directory
-output_dir: "/fleurg/projects/epiGBS2-ref/output"
+output_dir: "/home/maarten/test_data/epigbs2/output"
 
 # input directory where raw reads are
-input_dir       : "/fleurg/projects/epiGBS2-ref/data"
+input_dir       : "/home/maarten/test_data/data"
 
 # name of sequence read files
-Read1 : "epiGBS_1.fq.gz"
-Read2 : "epiGBS_2.fq.gz"
+Read1 : "test_data_R1.fq.gz"
+Read2 : "test_data_R2.fq.gz"
 
 # number of sequencing cycles (the same as read length in Illumina sequencing)
 cycles        : 150
@@ -280,40 +260,30 @@ cycles        : 150
 barcodes: "barcodes.tsv"
 
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
-tmpdir        : "/tmp"
+tmpdir        : "/tmp/"
 
-# some of the steps can be run in parallel. Please set the number of available computing threads on your system
-threads: "12"
-
-# mode of running pipeline (set denovo or reference)
+# mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
 
 # genome directory (leaave it blank in denovo mode)
-ref_dir: "/fleurg/projects/epiGBS2-ref/data/ref"
+ref_dir: "/home/maarten/test_data/ref/"
 
-# genome name (leave it blank in denovo mode)
-genome: "reference.fa"
+# genome name (leaave it blank in denovo mode)
+genome: "ref.fa"
 
 # advanced users have the possibility to change different parameter, leave them blank or write "default" to run them in default mode
 
 # parameters in the denovo reference creation:
-# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.95
-# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
-# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
+# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.97
+# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 10
+# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 10000
 param_denovo:
   identity: ""
   min-depth: ""
   max-depth: ""
 
-# parameters in the mpileup step (variant callin)
-# max-depth: At a position, read maximally INT reads per input file, default 10000000, check if mpileup automatically reduced the maximal depth even more. You might have to re-run your analysis with a lower max-depth value to avoid this.
-# min-MQ: Minimum mapping quality for an alignment to be used, default 0
-# min-BQ: Minimum base quality for a base to be considered, default 15
 
-param_SNPcalling:
-  max-depth: ""
-  min-MQ: ""
-  min-BQ: ""
+
 ```
 
 ## List of used software and references
@@ -327,12 +297,14 @@ param_SNPcalling:
 - [Python 3.7](https://www.python.org/)
 - [R + R package to render Rmd](https://www.r-project.org/)
 - [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc)
-- [Trim-galore](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore)
+- [Cutadapt](https://cutadapt.readthedocs.io/en/stable/)
 - [Pear](https://cme.h-its.org/exelixis/web/software/pear/)
 - [Seqtk](https://github.com/lh3/seqtk)
-- [STAR](https://github.com/alexdobin/STAR)
+- [Bismark](https://www.bioinformatics.babraham.ac.uk/projects/bismark/)
 - [vsearch](https://github.com/torognes/vsearch)
 - [Samtools](http://www.htslib.org/)
+- [Freebayes](https://github.com/freebayes/freebayes)
+- [epiDiverse SNP calling](https://github.com/EpiDiverse/snp)
 
 ### References
 
@@ -344,6 +316,9 @@ param_SNPcalling:
 5.	Stacks 2: Analytical Methods for Paired-end Sequencing Improve RADseq-based Population Genomics | bioRxiv. Available at: https://www.biorxiv.org/content/10.1101/615385v1. (Accessed: 27th August 2019)
 6.	Andrews, Simon. FastQC: a quality control tool for high throughput sequence data. Available online at: http://www.bioinformatics.babraham.ac.uk/projects/fastqc. (2010).
 7.	Zhang, J., Kobert, K., Flouri, T. & Stamatakis, A. PEAR: a fast and accurate Illumina Paired-End reAd mergeR. Bioinformatics 30, 614-620 (2014).
-8.	Dobin, A. et al. STAR: ultrafast universal RNA-seq aligner. Bioinformatics 29, 15-21 (2013).
 9.	Rognes, T., Flouri, T., Nichols, B., Quince, C. & Mahé, F. VSEARCH: a versatile open source tool for metagenomics. PeerJ 4, (2016).
 10.	Lepais, O. & Weir, J. T. SimRAD: an R package for simulation-based prediction of the number of loci expected in RADseq and similar genotyping by sequencing approaches. Mol. Ecol. Resour. 14, 1314-1321 (2014).
+11. Krueger F, Andrews SR. Bismark: a flexible aligner and methylation caller for Bisulfite-Seq applications. Bioinformatics. 27(11):1571-2. (2011)
+12. Garrison, E., Marth, G. Haplotype-based variant detection from short-read sequencing. arXiv:1207.3907 (2012)
+13. Martin, M. Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal 17 1, 10-1 (2011)
+14. Nunn, A., Otto, C., Stadler, P.F., Langenberger, D. Manipulating base quality scores enables variant calling from bisulfite sequencing alignments using conventional Bayesian approaches bioRxiv 2021.01.11.425926; doi: https://doi.org/10.1101/2021.01.11.425926 (2021)

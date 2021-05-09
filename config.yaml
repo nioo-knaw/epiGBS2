@@ -17,10 +17,7 @@ barcodes: "barcodes.tsv"
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
 tmpdir        : "/tmp"
 
-# some of the steps can be run in parallel. Please set the number of available computing threads on your system
-threads: "12"
-
-# mode of running pipeline (set denovo or reference)
+# mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
 
 # genome directory (leaave it blank in denovo mode)
@@ -32,20 +29,10 @@ genome: "consensus_cluster.renamed.fa"
 # advanced users have the possibility to change different parameter, leave them blank or write "default" to run them in default mode
 
 # parameters in the denovo reference creation:
-# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 90% identity write 0.90, default 0.95
-# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 0
-# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 0
+# identity: percentage of sequence identity in the last clustering step, in decimal number e.g. for 95% identity write 0.95, default 0.97
+# min-depth: minimal cluster depth in the first clustering step to include a cluster, default 10
+# max-depth: maximal cluster depth in the first clustering step to include a cluster, default 10000
 param_denovo:
   identity: ""
   min-depth: ""
   max-depth: ""
-
-# parameters in the mpileup step (variant callin)
-# max-depth: At a position, read maximally INT reads per input file, default 10000000, check if mpileup automatically reduced the maximal depth even more. You might have to re-run your analysis with a lower max-depth value to avoid this.
-# min-MQ: Minimum mapping quality for an alignment to be used, default 0
-# min-BQ: Minimum base quality for a base to be considered, default 15
-
-param_SNPcalling:
-  max-depth: ""
-  min-MQ: ""
-  min-BQ: ""

@@ -1,1 +1,1 @@
-You can place links to your data here and indicate the path in the config file.
+In this directory you will link (ln -s) or place your sequening files in fastq format (gzipped allowed) and the barcode file..
