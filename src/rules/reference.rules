@@ -175,8 +175,6 @@ rule call_SNPs_reference:
         snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
     conda:
         "../env/SNP_calling_epiDiverse.yaml"
-    params:
-        MQ=config["mapping_quality"]
     threads: workflow.cores
     shell:
         """
