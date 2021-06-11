@@ -104,7 +104,6 @@ rule genome_prep_for_bismark_denovo_bismark:
 #Align the trimmed reads to the denovo clusters
 # --un outputs  unmapped reads to the output directory #Needed?
 # --ambigious outputs ambigious writes the ambigiuos reads #Needed?
-# --non_directional: sequencing library not in a specific direction
 # --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
 
 rule alignment_denovo_bismark:
