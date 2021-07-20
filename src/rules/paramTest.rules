@@ -43,7 +43,7 @@ rule denovo_reference:
     params:
         cycles=config["cycles"],
         dir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex/"),
-        tmp=expand("{tmp}/denovo/", tmp=config["tmpdir"]),
+        tmp=expand("{tmp}/denovo/{params}/", tmp=config["tmpdir"],params=paramspace.wildcard_pattern),
         identity="0."+(str(paramspace.wildcard_pattern).split("/")[1].split("~")[1]),
         max_depth=getParam_maxd(param_maxd),
         indir=expand("{path}{read1}", path=config["output_dir"], read1="/output_demultiplex"),
@@ -143,8 +143,8 @@ rule makeDataSet:
         out=expand("{path}/paramTest/",path=config["output_dir"])
     shell:
         """paste \
-            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f2 -d "~" | sed "s|/.*$||") \
-            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Reading file" | grep "mindepth~" | cut -f3 -d "~" | sed "s|/.*$||") \
+            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Reading file" | fgrep "consensus" |  grep "mindepth~" | cut -f2 -d "~" | sed "s|/.*$||") \
+            <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Reading file" | fgrep "consensus" | grep "mindepth~" | cut -f3 -d "~" | sed "s|/.*$||") \
             <(cat {params.out}*/*/output_denovo/make_reference.log | grep "Clusters"| cut -f2 -d " ") \
             <(cat {params.out}Assembled.txt) \
             <(cat {params.out}*/*/alignment/*_report.txt | grep "Sequence pairs ana"| cut -f2) \
