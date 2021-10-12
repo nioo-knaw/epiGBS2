@@ -140,18 +140,12 @@ rule methylation_calling_denovo_bismark:
     output:
         calling=temp(expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])),
         coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"]),
-        cHH_CTOB=temp(expand("{out}/methylation_calling/CHH_CTOB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
         cHH_OB=temp(expand("{out}/methylation_calling/CHH_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHG_CTOB=temp(expand("{out}/methylation_calling/CHG_CTOB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHG_OB=temp(expand("{out}/methylation_calling/CHG_CTOB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cG_CTOB=temp(expand("{out}/methylation_calling/CG_CTOB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cG_OB=temp(expand("{out}/methylation_calling/CG_CTOB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHH_CTOT=temp(expand("{out}/methylation_calling/CHH_CTOT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+        cHG_OB=temp(expand("{out}/methylation_calling/CHG_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+        cG_OB=temp(expand("{out}/methylation_calling/CpG_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
         cHH_OT=temp(expand("{out}/methylation_calling/CHH_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHG_CTOT=temp(expand("{out}/methylation_calling/CHG_CTOT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHG_OT=temp(expand("{out}/methylation_calling/CHG_CTOT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cG_CTOT=temp(expand("{out}/methylation_calling/CG_CTOT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cG_OT=temp(expand("{out}/methylation_calling/CG_CTOT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"]))
+        cHG_OT=temp(expand("{out}/methylation_calling/CHG_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+        cG_OT=temp(expand("{out}/methylation_calling/CpG_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"]))
     params:
         out=expand("{path}",path=config["output_dir"]),
         NNrefDir=expand("{path}/output_denovo/NNNNref/",path=config["output_dir"])
