@@ -153,7 +153,20 @@ Recommendation: Run fastq-screen in bisulphite mode on raw data to determine sou
 
 ## Fix errors
 
-### Clone percentage
+### Clone removal
+
+#### Problem:
+The clone_filter process does not procede, due insufficient memory available in the server
+
+#### Fix:
+
+- Run clone_filter outside of the pipeline using the following command: `clone_filter -1 R1.fq.gz -2 R2.fq.gz -o ./ --inline_inline -igzfastq --oligo_len_1 3 --oligo_len_2 3 `
+- Change the values of Wobble_R1/Wobble_R2 the barcode file to 0 and set the input/ reads to the output of the command above.
+- If the previous solution does not work NGSReadsTreatment can be used instead. (paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6690869/) (download: https://sourceforge.net/projects/ngsreadstreatment/)
+- The following command filters the clones: `java -Xmx32g -jar NgsReadsTreatment_v1.3.jar prefix_R1.fastq prefix_R2.fastq 32`
+- After which the wobble bases should be removed for this you can use fastp https://github.com/OpenGene/fastp `fastp --trim_front1 3 --trim_front2 3 --disable_adapter_trimming --disable_trim_poly_g --disable_quality_filtering --in1 prefix_R1_1_trated.fastq --in2 prefix_R2_2_trated.fastq --out1 prefix_R1.deRepNoWobble.fq.gz --out2 prefix_R2.deRepNoWobble.fq.gz` 
+- The `prefix_R1.deRepNoWobble.fq.gz`/ `prefix_R2.deRepNoWobble.fq.gz` files can be used as input for the pipeline, after setting the Wobble_R1/Wobble_R2 at 0 in the barcode file.
+
 
 #### Problem:
 I have a very high percentage of clone reads
@@ -164,6 +177,13 @@ I have a very high percentage of clone reads
 - Check the quality and quantity of input DNA during the wetlab procedure.
 
 ### Demultiplexing
+
+#### Problem:
+There are many reads that are lost due to polyG (GGGGG) stretches at the beginning of the reads
+
+#### Fix: 
+- These are filtered in the process_radtags step as they can not be assigned to any individual. 
+- We are not sure yet what causes these polyGs.
 
 #### Problem:
 One or more samples have small amounts of recovered reads or read numbers differ a lot between different samples.
