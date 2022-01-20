@@ -153,6 +153,16 @@ Recommendation: Run fastq-screen in bisulphite mode on raw data to determine sou
 
 ## Fix errors
 
+### Installation
+
+#### Problem:
+`conda create -n snake snakemake=6.1.1` did not work
+
+#### Fix
+
+- install mamba in your base conda `conda install mamba` 
+- run `mamba create -n snake snakemake=6.1.1` 
+
 ### Clone removal
 
 #### Problem:
@@ -184,7 +194,8 @@ There are many reads that are lost due to polyG (GGGGG) stretches at the beginni
 #### Fix: 
 - These are filtered in the process_radtags step as they can not be assigned to any individual. 
 - We are not sure yet what causes these polyGs.
-
+- If the poly G's are still present in the trimmed data change line 17 in src/rules/trimming.rules into
+`cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u 1 -U 1 -m 20 -a G{{10}} -A G{{10}} -N --info-file test.log --untrimmed-output testR1Untrimmed.fq.gz --untrimmed-paired-output testR2Untrimmed.fq.gz -o testR1Trimmed.fq.gz -p testR2Trimmed.fq.gz output/output_demultiplex/clone-stacks/150-Crick.1.fq.gz output/output_demultiplex/clone-stacks/150-Crick.2.fq.gz 2>&1 | tee test2.log`
 #### Problem:
 One or more samples have small amounts of recovered reads or read numbers differ a lot between different samples.
 
