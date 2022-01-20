@@ -156,7 +156,7 @@ Recommendation: Run fastq-screen in bisulphite mode on raw data to determine sou
 ### Installation
 
 #### Problem:
-`conda create -n snake snakemake=6.1.1` did not work
+`conda create -n snake snakemake=6.1.1` did not work / environment takes a long time to solve
 
 #### Fix
 
