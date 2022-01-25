@@ -6,10 +6,11 @@
 - [Explanation of files in the output directory](#explanation-of-files-in-the-output-directory)
 - [When not to run the pipeline?](#when-not-to-run-the-pipeline)
 - [Quality control or "How to discover errors?"](#quality-control-or-how-to-discover-errors)
-- [Example Config Files](#example-config-files)
+- [Fix errors](#fix-errors)
+- [Example Data and Config Files](#example-data-and-config-files)
 - [List of used software and references](#list-of-used-software-and-references)
 
-## Prerequisites of bioinformatics skills and infrastructure and wetlab preparations for running the pipeline
+## Prerequisites for running the pipeline
 
 - A basic knowledge of Linux:
 	- Knowledge, about how to work with files and directories (cd, ls, nano)
@@ -36,8 +37,10 @@
 ## Preparation to run the pipeline
 
 - Make a conda environment for snakemake if snakemake is not installed globally on the server. You do not need administrator rights to do this but conda has to be installed (see [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)).
-	- `conda create -n snake snakemake=6.1.1`
+	- `conda create -n snake`
 	- `conda activate snake`
+	- `conda install -c conda-forge mamba`
+	- `mamba install -c bioconda snakemake=6.1.1`
 - Make a copy of the pipeline
 	- `git clone https://github.com/nioo-knaw/epiGBS2.git`
 - Enter the created directory:
@@ -153,29 +156,22 @@ Recommendation: Run fastq-screen in bisulphite mode on raw data to determine sou
 
 ## Fix errors
 
-### Installation
-
-#### Problem:
-`conda create -n snake snakemake=6.1.1` did not work / environment takes a long time to solve
-
-#### Fix
-
-- install mamba in your base conda `conda install mamba` 
-- run `mamba create -n snake snakemake=6.1.1` 
-
 ### Clone removal
 
 #### Problem:
-The clone_filter process does not procede, due insufficient memory available in the server
+The clone_filter process does not proceed due insufficient memory availability on the server
 
 #### Fix:
 
-- Run clone_filter outside of the pipeline using the following command: `clone_filter -1 R1.fq.gz -2 R2.fq.gz -o ./ --inline_inline -igzfastq --oligo_len_1 3 --oligo_len_2 3 `
-- Change the values of Wobble_R1/Wobble_R2 the barcode file to 0 and set the input/ reads to the output of the command above.
-- If the previous solution does not work NGSReadsTreatment can be used instead. (paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6690869/) (download: https://sourceforge.net/projects/ngsreadstreatment/)
-- The following command filters the clones: `java -Xmx32g -jar NgsReadsTreatment_v1.3.jar prefix_R1.fastq prefix_R2.fastq 32`
-- After which the wobble bases should be removed for this you can use fastp https://github.com/OpenGene/fastp `fastp --trim_front1 3 --trim_front2 3 --disable_adapter_trimming --disable_trim_poly_g --disable_quality_filtering --in1 prefix_R1_1_trated.fastq --in2 prefix_R2_2_trated.fastq --out1 prefix_R1.deRepNoWobble.fq.gz --out2 prefix_R2.deRepNoWobble.fq.gz` 
-- The `prefix_R1.deRepNoWobble.fq.gz`/ `prefix_R2.deRepNoWobble.fq.gz` files can be used as input for the pipeline, after setting the Wobble_R1/Wobble_R2 at 0 in the barcode file.
+- Run clone_filter outside of the pipeline using the following command: 
+	- `clone_filter -1 R1.fq.gz -2 R2.fq.gz -o ./ --inline_inline -igzfastq --oligo_len_1 3 --oligo_len_2 3 `
+- Change the values of Wobble_R1/Wobble_R2 in the barcode file to 0 and in the config.yaml file set the input_dir to the output directory of the command above.
+- If the previous solution does not work, NGSReadsTreatment can be used instead. (paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6690869/) (download: https://sourceforge.net/projects/ngsreadstreatment/)
+- The following command filters the clone reads: 
+	- `java -Xmx32g -jar NgsReadsTreatment_v1.3.jar prefix_R1.fastq prefix_R2.fastq 32`
+- Then the wobble sequence has to be removed manually. You can use [fastp](https://github.com/OpenGene/fastp)
+	- `fastp --trim_front1 3 --trim_front2 3 --disable_adapter_trimming --disable_trim_poly_g --disable_quality_filtering --in1 prefix_R1_1_trated.fastq --in2 prefix_R2_2_trated.fastq --out1 prefix_R1.deRepNoWobble.fq.gz --out2 prefix_R2.deRepNoWobble.fq.gz` 
+- After changing the values for Wobble_R1/Wobble_R2 to 0 in the barcode file, the `prefix_R1.deRepNoWobble.fq.gz`/ `prefix_R2.deRepNoWobble.fq.gz` files can be used as input for the pipeline.
 
 
 #### Problem:
@@ -189,13 +185,15 @@ I have a very high percentage of clone reads
 ### Demultiplexing
 
 #### Problem:
-There are many reads that are lost due to polyG (GGGGG) stretches at the beginning of the reads
+There are many reads that are lost due to polyG (GGGGG) stretches at the beginning or end of the reads
 
 #### Fix: 
-- These are filtered in the process_radtags step as they can not be assigned to any individual. 
+- Reads containing polyG stretches at the start are removed in the process_radtags step as they cannot be assigned to any individual. 
 - We are not sure yet what causes these polyGs.
-- If the poly G's are still present in the trimmed data change line 17 in src/rules/trimming.rules into
-`cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u 1 -U 1 -m 20 -a G{{10}} -A G{{10}} -N --info-file test.log --untrimmed-output testR1Untrimmed.fq.gz --untrimmed-paired-output testR2Untrimmed.fq.gz -o testR1Trimmed.fq.gz -p testR2Trimmed.fq.gz output/output_demultiplex/clone-stacks/150-Crick.1.fq.gz output/output_demultiplex/clone-stacks/150-Crick.2.fq.gz 2>&1 | tee test2.log`
+- In the multiQC report you can check for an overpresentation of G's in the Per Base Sequence Content plot.
+- If the poly G's are present in the trimmed data, change line 17 in src/rules/trimming.rules to add additional polyG trimming:
+	- `cutadapt -a AGATCGGAAGAGC -A AGATCGGAAGAGC -u 1 -U 1 -m 20 -a G{{10}} -A G{{10}} -N --info-file test.log --untrimmed-output testR1Untrimmed.fq.gz --untrimmed-paired-output testR2Untrimmed.fq.gz -o testR1Trimmed.fq.gz -p testR2Trimmed.fq.gz output/output_demultiplex/clone-stacks/150-Crick.1.fq.gz output/output_demultiplex/clone-stacks/150-Crick.2.fq.gz 2>&1 | tee test2.log`
+	
 #### Problem:
 One or more samples have small amounts of recovered reads or read numbers differ a lot between different samples.
 
@@ -223,9 +221,13 @@ The mapping percentage in de novo mode is low.
 #### Fix:
 - check and optimize the parameters of the de novo reference creation
 
-## Example Config Files
+## Example Data and Config Files
+	
+### Example Data
+	
+An example data set and barcode file are available at [Zenodo](https://zenodo.org/record/5878925).
 
-### De novo
+### Barcode file using the de novo branch
 
 ```
 # path to output directory
@@ -245,7 +247,7 @@ cycles        : 150
 barcodes: "barcodes.tsv"
 
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
-tmpdir        : "/tmp/"
+tmpdir        : "/tmp"
 
 # mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "denovo"
@@ -271,7 +273,7 @@ param_denovo:
 ```
 
 
-### Reference
+### Barcode file using the Reference branch
 
 ```
 # path to output directory
@@ -291,7 +293,7 @@ cycles        : 150
 barcodes: "barcodes.tsv"
 
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
-tmpdir        : "/tmp/"
+tmpdir        : "/tmp"
 
 # mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
