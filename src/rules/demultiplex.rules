@@ -39,15 +39,15 @@ rule header_Watson_R1:
 
 rule cat_watson_R1:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
+        output_WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
     output:
         outFile=expand("{path}/output_demultiplex/Watson_R1.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir="demultiplex"),
+        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
     conda:
         "../env/python3.yaml"
     shell:
-       "cat {params.tmp}/samplesHeader/*-Watson.1.fq.gz > {output.outFile}"
+       "cat {params.tmp}/*-Watson.1.fq.gz > {output.outFile}"
 
 
 rule header_Watson_R2:
@@ -69,15 +69,15 @@ rule header_Watson_R2:
 
 rule cat_watson_R2:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Watson.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
+        output_WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
     output:
         outFile=expand("{path}/output_demultiplex/Watson_R2.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex"),
+        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
     conda:
         "../env/python3.yaml"
     shell:
-       "cat {params.tmp}/samplesHeader/*-Watson.2.fq.gz > {output.outFile}"
+       "cat {params.tmp}/*-Watson.2.fq.gz > {output.outFile}"
 
 
 
@@ -97,17 +97,18 @@ rule header_Crick_R1:
     shell:
          "zcat {params.outputdir}clone-stacks/{params.sample}-Crick.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
 
-rule cat_Crick_R1:
+rule cat_crick_R1:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
+        output_CrickR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
     output:
         outFile=expand("{path}/output_demultiplex/Crick_R1.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir="demultiplex"),
+        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
     conda:
         "../env/python3.yaml"
     shell:
-       "cat {params.tmp}/samplesHeader/*-Crick.1.fq.gz > {output.outFile}"
+       "cat {params.tmp}/*-Crick.1.fq.gz > {output.outFile}"
+
 
 
 rule header_Crick_R2:
@@ -126,17 +127,17 @@ rule header_Crick_R2:
     shell:
          "zcat {params.outputdir}clone-stacks/{params.sample}-Crick.2.fq.gz | cut -f1 -d ' '  | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
 
-rule cat_Crick_R2:
+rule cat_crick_R2:
     input:
-        inputDir=expand("{tmp}/{dir}/samplesHeader/{sample}-Crick.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex",sample=SAMPLES)
+        output_CrickR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
     output:
         outFile=expand("{path}/output_demultiplex/Crick_R2.fq.gz",  path=config["output_dir"])
     params:
-        tmp=expand("{path}/{dir}", path=config["tmpdir"],dir="demultiplex"),
+        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
     conda:
         "../env/python3.yaml"
     shell:
-       "cat {params.tmp}/samplesHeader/*-Crick.2.fq.gz > {output.outFile}"
+       "cat {params.tmp}/*-Crick.2.fq.gz > {output.outFile}"
 
 #rule remove_tmp_files:
 #    params:
