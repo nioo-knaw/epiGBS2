@@ -67,22 +67,22 @@
 		- Min-depth: minimal cluster depth in the first clustering step to include a cluster, default 10
 		- Max-depth: maximal cluster depth in the first clustering step to include a cluster, default 10000
 
-- Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Flowcell, Lane, Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. Make sure that the sample name does not only contain numbers but also letters. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession. If this is not working, and you have PC you can remove the `^M` with `dos2unix barcodes.tsv`. You can check the removal with `cat -A barcode.tsv`.
+- Make a barcode file: The barcode file is tab-delimited and contains at least the following columns: Barcode_R1, Barcode_R2, Sample, ENZ_R1, ENZ_R2, Wobble_R1, Wobble_R2. All other fields are optional. Make sure that the sample name does not only contain numbers but also letters. If you prepare the barcode file in Excel, make sure that no `^M` are present after uploading the file to the Linux server. You can check this by opening the barcode file with `cat -A barcode.tsv` on a Linux server. You can remove the `^M` with `sed -e "s/^M//" filename > newfilename`. To enter ^M, type CTRL-V, then CTRL-M. That is, hold down the CTRL key then press V and M in succession. If this is not working, and you have PC you can remove the `^M` with `dos2unix barcodes.tsv`. You can check the removal with `cat -A barcode.tsv`.
 
-The Flowcellname can be found in the fastq headers of the read file, e.g. `@ST-E00317:403:H53KHCCXY:5:1101:5660:1309 1:N:0:NCAATCAC` translates to `@ST-E00317:403:FLOWCELL:LANE-NUMBER:1101:5660:1309 1:N:0:NCAATCAC`. ENZ_R1/2 expects the names of the restriction enzymes and Wobble_R1/2 is the length of the unique molecular identifier ("Wobble") sequence (usually 3).
+ ENZ_R1/2 expects the names of the restriction enzymes and Wobble_R1/2 is the length of the unique molecular identifier ("Wobble") sequence (usually 3).
 It is important that the restriction enzyme names are spelled correctly, so the end of the restriction enzyme names are capital i (I) and not an l (lowercase L) or an 1 (number).
 
 At the moment it is not supported to process **multiple lanes** at the same time. Limiting step is the demultiplexing. If you want to analyse more than one lane, please first run demultiplexing per lane, merge demultiplexed files and then run the rest of the pipeline.
 
 ```
 # barcodes.tsv
-Flowcell        Lane    Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
-H53KHCCXY       5       AACT    CCAG    BUXTON_178      C       BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 1       2       AseI    NsiI    3       3       Scabiosa columbaria
-H53KHCCXY       5       CCTA    CCAG    WUR_178 C       WUR     BUXTON_WUR_AseI_NsiI_final_run1 2       2       AseI    NsiI    3       3       Scabiosa columbaria
-H53KHCCXY       5       TTAC    CCAG    BUXTON_169      C       BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 3       2       AseI    NsiI    3       3       Scabiosa columbaria
-H53KHCCXY       5       AGGC    CCAG    WUR_169 C       WUR     BUXTON_WUR_AseI_NsiI_final_run1 4       2       AseI    NsiI    3       3       Scabiosa columbaria
-H53KHCCXY       5       GAAGA   CCAG    BUXTON_175      SD      BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 5       2       AseI    NsiI    3       3       Scabiosa columbaria
-H53KHCCXY       5       CCTTC   CCAG    WUR_175 SD      WUR     BUXTON_WUR_AseI_NsiI_final_run1 6       2       AseI    NsiI    3       3       Scabiosa columbaria
+Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
+AACT    CCAG    BUXTON_178      C       BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 1       2       AseI    NsiI    3       3       Scabiosa columbaria
+CCTA    CCAG    WUR_178 C       WUR     BUXTON_WUR_AseI_NsiI_final_run1 2       2       AseI    NsiI    3       3       Scabiosa columbaria
+TTAC    CCAG    BUXTON_169      C       BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 3       2       AseI    NsiI    3       3       Scabiosa columbaria
+AGGC    CCAG    WUR_169 C       WUR     BUXTON_WUR_AseI_NsiI_final_run1 4       2       AseI    NsiI    3       3       Scabiosa columbaria
+GAAGA   CCAG    BUXTON_175      SD      BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 5       2       AseI    NsiI    3       3       Scabiosa columbaria
+CCTTC   CCAG    WUR_175 SD      WUR     BUXTON_WUR_AseI_NsiI_final_run1 6       2       AseI    NsiI    3       3       Scabiosa columbaria
 ```
 
 ## Start the pipeline

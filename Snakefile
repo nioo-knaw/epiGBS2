@@ -7,8 +7,8 @@ import random
 df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', dtype="object").set_index('Sample')
 SAMPLES = df.index
 SAMPLE = SAMPLES[0]
-flowCell = df.Flowcell[0]
-lane = df.Lane[0]
+flowCell = "Redudant"
+lane = "Redundant"
 projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 
 
