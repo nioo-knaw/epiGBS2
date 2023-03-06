@@ -47,8 +47,8 @@ rule denovo_reference:
         consensus=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus.fa"),
         assemble=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Assembled.fq.gz"),
         unass_R2=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R2.crick.fq.gz"),
-        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz"),
-        index_ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai")
+        unass_R1=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/Unassembled.R1.watson.fq.gz")
+        #index_ref=expand("{path}{file}", path=config["output_dir"], file="/output_denovo/consensus_cluster.renamed.fa.fai")
 
 
     params:
