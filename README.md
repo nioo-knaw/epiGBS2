@@ -36,15 +36,19 @@
 
 ## Preparation to run the pipeline
 
-- Make a conda environment for snakemake if snakemake is not installed globally on the server. You do not need administrator rights to do this but conda has to be installed (see [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)).
-	- `conda create -n snake`
-	- `conda activate snake`
-	- `conda install -c conda-forge mamba`
-	- `mamba install -c bioconda snakemake=6.1.1`
 - Make a copy of the pipeline
 	- `git clone https://github.com/nioo-knaw/epiGBS2.git`
+
 - Enter the created directory:
 	- `cd epiGBS2`
+
+- Make a conda environment for snakemake if snakemake is not installed globally on the server. You do not need administrator rights to do this but conda has to be installed (see [Prerequisites for running the pipeline](#prerequisites-for-running-the-pipeline)).
+	- `conda create -n mamba`
+	- `conda activate mamba`
+	- `conda install -c conda-forge mamba`
+	- `mamba env create -f src/env/snakemake.yaml`
+	- `conda activate snakemake`
+
 - Open and adjust the config file: __All paths are full paths, no relative paths allowed.__ For examples, please see [Example Config Files](#example-config-files)
 	- `nano config.yaml`
 	- output_dir: Path of directory to store all output files and directory. Path will be created by the pipeline and should not pre-exist. E.g. if the path of the cloned directory is `/fleurg/projects/epiGBS2`, then use `/fleurg/projects/epiGBS2/output`.

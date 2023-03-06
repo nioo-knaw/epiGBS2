@@ -6,56 +6,58 @@ channels:
   - r
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
-  - _openmp_mutex=4.5=1_gnu
+  - _openmp_mutex=4.5=2_gnu
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.18.1=h7f98852_0
-  - ca-certificates=2021.10.26=h06a4308_2
+  - ca-certificates=2022.12.7=ha878542_0
   - cairo=1.16.0=h6cf1ce9_1008
-  - curl=7.79.1=h494985f_1
-  - expat=2.4.1=h9c3ff4c_0
-  - fontconfig=2.13.1=hba837de_1005
-  - freetype=2.10.4=h0708190_1
-  - fribidi=1.0.10=h516909a_0
-  - gettext=0.21.0=hf68c758_0
-  - giflib=5.2.1=h516909a_2
-  - graphite2=1.3.14=h23475e2_0
+  - expat=2.2.10=h9c3ff4c_0
+  - fontconfig=2.13.96=ha180cfb_0
+  - freetype=2.12.1=hca18f0e_1
+  - fribidi=1.0.10=h36c2ea0_0
+  - gettext=0.21.1=h27087fc_0
+  - giflib=5.2.1=h36c2ea0_2
+  - graphite2=1.3.13=h58526e2_1001
   - graphviz=2.42.3=h0511662_0
   - harfbuzz=2.9.1=h83ec7ef_1
-  - icu=68.1=h58526e2_0
-  - jpeg=9d=h516909a_0
-  - krb5=1.19.2=h48eae69_2
-  - ld_impl_linux-64=2.36.1=hea4e1c9_2
-  - libcurl=7.79.1=h494985f_1
-  - libdb=6.2.32=he1b5a44_0
-  - libedit=3.1.20210714=h7f8727e_0
+  - htslib=1.16=h6bc39ce_0
+  - icu=68.2=h9c3ff4c_0
+  - jpeg=9e=h0b41bf4_3
+  - keyutils=1.6.1=h166bdaf_0
+  - krb5=1.20.1=hf9c8cef_0
+  - ld_impl_linux-64=2.40=h41732ed_0
+  - libcurl=7.87.0=h6312ad2_0
+  - libdb=6.2.32=h9c3ff4c_0
+  - libdeflate=1.13=h166bdaf_0
+  - libedit=3.1.20191231=he28a2e2_2
   - libev=4.33=h516909a_1
-  - libffi=3.4.2=h9c3ff4c_4
-  - libgcc=7.2.0=h69d50b8_2
-  - libgcc-ng=11.2.0=h1d223b6_11
+  - libffi=3.4.2=h7f98852_5
+  - libgcc-ng=12.2.0=h65d4601_19
   - libgd=2.2.5=h8e06009_4
-  - libglib=2.70.0=h174f98d_1
-  - libgomp=11.2.0=h1d223b6_11
-  - libiconv=1.16=h516909a_0
-  - libnghttp2=1.43.0=ha19adfc_1
+  - libglib=2.74.1=h606061b_1
+  - libgomp=12.2.0=h65d4601_19
+  - libiconv=1.17=h166bdaf_0
+  - libnghttp2=1.51.0=hdcd2b5c_0
   - libnsl=2.0.0=h7f98852_0
-  - libpng=1.6.37=hed695b0_2
-  - libssh2=1.10.0=ha35d2d1_2
-  - libstdcxx-ng=11.2.0=he4da1e4_11
+  - libpng=1.6.39=h753d276_0
+  - libsqlite=3.40.0=h753d276_0
+  - libssh2=1.10.0=haa6b8db_3
+  - libstdcxx-ng=12.2.0=h46fd767_19
   - libtiff=4.1.0=hc3755c2_3
-  - libtool=2.4.6=h9c3ff4c_1008
-  - libuuid=2.32.1=h14c3975_1000
+  - libtool=2.4.7=h27087fc_0
+  - libuuid=2.32.1=h7f98852_1000
   - libwebp=1.0.2=h56121f0_5
-  - libxcb=1.14=h7b6447c_0
+  - libxcb=1.13=h7f98852_1004
   - libxml2=2.9.12=h72842e0_0
   - libxslt=1.1.33=h15afd5d_2
-  - libzlib=1.2.11=h36c2ea0_1013
+  - libzlib=1.2.13=h166bdaf_4
   - llvm-openmp=8.0.1=hc9558a2_0
   - lz4-c=1.9.3=h9c3ff4c_1
-  - ncurses=6.2=h58526e2_4
+  - ncurses=6.3=h27087fc_1
   - openmp=8.0.1=0
-  - openssl=3.0.0=h7f98852_1
-  - pango=1.42.4=h80147aa_5
-  - pcre=8.45=h9c3ff4c_0
+  - openssl=1.1.1t=h0b41bf4_0
+  - pango=1.42.4=h69149e4_5
+  - pcre2=10.40=hc3806b6_0
   - perl=5.26.2=h36c2ea0_1008
   - perl-aceperl=1.92=pl526_2
   - perl-algorithm-munkres=0.08=pl526_1
@@ -65,8 +67,8 @@ dependencies:
   - perl-array-compare=3.0.1=pl526_1
   - perl-autoloader=5.74=pl526_2
   - perl-base=2.23=pl526_1
-  - perl-bio-phylo=0.58=pl526_1
-  - perl-bioperl-core=1.007002=pl526_1
+  - perl-bio-phylo=0.58=pl5262hdfd78af_3
+  - perl-bioperl-core=1.007002=pl5262hdfd78af_3
   - perl-business-isbn=3.004=pl526_0
   - perl-business-isbn-data=20140910.003=pl526_0
   - perl-cache-cache=1.08=pl526_0
@@ -172,7 +174,7 @@ dependencies:
   - perl-mozilla-ca=20180117=pl526_1
   - perl-mro-compat=0.13=pl526_0
   - perl-net-http=6.19=pl526_0
-  - perl-net-ssleay=1.74=0
+  - perl-net-ssleay=1.88=pl526h90d6eec_0
   - perl-ntlm=1.09=pl526_4
   - perl-ole-storage_lite=0.19=pl526_3
   - perl-package-deprecationmanager=0.17=pl526_0
@@ -211,7 +213,6 @@ dependencies:
   - perl-test-harness=3.42=pl526_0
   - perl-test-leaktrace=0.16=pl526h14c3975_2
   - perl-test-requiresinternet=0.05=pl526_0
-  - perl-threaded=5.26.0=0
   - perl-tie-ixhash=1.23=pl526_2
   - perl-time-hires=1.9760=pl526h14c3975_1
   - perl-time-local=1.28=pl526_1
@@ -229,7 +230,7 @@ dependencies:
   - perl-xml-libxml=2.0132=pl526h7ec2d77_1
   - perl-xml-libxslt=1.94=pl526_1
   - perl-xml-namespacesupport=1.12=pl526_0
-  - perl-xml-parser=2.44_01=pl5262hc3e0081_1002
+  - perl-xml-parser=2.44=pl526h4e0c4b3_7
   - perl-xml-regexp=0.04=pl526_2
   - perl-xml-sax=1.02=pl526_0
   - perl-xml-sax-base=1.09=pl526_0
@@ -242,33 +243,32 @@ dependencies:
   - perl-xml-xpathengine=0.14=pl526_2
   - perl-xsloader=0.24=pl526_0
   - perl-yaml=1.29=pl526_0
-  - pip=21.3.1=pyhd8ed1ab_0
+  - pip=23.0.1=pyhd8ed1ab_0
   - pixman=0.40.0=h36c2ea0_0
-  - python=3.10.0=h543edf9_2_cpython
-  - readline=8.1=h46c0cb4_0
-  - samtools=1.7=1
-  - sqlite=3.36.0=h9cd32fc_2
+  - pthread-stubs=0.4=h36c2ea0_1001
+  - python=3.11.0=h10a6764_1_cpython
+  - readline=8.1.2=h0f457ee_0
+  - samtools=1.16.1=h6899075_1
+  - setuptools=67.4.0=pyhd8ed1ab_0
   - stacks=2.55=h9a82719_1
-  - tidyp=1.04=h779adbc_3
-  - tk=8.6.11=h27826a3_1
-  - tzdata=2021e=he74cb21_0
-  - velvet=1.2.10=h5bf99c6_4
-  - wheel=0.37.0=pyhd8ed1ab_1
-  - xorg-kbproto=1.0.7=h14c3975_1002
-  - xorg-libice=1.0.10=h516909a_0
+  - tidyp=1.04=hec16e2b_4
+  - tk=8.6.12=h27826a3_0
+  - tzdata=2022g=h191b570_0
+  - velvet=1.2.10=h7132678_5
+  - wheel=0.38.4=pyhd8ed1ab_0
+  - xorg-kbproto=1.0.7=h7f98852_1002
+  - xorg-libice=1.0.10=h7f98852_0
   - xorg-libsm=1.2.3=hd9c2040_1000
-  - xorg-libx11=1.6.12=h516909a_0
-  - xorg-libxext=1.3.4=h516909a_0
-  - xorg-libxpm=3.5.13=h516909a_0
-  - xorg-libxrender=0.9.10=h516909a_1002
-  - xorg-libxt=1.1.5=h516909a_1003
-  - xorg-renderproto=0.11.1=h14c3975_1002
-  - xorg-xextproto=7.3.0=h14c3975_1002
-  - xorg-xproto=7.0.31=h14c3975_1007
-  - xz=5.2.5=h516909a_1
-  - zlib=1.2.11=h36c2ea0_1013
+  - xorg-libx11=1.7.2=h7f98852_0
+  - xorg-libxau=1.0.9=h7f98852_0
+  - xorg-libxdmcp=1.1.3=h7f98852_0
+  - xorg-libxext=1.3.4=h0b41bf4_2
+  - xorg-libxpm=3.5.13=h7f98852_0
+  - xorg-libxrender=0.9.10=h7f98852_1003
+  - xorg-libxt=1.2.1=h7f98852_2
+  - xorg-renderproto=0.11.1=h7f98852_1002
+  - xorg-xextproto=7.3.0=h0b41bf4_1003
+  - xorg-xproto=7.0.31=h7f98852_1007
+  - xz=5.2.6=h166bdaf_0
+  - zlib=1.2.13=h166bdaf_4
   - zstd=1.4.9=ha95c52a_0
-  - pip:
-    - certifi==2021.5.30
-    - setuptools==58.0.4
-prefix: /scratch/conda/envs/stacks2.6
