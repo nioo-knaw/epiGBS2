@@ -93,7 +93,7 @@ out_file.close()
 # Run stacks ###############
 # Run clone filter
 
-if int(line2split[bc_dict["Wobble_R1"][0]]) is not 0:
+if int(line2split[bc_dict["Wobble_R1"][0]]) != 0:
     cmd = "clone_filter -1 %s -2 %s " % (args.reads1, args.reads2)
     cmd += "-o %s --inline_inline " % os.path.join(args.outputdir, "clone")
     cmd += "-igzfastq --oligo_len_1 %s --oligo_len_2 %s " % (line2split[bc_dict["Wobble_R1"][0]],
@@ -103,7 +103,7 @@ if int(line2split[bc_dict["Wobble_R1"][0]]) is not 0:
     run_subprocess([cmd], args, log)
 # Run remove radtags
 
-if int(line2split[bc_dict["Wobble_R1"][0]]) is 0:
+if int(line2split[bc_dict["Wobble_R1"][0]]) == 0:
     read1 = args.reads1
     read2 = args.reads2
 else:
