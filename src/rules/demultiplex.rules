@@ -62,7 +62,8 @@ rule process_radtags:
         "../env/stacks.yaml"
     threads: THREADSPERRUN//1
     output:
-        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
+        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"]),
+        samplesWatsonR1=expand("{path}/output_demultiplex/logs/{{run}}/{samples}-Watson.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
     shell:
         "process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI -c --inline-inline --threads {threads}"
 
