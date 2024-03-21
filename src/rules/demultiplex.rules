@@ -76,8 +76,10 @@ rule moveDemultiplexFiles:
         output_dir=expand("{path}/output_demultiplex/clone-stacks/",path=config["output_dir"]),
         log=expand("{path}/logs/",path=config["output_dir"])
     output:
-        samplesR1=expand("{path}/output_demultiplex/clone-stacks/{samples}.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
-        samplesR2=expand("{path}/output_demultiplex/clone-stacks/{samples}.2.fq.gz",path=config["output_dir"],samples=SAMPLES)
+        samplesWatsonR1=expand("{path}/output_demultiplex/clone-stacks/{samples}-Watson.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
+        samplesWatsonR2=expand("{path}/output_demultiplex/clone-stacks/{samples}-Watson.2.fq.gz",path=config["output_dir"],samples=SAMPLES),
+        samplesCrickR1=expand("{path}/output_demultiplex/clone-stacks/{samples}-Crick.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
+        samplesCrickR2=expand("{path}/output_demultiplex/clone-stacks/{samples}-Crick.2.fq.gz",path=config["output_dir"],samples=SAMPLES)
     shell:
         """
         mv {params.input_dir}/*/*.fq.gz {params.output_dir}/
