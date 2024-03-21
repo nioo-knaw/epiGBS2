@@ -43,7 +43,7 @@ rule make_stacks_files:
     conda:
         "../env/R.yaml"
     shell:
-        "Rscript src/demultiplex/createFilesFrombarcodes.R {input.barcodes} {params.output_dir}"
+        "Rscript src/demultiplex/createFilesFromBarcodeFile.R {input.barcodes} {params.output_dir}"
 
 #We then do some snakemake magic to run process radtags for each run.
 #This outputs 2 files per sample (the R1 and R2) 
