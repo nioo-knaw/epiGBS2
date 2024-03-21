@@ -1,6 +1,7 @@
 rule fastqc:
   input:
-      expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+        samplesR1=expand("{path}/output_demultiplex/clone-stacks/{samples}.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
+        samplesR2=expand("{path}/output_demultiplex/clone-stacks/{samples}.2.fq.gz",path=config["output_dir"],samples=SAMPLES)
   output:
       dir=directory(expand("{path}/fastqc/", path=config["output_dir"]))
 
