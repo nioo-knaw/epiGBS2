@@ -57,5 +57,6 @@ module_order:
     # MultiQC general module for catching output from custom scripts
     - fastqc
     - 'custom_content'
+    - stacks
     - cutadapt
     - bismark
