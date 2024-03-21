@@ -53,7 +53,7 @@ rule logparse:
 rule MultiQCRef:
   input:
       before=expand("{path}/fastqc/", path=config["output_dir"]),
-      demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
+      #demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
       dir=expand("{path}/fastqc_trimmed/", path=config["output_dir"]),
       coverageuncompr=expand("{out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"],sample=SAMPLES)
   output:
