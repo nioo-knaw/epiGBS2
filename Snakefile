@@ -15,6 +15,7 @@ RAWREADSR2 = df.rawR2.str.replace(".fq.gz","",regex=False).unique()
 RUN = df.rawR1.str.replace("_R1.fq.gz","",regex=False).unique()
 OLIGOR1 = df.Wobble_R1.unique()
 OLIGOR1 = df.Wobble_R2.unique()
+THREADSPERRUN=workflow.cores/RUN.size
 
 paramspace = Paramspace(pd.read_csv("src/parameter_test/paramTest.tsv", sep="\t"))
 
