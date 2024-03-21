@@ -1,6 +1,4 @@
 
-param_oligo=config["param_demultiplex"]["nOligo"]
-
 #We always use 3 as the number of oligo for our adapters. (If we would ever change this we can account for this)
 def getParam_oligo(param_oligo):
     if param_oligo == "default" or param_oligo == "":
@@ -20,7 +18,9 @@ rule clone_filter:
         R2=expand("{path}/{{run}}_R2.fq.gz",path=config["input_dir"],R2=RUN)
     params:
         output_dir=expand("{path}/output_demultiplex/", path=config["output_dir"]),
-        param_oligo=getParam_oligo(param_oligo)
+        param_oligoR1=getParam_oligo(OLIGOR1),
+        param_oligoR2=getParam_oligo(OLIGOR1)
+
     output:
         R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
         R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"])
@@ -28,7 +28,7 @@ rule clone_filter:
         "../env/stacks.yaml"
     threads: 1
     shell: 
-        "clone_filter -1 {input.R1} -2 {input.R2} -o {params.output_dir}/clone/ --oligo_len_1 {params.param_oligo} --oligo_len_2 {params.param_oligo} --inline_inline -i gzfastq"
+        "clone_filter -1 {input.R1} -2 {input.R2} -o {params.output_dir}/clone/ --oligo_len_1 {params.param_oligoR1} --oligo_len_2 {params.param_oligo} --inline_inline -i gzfastq"
 
 #Stacks and the rest of the pipeline need to have specific files for barcodes, 
 #the format is different and we add the control nucleotide and we need to split it per run so we can demultiplex them in parallel
