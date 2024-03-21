@@ -6,6 +6,7 @@ args = commandArgs(trailingOnly=TRUE)
 barcodes<-read.table(args[1],h=T,sep="\t")
 barcodes$run<-sub("_R1.fq.gz","",barcodes$rawR1)
 
+if(sum(duplicated(barcodes$sample))==0){
 barcodeStacks<-data.frame(sample=c(paste0(barcodes$Sample,"-Watson"),paste0(barcodes$Sample,"-Crick")),
                           barcode1=c(paste0(barcodes$Barcode_R1,"T"),paste0(barcodes$Barcode_R1,"C")),
                           barcode2=c(paste0(barcodes$Barcode_R2,"C"),paste0(barcodes$Barcode_R2,"T")))
@@ -20,3 +21,4 @@ barcodeStacks<-data.frame(barcode1=c(paste0(barcodesSub$Barcode_R1,"T"),paste0(b
               
               
 }
+}else{print(paste0("There are duplicated sample names in your barcode file! Adjust this by adding a tag to",c(barcodes$sample[duplicated(barcodes$sample)==T])))}
