@@ -8,7 +8,7 @@ barcodes$run<-sub("_R1.fq.gz","",barcodes$rawR1)
 
 barcodeStacks<-data.frame(sample=c(paste0(barcodes$sample,"-Watson"),paste0(barcodes$sample,"-Crick")),
                           barcode1=c(paste0(barcodes$barcode1,"T"),paste0(barcodes$barcode1,"C")),
-                          barcode2=c(paste0(barcodes$barcode2,"C",paste0(barcodes$barcode2,"T")))
+                          barcode2=c(paste0(barcodes$barcode2,"C"),paste0(barcodes$barcode2,"T")))
 write.table(barcodeStacks,paste0(args[2],"/barcodeStacks.tsv"),row.names = F,col.names = F,quote=F,sep="\t")
 
 for(run in barcodes$run){
