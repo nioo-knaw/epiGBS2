@@ -3,7 +3,7 @@ rule cutadapt_adapter:
 		R1=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.1.fq.gz",out=config["output_dir"]),
 		R2=expand("{out}/output_demultiplex/clone-stacks/{{sample}}-{{strand}}.2.fq.gz",out=config["output_dir"])
 	output:
-		txt=expand("{out}/log/{{sample}}-{{strand}}_read-info.txt",out=config["output_dir"]),
+		txt=temp(expand("{out}/log/{{sample}}-{{strand}}_read-info.txt",out=config["output_dir"])),
 		R1untrimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.1.fq.gz",tmp=config["tmpdir"])),
 		R2untrimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_untrimmed.2.fq.gz",tmp=config["tmpdir"])),
 		R1trimmed=temp(expand("{tmp}/cutadapt_adapter/{{sample}}-{{strand}}_trimmed.1.fq.gz",tmp=config["tmpdir"])),

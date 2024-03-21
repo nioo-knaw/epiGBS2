@@ -76,13 +76,13 @@ At the moment it is not supported to process **multiple lanes** at the same time
 
 ```
 # barcodes.tsv
-Barcode_R1      Barcode_R2      Sample  history Country PlateName       Row     Column  ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       Species
-AACT    CCAG    BUXTON_178      C       BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 1       2       AseI    NsiI    3       3       Scabiosa columbaria
-CCTA    CCAG    WUR_178 C       WUR     BUXTON_WUR_AseI_NsiI_final_run1 2       2       AseI    NsiI    3       3       Scabiosa columbaria
-TTAC    CCAG    BUXTON_169      C       BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 3       2       AseI    NsiI    3       3       Scabiosa columbaria
-AGGC    CCAG    WUR_169 C       WUR     BUXTON_WUR_AseI_NsiI_final_run1 4       2       AseI    NsiI    3       3       Scabiosa columbaria
-GAAGA   CCAG    BUXTON_175      SD      BUXTON  BUXTON_WUR_AseI_NsiI_final_run1 5       2       AseI    NsiI    3       3       Scabiosa columbaria
-CCTTC   CCAG    WUR_175 SD      WUR     BUXTON_WUR_AseI_NsiI_final_run1 6       2       AseI    NsiI    3       3       Scabiosa columbaria
+Barcode_R1      Barcode_R2      Sample    ENZ_R1  ENZ_R2  Wobble_R1       Wobble_R2       rawR1	rawR2
+AACT    CCAG    BUXTON_178      AseI    NsiI    3       3		lane1_R1.fq.gz	lane1_R2.fq.gz
+CCTA    CCAG    WUR_178         AseI    NsiI    3       3		lane1_R1.fq.gz 	lane1_R2.fq.gz
+TTAC    CCAG    BUXTON_169      AseI    NsiI    3       3		lane1_R1.fq.gz 	lane1_R2.fq.gz
+AGGC    CCAG    WUR_169         AseI    NsiI    3       3		lane2_R1.fq.gz 	lane2_R2.fq.gz
+GAAGA   CCAG    BUXTON_175      AseI    NsiI    3       3		lane2_R1.fq.gz 	lane2_R2.fq.gz
+CCTTC   CCAG    WUR_175         AseI    NsiI    3       3		lane2_R1.fq.gz 	lane2_R2.fq.gz
 ```
 
 ## Start the pipeline

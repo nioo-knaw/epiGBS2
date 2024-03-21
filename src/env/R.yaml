@@ -1,0 +1,8 @@
+name: R4.3.2
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+  - r
+dependencies: 
+  - r-base=4.3.2

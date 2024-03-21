@@ -10,7 +10,9 @@ SAMPLE = SAMPLES[0]
 flowCell = "Redudant"
 lane = "Redundant"
 projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
-
+RAWREADSR1 = df.rawR1.str.replace(".fq.gz","",regex=False).unique()
+RAWREADSR2 = df.rawR2.str.replace(".fq.gz","",regex=False).unique()
+RUN = df.rawR1.str.replace("_R1.fq.gz","",regex=False).unique()
 
 paramspace = Paramspace(pd.read_csv("src/parameter_test/paramTest.tsv", sep="\t"))
 
