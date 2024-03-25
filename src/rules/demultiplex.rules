@@ -64,7 +64,7 @@ rule process_radtags:
     output:
         log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
     shell:
-        "process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI -c --inline-inline --threads {threads}"
+        "process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI --inline-inline --threads {threads} --barcode-dist-1 0  --barcode-dist-2 0 -r -D"
 
 #This moves all samples into the demultiplex/samples directory
 rule moveDemultiplexFiles:
