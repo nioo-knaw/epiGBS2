@@ -51,6 +51,7 @@ rule make_stacks_files:
 #Howver this is complicated due to the samples needing to be split up per file...
 #TODO make this less janky... so we do not do weird shit with the logs...
 #Figure out what happesn if this breaks.
+#TODO the restriction enzym need to be unhardcoded
 rule process_radtags:
     input:
         barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"]),
