@@ -106,7 +106,7 @@ if DUPES==True:
             CrickR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.1.fq.gz",path=config["output_dir"]),
             CrickR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.2.fq.gz",path=config["output_dir"])
         params:
-            output_dir=expand("{path}/demultiplex/logs/",path=config["output_dir"])
+            output_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"])
         shell:
             """
             cat {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz {output.WatsonR1}
