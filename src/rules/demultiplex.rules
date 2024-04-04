@@ -45,45 +45,77 @@ rule make_stacks_files:
     shell:
         "Rscript src/demultiplex/createFilesFromBarcodeFile.R {input.barcodes} {params.output_dir}"
 
+
 #We then do some snakemake magic to run process radtags for each run.
-#This outputs 2 files per sample (the R1 and R2) 
-#TODO figure out to have this not be completely dependent on the process_radtags.log file being generated.
-#Howver this is complicated due to the samples needing to be split up per file...
-#TODO make this less janky... so we do not do weird shit with the logs...
-#Figure out what happesn if this breaks.
-#TODO the restriction enzym need to be unhardcoded
+#https://stackoverflow.com/questions/41135801/snakemake-best-practice-for-demultiplexing <- based on this
+# A lot of this happens in the Snakefile where a dictonary is created from the barcode file specifying in which run each sample is located.
+# We than run each proces_radtags for each demultiplexing instance. The output is the process_radtags logs and a temporrary "hack directory".
+# The first is a fail safe to ensure that there is actually demutliplexed data. The latter is used to generate the wild cards that are necessary for the moving/catting of the samples
+# TODO the hack directory should not be necesarry but I do not know how to include something from the config in lines (84 and 102): lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
+
 rule process_radtags:
     input:
-        barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"]),
-        R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
-        R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"])
+        R1=expand("{path}/output_demultiplex/clone_filter/{{run}}_R1.1.fq.gz",path=config["outputDir"]),
+        R2=expand("{path}/output_demultiplex/clone_filter/{{run}}_R2.2.fq.gz",path=config["outputDir"]),
+        barcodes=expand("{path}/stacksFiles/barcodeStacks{{run}}.tsv", path=config["outputDir"], bar=config["barcodeFile"])
+    output:
+        hackDir=directory(temp("demux_tmp_{run}")),
+        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone_filter.log",path=config["outputDir"])
     params:
-        output_dir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["output_dir"])
+        outputDir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["outputDir"]),
     conda:
-        "../env/stacks.yaml"
-    threads: THREADSPERRUN//1
-    output:
-        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
-    shell:
-        "process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI --inline-inline --threads {threads} --barcode-dist-1 0  --barcode-dist-2 0 -r -D"
+        "env/stacks.yaml"
+    shell: #TODO Here we still need to take the restriction enzyms out of the contig
+        """
+        process_radtags -1 {input.R1} -2 {input.R2} -o {params.outputDir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI -c --inline-inline --threads {threads}
+        mkdir {output.hackDir}
+    	"""
 
-#This moves all samples into the demultiplex/samples directory
-rule moveDemultiplexFiles:
-    input:
-        log=expand("{path}/output_demultiplex/logs/{run}/process_radtags.clone.log",path=config["output_dir"],run=RUN)
-    params:
-        input_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"]),
-        output_dir=expand("{path}/output_demultiplex/clone-stacks/",path=config["output_dir"]),
-        log=expand("{path}/logs/",path=config["output_dir"])
-    output:
-        samplesWatsonR1=expand("{path}/output_demultiplex/clone-stacks/{samples}-Watson.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
-        samplesWatsonR2=expand("{path}/output_demultiplex/clone-stacks/{samples}-Watson.2.fq.gz",path=config["output_dir"],samples=SAMPLES),
-        samplesCrickR1=expand("{path}/output_demultiplex/clone-stacks/{samples}-Crick.1.fq.gz",path=config["output_dir"],samples=SAMPLES),
-        samplesCrickR2=expand("{path}/output_demultiplex/clone-stacks/{samples}-Crick.2.fq.gz",path=config["output_dir"],samples=SAMPLES)
-    shell:
-        """
-        mv {params.input_dir}/*/*.fq.gz {params.output_dir}/
-        """
+#If there are no duplicates we simply move the read files from the demultiplex/logs/ directory to the demultiplex/samples folder.
+if DUPES==False:
+    rule move_samples:
+        input:
+            lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
+        output:
+            WatsonR1=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.1.fq.gz",path=config["outputDir"]),
+            WatsonR2=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.2.fq.gz",path=config["outputDir"]),
+            CrickR1=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.1.fq.gz",path=config["outputDir"]),
+            CrickR2=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.2.fq.gz",path=config["outputDir"]).
+
+        params:
+            outputDir=expand("{path}/output_demultiplex/logs/",path=config["outputDir"]),
+        shell:
+            """
+            mv {params.outputDir}/*/{wildcards.sample}-Watson.1.fq.gz {output.WatsonR1}
+            mv {params.outputDir}/*/{wildcards.sample}-Watson.2.fq.gz {output.WatsonR2}
+            mv {params.outputDir}/*/{wildcards.sample}-Crick.1.fq.gz {output.CrickR1}
+            mv {params.outputDir}/*/{wildcards.sample}-Crick.2.fq.gz {output.CrickR2}
+            """
+
+#If there are duplicates in the log file we cannot move the files. As two files with the same name in different runs should be catted
+#For whatever reason snakemake selects only one combination of run/sample from the dictionary if there are two or more? So by including the logs files as inputs we ensure all
+#instances of process_radtags are actually done running.
+#When they are done all samples with the same name are catted together and the files in the logs directory are removed.
+if DUPES==True:
+    rule cat_samples:
+        input:
+            lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
+            log=expand("{path}/output_demultiplex/logs/{run}/process_radtags.clone_filter.log",path=config["outputDir"],run=RUN)
+        output:
+            WatsonR1=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.1.fq.gz",path=config["outputDir"]),
+            WatsonR2=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.2.fq.gz",path=config["outputDir"]),
+            CrickR1=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.1.fq.gz",path=config["outputDir"]),
+            CrickR2=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.2.fq.gz",path=config["outputDir"]).
+        params:
+            outputDir=expand("{path}/demultiplex/logs/",path=config["outputDir"])
+        shell:
+            """
+            cat {params.outputDir}/*/{wildcards.sample}-Watson.1.fq.gz {output.WatsonR1}
+            cat {params.outputDir}/*/{wildcards.sample}-Watson.2.fq.gz {output.WatsonR2}
+            cat {params.outputDir}/*/{wildcards.sample}-Crick.1.fq.gz {output.CrickR1}
+            cat {params.outputDir}/*/{wildcards.sample}-Crick.2.fq.gz {output.CrickR2}
+            rm {params.outputDir}*/{wildcards.sample}*.fq.gz
+            """
 
 
 rule header_Watson_R1:

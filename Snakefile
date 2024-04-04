@@ -4,7 +4,13 @@ from snakemake.utils import Paramspace
 import pandas as pd
 import os
 import random
+
+#Read the barcode file and do some management to create all of the info we need (sample file / seprate into runs / make a dictionary of the both of them etc.)
 df = pd.read_csv(os.path.join(config["input_dir"],config["barcodes"]), sep='\t', dtype="object").set_index('Sample')
+df['run'] = df['rawR1'].str.replace("_R1.fq.gz","",regex=False)
+df['sample']=df.index
+
+
 SAMPLES = df.index
 SAMPLE = SAMPLES[0]
 flowCell = "Redudant"
@@ -12,10 +18,20 @@ lane = "Redundant"
 projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 RAWREADSR1 = df.rawR1.str.replace(".fq.gz","",regex=False).unique()
 RAWREADSR2 = df.rawR2.str.replace(".fq.gz","",regex=False).unique()
-RUN = df.rawR1.str.replace("_R1.fq.gz","",regex=False).unique()
+RUN = df.rawR1.str.replace("_R1.fq.gz","",regex=False).unique() #TODO make this less specific?
 OLIGOR1 = df.Wobble_R1[0]
 OLIGOR1 = df.Wobble_R2[0]
 THREADSPERRUN=workflow.cores/RUN.size
+
+#Create a dictonary for the demultiplexing #see src/demultiplexing.smk
+grouped = df.groupby("run")["sample"].apply(set)
+LANESAMPLE = grouped.to_dict()
+DUPES=df['sample'].duplicated().any()
+
+SAMPLES = {}   #Create a dictonary for the demultiplexing #see src/demultiplexing.smk
+for lane, samples in LANESAMPLE.items():
+    for sample in samples:
+        SAMPLES[sample] = lane
 
 paramspace = Paramspace(pd.read_csv("src/parameter_test/paramTest.tsv", sep="\t"))
 
