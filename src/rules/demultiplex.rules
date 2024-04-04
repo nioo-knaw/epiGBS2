@@ -51,7 +51,7 @@ rule make_stacks_files:
 # A lot of this happens in the Snakefile where a dictonary is created from the barcode file specifying in which run each sample is located.
 # We than run each proces_radtags for each demultiplexing instance. The output is the process_radtags logs and a temporrary "hack directory".
 # The first is a fail safe to ensure that there is actually demutliplexed data. The latter is used to generate the wild cards that are necessary for the moving/catting of the samples
-# TODO the hack directory should not be necesarry but I do not know how to include something from the config in lines (84 and 102): lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
+# TODO the hack directory should not be necesarry but I do not know how to include something from the config (in lines 78 and 101): lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
 
 rule process_radtags:
     input:
@@ -60,7 +60,7 @@ rule process_radtags:
         barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"])
     output:
         hackDir=directory(temp("demux_tmp_{run}")),
-        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone_filter.log",path=config["output_dir"])
+        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
     params:
         output_dir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["output_dir"]),
     conda:
