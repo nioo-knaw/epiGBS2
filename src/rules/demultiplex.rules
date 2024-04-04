@@ -57,7 +57,7 @@ rule process_radtags:
     input:
         R1=expand("{path}/output_demultiplex/clone_filter/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
         R2=expand("{path}/output_demultiplex/clone_filter/{{run}}_R2.2.fq.gz",path=config["output_dir"]),
-        barcodes=expand("{path}/stacksFiles/barcodeStacks{{run}}.tsv", path=config["output_dir"], bar=config["barcodeFile"])
+        barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"])
     output:
         hackDir=directory(temp("demux_tmp_{run}")),
         log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone_filter.log",path=config["output_dir"])
@@ -65,7 +65,7 @@ rule process_radtags:
         output_dir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["output_dir"]),
     conda:
         "../env/stacks.yaml"
-    shell: #TODO Here we still need to take the restriction enzyms out of the contig
+    shell: #TODO Here we still need to take the restriction enzyms out of the config
         """
         process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI -c --inline-inline --threads {threads}
         mkdir {output.hackDir}
