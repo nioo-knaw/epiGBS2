@@ -109,10 +109,10 @@ if DUPES==True:
             output_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"])
         shell:
             """
-            cat {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz {output.WatsonR1}
-            cat {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz {output.WatsonR2}
-            cat {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz {output.CrickR1}
-            cat {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz {output.CrickR2}
+            cat {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz > {output.WatsonR1}
+            cat {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz > {output.WatsonR2}
+            cat {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz > {output.CrickR1}
+            cat {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz > {output.CrickR2}
             rm {params.output_dir}*/{wildcards.sample}*.fq.gz
             """
 
