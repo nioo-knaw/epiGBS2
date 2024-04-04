@@ -55,8 +55,8 @@ rule make_stacks_files:
 
 rule process_radtags:
     input:
-        R1=expand("{path}/output_demultiplex/clone_filter/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
-        R2=expand("{path}/output_demultiplex/clone_filter/{{run}}_R2.2.fq.gz",path=config["output_dir"]),
+        R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
+        R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"]),
         barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"])
     output:
         hackDir=directory(temp("demux_tmp_{run}")),
