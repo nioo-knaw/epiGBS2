@@ -64,7 +64,7 @@ rule process_radtags:
     params:
         outputDir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["outputDir"]),
     conda:
-        "env/stacks.yaml"
+        "../env/stacks.yaml"
     shell: #TODO Here we still need to take the restriction enzyms out of the contig
         """
         process_radtags -1 {input.R1} -2 {input.R2} -o {params.outputDir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI -c --inline-inline --threads {threads}
@@ -80,8 +80,7 @@ if DUPES==False:
             WatsonR1=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.1.fq.gz",path=config["outputDir"]),
             WatsonR2=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.2.fq.gz",path=config["outputDir"]),
             CrickR1=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.1.fq.gz",path=config["outputDir"]),
-            CrickR2=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.2.fq.gz",path=config["outputDir"]).
-
+            CrickR2=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.2.fq.gz",path=config["outputDir"])
         params:
             outputDir=expand("{path}/output_demultiplex/logs/",path=config["outputDir"]),
         shell:
@@ -105,7 +104,7 @@ if DUPES==True:
             WatsonR1=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.1.fq.gz",path=config["outputDir"]),
             WatsonR2=expand("{path}/output_demultiplex/samples/{{sample}}-Watson.2.fq.gz",path=config["outputDir"]),
             CrickR1=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.1.fq.gz",path=config["outputDir"]),
-            CrickR2=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.2.fq.gz",path=config["outputDir"]).
+            CrickR2=expand("{path}/output_demultiplex/samples/{{sample}}-Crick.2.fq.gz",path=config["outputDir"])
         params:
             outputDir=expand("{path}/demultiplex/logs/",path=config["outputDir"])
         shell:
