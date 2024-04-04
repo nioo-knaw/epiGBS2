@@ -99,7 +99,7 @@ if DUPES==True:
     rule cat_samples:
         input:
             lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
-            log=expand("{path}/output_demultiplex/logs/{run}/process_radtags.clone_filter.log",path=config["output_dir"],run=RUN)
+            log=expand("{path}/output_demultiplex/logs/{run}/process_radtags.clone.log",path=config["output_dir"],run=RUN)
         output:
             WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.1.fq.gz",path=config["output_dir"]),
             WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.2.fq.gz",path=config["output_dir"]),
