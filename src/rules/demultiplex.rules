@@ -69,7 +69,7 @@ rule process_radtags:
         "../env/stacks.yaml"
     shell: #TODO Here we still need to take the restriction enzyms out of the config
         """
-        process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 {params.enz_R1} --renz_2 {params.enz_R2} -c --inline-inline --threads {threads}
+        process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 {params.enz_R1} --renz_2 {params.enz_R2} -r --barcode_dist_1 0 --barcode_dist_2 0 -c --inline-inline --threads {threads}
         mkdir {output.hackDir}
     	"""
 
