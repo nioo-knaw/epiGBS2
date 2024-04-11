@@ -63,11 +63,13 @@ rule process_radtags:
         log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
     params:
         output_dir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["output_dir"]),
+        enz_R1=ENZ_R1,
+        enz_R2=ENZ_R2
     conda:
         "../env/stacks.yaml"
     shell: #TODO Here we still need to take the restriction enzyms out of the config
         """
-        process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 aseI --renz_2 nsiI -c --inline-inline --threads {threads}
+        process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 {params.enz_R1} --renz_2 {params.enz_R2} -c --inline-inline --threads {threads}
         mkdir {output.hackDir}
     	"""
 
