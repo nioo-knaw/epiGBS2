@@ -18,7 +18,7 @@ lane = "Redundant"
 projectName=random.randint(1,1000000) #To ensure non overlapping tmp directories
 RAWREADSR1 = df.rawR1.str.replace(".fq.gz","",regex=False).unique()
 RAWREADSR2 = df.rawR2.str.replace(".fq.gz","",regex=False).unique()
-RUN = df.rawR1.str.replace("R1.f*.gz","",regex=False).unique() #TODO is this aspecific enough?
+RUN = df.rawR1.str.replace("R1.*$","",regex=True).unique() #TODO is this aspecific enough?
 OLIGOR1 = df.Wobble_R1[0]
 OLIGOR2 = df.Wobble_R2[0]
 ENZ_R1 = df.ENZ_R1[0]
