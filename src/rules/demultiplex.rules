@@ -115,7 +115,7 @@ if DUPES==True:
             cat {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz > {output.WatsonR2}
             cat {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz > {output.CrickR1}
             cat {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz > {output.CrickR2}
-            rm {params.output_dir}/*/{wildcards.sample}*.fq.gz
+            rm {params.output_dir}/*/{wildcards.sample}-*.fq.gz
             """
 
 
