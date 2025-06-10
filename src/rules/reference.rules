@@ -1,17 +1,21 @@
 #prepares the genome for bismark
 rule genome_prep_for_bismark_reference_bismark:
-    input:
-        reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
-    output:
-        maskedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
-    params:
-        refDir=expand("{path}/",path=config["ref_dir"])
-    conda:
-        "../env/bismark.yaml"
-    shell:
-         '''
-         bismark_genome_preparation {params.refDir}
-         '''
+	input:
+		reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
+	output:
+		maskedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
+	params:
+		refDir=expand("{path}/",path=config["ref_dir"])
+	resources:
+		mem_mb= 30000,
+		runtime= 60,
+		cpus_per_task=1
+	conda:
+		"../env/bismark.yaml"
+	shell:
+		 '''
+		 bismark_genome_preparation {params.refDir}
+		 '''
 
 #Align the trimmed reads to the reference clusters
 # --un outputs  unmapped reads to the output directory #Needed?
@@ -19,21 +23,25 @@ rule genome_prep_for_bismark_reference_bismark:
 # --rg_tag --rg_id adds sample names to the bam file is necesarry for bisSNP snp calling
 
 rule alignment_reference_bismark:
-    input:
-        R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
-        R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
-        maskedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
-    output:
-        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
-    params:
-        out=expand("{path}",path=config["output_dir"]),
-        sample="{sample}",
-        refDir=expand("{path}/",path=config["ref_dir"])
-    conda:
-        "../env/bismark.yaml"
-    threads: 8
-    shell:
-        "bismark --un --ambiguous --genome {params.refDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
+	input:
+		R1merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.1.fq.gz",out=config["output_dir"]),
+		R2merged=expand("{out}/cutadapt/{{sample}}_trimmed_filt_merged.2.fq.gz",out=config["output_dir"]),
+		maskedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
+	output:
+		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"])
+	params:
+		out=expand("{path}",path=config["output_dir"]),
+		sample="{sample}",
+		refDir=expand("{path}/",path=config["ref_dir"])
+	conda:
+		"../env/bismark.yaml"
+	threads: 8
+	resources:
+		mem_mb= 20000,
+		runtime= 60,
+		cpus_per_task=8
+	shell:
+		"bismark --un --ambiguous --genome {params.refDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
 
 
 # Call methylation sites with bismark
@@ -45,118 +53,149 @@ rule alignment_reference_bismark:
 # --cytosine_report produces a genome-wide methylation report for all cytosines in the genome. (Not sure how this interacts with bedGraph)
 # 
 rule methylation_calling_reference_bismark:
-    input:
-        alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
-        refNN=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
-        maskedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
-    output:
-        calling=temp(expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])),
-        coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"]),
-        cHH_OB=temp(expand("{out}/methylation_calling/CHH_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHG_OB=temp(expand("{out}/methylation_calling/CHG_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cG_OB=temp(expand("{out}/methylation_calling/CpG_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHH_OT=temp(expand("{out}/methylation_calling/CHH_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cHG_OT=temp(expand("{out}/methylation_calling/CHG_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
-        cG_OT=temp(expand("{out}/methylation_calling/CpG_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"]))
-
-    params:
-        out=expand("{path}",path=config["output_dir"]),
-        refDir=expand("{path}/",path=config["ref_dir"])
-    conda:
-        "../env/bismark.yaml"
-    threads: 2
-    shell:
-        "bismark_methylation_extractor -p --CX --no_overlap --scaffolds --report --bedGraph --cytosine_report --genome_folder {params.refDir} {input.alignment} -o {params.out}/methylation_calling/"
+	input:
+		alignment=expand("{out}/alignment/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"]),
+		refNN=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
+		maskedReference=expand("{path}/Bisulfite_Genome/CT_conversion/genome_mfa.CT_conversion.fa",path=config["ref_dir"])
+	output:
+		calling=temp(expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])),
+		coveragecompr=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.bismark.cov.gz",out=config["output_dir"]),
+		cHH_OB=temp(expand("{out}/methylation_calling/CHH_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+		cHG_OB=temp(expand("{out}/methylation_calling/CHG_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+		cG_OB=temp(expand("{out}/methylation_calling/CpG_OB_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+		cHH_OT=temp(expand("{out}/methylation_calling/CHH_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+		cHG_OT=temp(expand("{out}/methylation_calling/CHG_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"])),
+		cG_OT=temp(expand("{out}/methylation_calling/CpG_OT_{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.txt",out=config["output_dir"]))
+	params:
+		out=expand("{path}",path=config["output_dir"]),
+		refDir=expand("{path}/",path=config["ref_dir"])
+	resources:
+		mem_mb= 20000,
+		runtime= 60,
+		cpus_per_task=2
+	conda:
+		"../env/bismark.yaml"
+	threads: 2
+	shell:
+		"bismark_methylation_extractor -p --CX --no_overlap --scaffolds --report --bedGraph --cytosine_report --genome_folder {params.refDir} {input.alignment} -o {params.out}/methylation_calling/"
 
 rule gunzip:
-    input: 
-        calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])
-    output:
-        coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
-    threads: 1
-    shell:
-        "gzip -c {input.calling} > {output.coverageuncompr}"
+	input: 
+		calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])
+	output:
+		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
+	threads: 1
+	resources:
+		mem_mb= 20000,
+		runtime= 60,
+		cpus_per_task=1
+	shell:
+		"gzip -c {input.calling} > {output.coverageuncompr}"
 
 ##SNP_calling
 #Index reference
 rule faidx_ref:
-    input:
-        reference=expand("{path}/{genome}",path=config["output_dir"],genome=config["genome"])
-    output:
-        referenceFai=expand("{path}/{genome}.fai",path=config["output_dir"],genome=config["genome"])
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        """
-        samtools faidx {input.reference}
-        """
+	input:
+		reference=expand("{path}/{genome}",path=config["output_dir"],genome=config["genome"])
+	output:
+		referenceFai=expand("{path}/{genome}.fai",path=config["output_dir"],genome=config["genome"])
+	conda:
+		"../env/samtools.yaml"
+	resources:
+		mem_mb= 20000,
+		runtime= 10,
+		cpus_per_task=1
+	shell:
+		"""
+		samtools faidx {input.reference}
+		"""
 #Merge the bam files for SNP calling, sort the output
 rule merge_sort_bam:
-    input:
-        alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES)
-    output:
-        mergedBam=temp(expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    threads: workflow.cores
-    shell:
-        "samtools merge - {input.alignmentCalmd} | samtools sort -@ {threads} > {output.mergedBam}"
+	input:
+		alignmentCalmd=expand("{out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam",out=config["output_dir"],sample=SAMPLES)
+	output:
+		mergedBam=temp(expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]))
+	conda:
+		"../env/samtools.yaml"
+	threads: workflow.cores
+	resources:
+		mem_mb= 100000,
+		runtime= 360,
+		cpus_per_task=workflow.cores
+	shell:
+		"samtools merge - {input.alignmentCalmd} | samtools sort -@ {threads} > {output.mergedBam}"
 #index the bam file
 rule index_merged_bam:
-    input:
-        mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"])
-    output:
-        mergedBai=temp(expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools index {input.mergedBam}"
+	input:
+		mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"])
+	output:
+		mergedBai=temp(expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]))
+	conda:
+		"../env/samtools.yaml"
+	resources:
+		mem_mb= 10000,
+		runtime= 10,
+		cpus_per_task=1	
+	shell:
+		"samtools index {input.mergedBam}"
 #Run calmd 
 rule calmd_bam:
-    input:
-        mergedBai=expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]),
-        mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]),
-        reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
-    output:
-        alignmentCalmd=temp(expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    threads: workflow.cores
-    shell:
-        """samtools calmd -b {input.mergedBam} {input.reference}  -@ {threads}  > {output.alignmentCalmd}"""
+	input:
+		mergedBai=expand("{tmp}/alignment/merged.bam.bai",tmp=config["tmpdir"]),
+		mergedBam=expand("{tmp}/alignment/merged.bam",tmp=config["tmpdir"]),
+		reference=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"])
+	output:
+		alignmentCalmd=temp(expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]))
+	conda:
+		"../env/samtools.yaml"
+	threads: workflow.cores
+	shell:
+		"""samtools calmd -b {input.mergedBam} {input.reference}  -@ {threads}  > {output.alignmentCalmd}"""
 rule index_calmd:
-    input:
-        alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"])
-    output:
-        alignmentCalmdBai=temp(expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"]))
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools index {input.alignmentCalmd}"
+	input:
+		alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"])
+	output:
+		alignmentCalmdBai=temp(expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"]))
+	conda:
+		"../env/samtools.yaml"
+	resources:
+		mem_mb= 100000,
+		runtime= 360,
+		cpus_per_task=workflow.cores
+	shell:
+		"samtools index {input.alignmentCalmd}"
 #Change the sam queries using the epiDiverse script
 rule change_sam_queries:
-    input:
-        mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
-        alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
-    output:
-        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
-    params:
-        tmp=config["tmpdir"]
-    threads: workflow.cores
-    conda:
-        "../env/SNP_calling_epiDiverse.yaml"
-    shell:
-        "python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.maskedBam} -t {params.tmp} -T {threads} -Q"
+	input:
+		mergedBam=expand("{tmp}/snp_calling/merged_calmd.bam",tmp=config["tmpdir"]),
+		alignmentCalmd=expand("{tmp}/snp_calling/merged_calmd.bam.bai",tmp=config["tmpdir"])
+	output:
+		maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
+	params:
+		tmp=config["tmpdir"]
+	threads: workflow.cores
+	resources:
+		mem_mb= 100000,
+		runtime= 360,
+		cpus_per_task=workflow.cores
+	conda:
+		"../env/SNP_calling_epiDiverse.yaml"
+	shell:
+		"python src/mapping_varcall/change_sam_queries.py {input.mergedBam} {output.maskedBam} -t {params.tmp} -T {threads} -Q"
 
 rule index_preparation:
-    input:
-        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
-    output:
-        maskedBai=expand("{out}/snp_calling/masked.bam.bai",out=config["output_dir"])
-    conda:
-        "../env/samtools.yaml"
-    shell:
-        "samtools index {input.maskedBam}"
+	input:
+		maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"])
+	output:
+		maskedBai=expand("{out}/snp_calling/masked.bam.bai",out=config["output_dir"])
+	resources:
+		mem_mb= 10000,
+		runtime= 10,
+		cpus_per_task=1	
+	conda:
+		"../env/samtools.yaml"
+	shell:
+		"samtools index {input.maskedBam}"
 
 
 #Call SNPs using freebayes
@@ -172,24 +211,28 @@ rule index_preparation:
 #
 
 rule call_SNPs_reference:
-    input:
-        maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"]),
-        maskedBai=expand("{out}/snp_calling/masked.bam.bai",out=config["output_dir"]),
-        ref=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
-        refFai=expand("{path}/{genome}.fai", path=config["ref_dir"],genome=config["genome"]),
-    output:
-        snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
-    conda:
-        "../env/SNP_calling_epiDiverse.yaml"
-    threads: workflow.cores
-    shell:
-        """
-        freebayes-parallel <(fasta_generate_regions.py {input.refFai} 100000) {threads} -f {input.ref} {input.maskedBam} \
-        --no-partial-observations \
-        --report-genotype-likelihood-max \
-        --genotype-qualities \
-        --min-coverage 0 \
-        --min-base-quality 1 \
-        --min-mapping-quality 10 \
-        --no-population-priors | bgzip -c > {output.snpVCF}
-        """
+	input:
+		maskedBam=expand("{out}/snp_calling/masked.bam",out=config["output_dir"]),
+		maskedBai=expand("{out}/snp_calling/masked.bam.bai",out=config["output_dir"]),
+		ref=expand("{path}/{genome}", path=config["ref_dir"],genome=config["genome"]),
+		refFai=expand("{path}/{genome}.fai", path=config["ref_dir"],genome=config["genome"]),
+	output:
+		snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
+	conda:
+		"../env/SNP_calling_epiDiverse.yaml"
+	threads: workflow.cores
+	resources:
+		mem_mb= 100000,
+		runtime= 2400,
+		cpus_per_task=workflow.cores
+	shell:
+		"""
+		freebayes-parallel <(fasta_generate_regions.py {input.refFai} 100000) {threads} -f {input.ref} {input.maskedBam} \
+		--no-partial-observations \
+		--report-genotype-likelihood-max \
+		--genotype-qualities \
+		--min-coverage 0 \
+		--min-base-quality 1 \
+		--min-mapping-quality 10 \
+		--no-population-priors | bgzip -c > {output.snpVCF}
+		"""

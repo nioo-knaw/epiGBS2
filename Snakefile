@@ -22,7 +22,7 @@ RUN = df.rawR1.str.replace("R1.*$","",regex=True).unique() #TODO is this aspecif
 OLIGOR1 = df.Wobble_R1[0]
 OLIGOR2 = df.Wobble_R2[0]
 ENZ_R1 = df.ENZ_R1[0]
-ENZ_R2 = df.ENZ_R1[0]
+ENZ_R2 = df.ENZ_R2[0]
 
 THREADSPERRUN=workflow.cores/RUN.size
 
@@ -67,10 +67,10 @@ if config["mode"]== "reference":
             {out}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz \
             {out}/fastqc/ \
             {out}/multiQC_report.html \
-		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz \
-		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
-		    {out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz \
+            {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
+            {out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
 if config["mode"]== "denovo":
@@ -82,10 +82,10 @@ if config["mode"]== "denovo":
             {out}/fastqc/ \
             {out}/multiQC_report.html \
             {out}/output_denovo/consensus_cluster.renamed.fa \
-		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
-		    {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
-		    {out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/alignment/{sample}_trimmed_filt_merged.1_bismark_bt2_pe.bam \
+            {out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz \
             {out}/snp_calling/snp.vcf.gz".split(),out=config["output_dir"],sample=SAMPLES)
 
 if config["mode"]== "paramTest":
@@ -104,7 +104,7 @@ if config["mode"]== "paramTest":
             {out}/paramTest/averageDepth.txt \
             {out}/paramTest/denovoParameter.tsv \
             {out}/paramTest/denovoParameter.tiff \
-		    {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
+            {out}/cutadapt/{sample}_trimmed_filt_merged.1.fq.gz \
             {out}/cutadapt/{sample}_trimmed_filt_merged.2.fq.gz".split(),out=config["output_dir"],params=paramspace.instance_patterns,sample=SAMPLE,samples=SAMPLES)
     
 

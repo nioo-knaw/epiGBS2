@@ -1,30 +1,30 @@
 # path to output directory
-output_dir: "/mnt/nfs/bioinfdata/home/NIOO/fleurg/projects/epigbs-snakemake-3.0-final-ref/output-ref"
+output_dir: "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/output/"
 
 # input directory where raw reads are
-input_dir       : "/mnt/nfs/bioinfdata/home/NIOO/fleurg/epiGBS/data"
+input_dir       : "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/raw/"
 
 # name of sequence read files
-Read1 : "RRBS_KD17072296_H53KHCCXY_L5_1.fq.gz"
-Read2 : "RRBS_KD17072296_H53KHCCXY_L5_2.fq.gz"
+#Read1 : "RRBS_KD17072296_H53KHCCXY_L5_1.fq.gz"
+#Read2 : "RRBS_KD17072296_H53KHCCXY_L5_2.fq.gz"
 
 # number of sequencing cycles (the same as read length in Illumina sequencing)
 cycles        : 150
 
 # barcode file(barcode file should be kept inside input directory) and enzymes will be included in barcode file
-barcodes: "barcodes.tsv"
+barcodes: "barcodes_epiGBS_2.txt"
 
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
-tmpdir        : "/tmp"
+tmpdir        : "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/epiGBS2"
 
 # mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
 
 # genome directory (leaave it blank in denovo mode)
-ref_dir: "/home/NIOO.INT/fleurg/epiGBS/analysis/output_denovo_test_data"
+ref_dir: "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/genome"
 
 # genome name (leaave it blank in denovo mode)
-genome: "consensus_cluster.renamed.fa"
+genome: "lyrata.fa"
 
 # advanced users have the possibility to change different parameter, leave them blank or write "default" to run them in default mode
 

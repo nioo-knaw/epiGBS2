@@ -1,49 +1,93 @@
 
 #We always use 3 as the number of oligo for our adapters. (If we would ever change this we can account for this)
 def getParam_oligo(param_oligo):
-    if param_oligo == "default" or param_oligo == "":
-        id = 3
-    else:
-        id = param_oligo
-    return id
+	if param_oligo == "default" or param_oligo == "":
+		id = 3
+	else:
+		id = param_oligo
+	return id
 
 #Clone_filter removes PCR duplicates
 #It compares reads that are removes reads that are completely identical 
 #including the UMI/wobble/oligo's (random bases that are added at the beginning of the reads)
 #as if all of these are identical it will most likely be a PCR artifact
-rule clone_filter:
-    input:
-        barcodes=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
-        R1=expand("{path}/{{run}}_R1.fq.gz",path=config["input_dir"],R1=RUN),
-        R2=expand("{path}/{{run}}_R2.fq.gz",path=config["input_dir"],R2=RUN)
-    params:
-        output_dir=expand("{path}/output_demultiplex/", path=config["output_dir"]),
-        param_oligoR1=getParam_oligo(OLIGOR1),
-        param_oligoR2=getParam_oligo(OLIGOR1)
-    output:
-        R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
-        R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"])
-    conda:
-        "../env/stacks.yaml"
-    threads: 1
-    shell: 
-        "clone_filter -1 {input.R1} -2 {input.R2} -o {params.output_dir}/clone/ --oligo_len_1 {params.param_oligoR1} --oligo_len_2 {params.param_oligoR2} --inline_inline -i gzfastq"
+rule deduplicate_trim:
+	params:
+		run="{run}",
+		adapter1="AATGATACGGCGACCACCGAGATCTACA", 
+		adapter2="CAAGCAGAAGACGGCATACGAGAT"
+	input:
+		reads1=expand("{input}/{{run}}_R1.fq.gz",input=config["input_dir"]),
+		reads2=expand("{input}/{{run}}_R2.fq.gz",input=config["input_dir"])
+	output:
+		R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
+		R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"]),
+		fastp_html=expand("{output_dir}/output_demultiplex/logs/{{run}}/{{run}}Preprocessing.html", output_dir=config["output_dir"]),
+		fastp_json=expand("{output_dir}/output_demultiplex/logs/{{run}}/{{run}}Preprocessing.json", output_dir=config["output_dir"])
+	conda: 
+		"../env/fastp.yaml"
+	resources:
+		mem_mb= 10000,
+		runtime= 120,
+		cpus_per_task= 8
+	threads: 
+		8
+	shell:
+		"""
+		fastp --in1 {input.reads1} \
+			--in2 {input.reads2} \
+			--out1 {output.R1} \
+			--out2 {output.R2} \
+			--adapter_sequence {params.adapter1} \
+			--adapter_sequence_r2 {params.adapter2} \
+			--dedup \
+			--trim_poly_x \
+			--umi \
+			--umi_loc per_read \
+			--umi_len 3 \
+			-j {output.fastp_json} \
+			-h {output.fastp_html} \
+			-w {threads} 
+		""" 
+
+
+#rule clone_filter:
+#	input:
+#		barcodes=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"]),
+#		R1=expand("{path}/{{run}}_R1.fq.gz",path=config["input_dir"],R1=RUN),
+#		R2=expand("{path}/{{run}}_R2.fq.gz",path=config["input_dir"],R2=RUN)
+#	params:
+#		output_dir=expand("{path}/output_demultiplex/", path=config["output_dir"]),
+#		param_oligoR1=getParam_oligo(OLIGOR1),
+#		param_oligoR2=getParam_oligo(OLIGOR1)
+#	output:
+#		R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
+#		R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"])
+#	conda:
+#		"../env/stacks.yaml"
+#	threads: 1
+#	shell: 
+#		"clone_filter -1 {input.R1} -2 {input.R2} -o {params.output_dir}/clone/ --oligo_len_1 {params.param_oligoR1} --oligo_len_2 {params.param_oligoR2} --inline_inline -i gzfastq"
 
 #Stacks and the rest of the pipeline need to have specific files for barcodes, 
 #the format is different and we add the control nucleotide and we need to split it per run so we can demultiplex them in parallel
 #popmap (to which population do samples belong),
 #and an input file for SNPFilter report to add nice colours to the plots based on a priori clustering
 rule make_stacks_files:
-    input:
-        barcodes=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
-    output:
-        barcodes=expand("{path}/output_demultiplex/barcode_stacks{run}.tsv", path=config["output_dir"],run=RUN)
-    params:
-        output_dir=expand("{path}/output_demultiplex/",path=config["output_dir"])
-    conda:
-        "../env/R.yaml"
-    shell:
-        "Rscript src/demultiplex/createFilesFromBarcodeFile.R {input.barcodes} {params.output_dir}"
+	input:
+		barcodes=expand("{path}/{bar}", path=config["input_dir"], bar=config["barcodes"])
+	output:
+		barcodes=expand("{path}/output_demultiplex/barcode_stacks{run}.tsv", path=config["output_dir"],run=RUN)
+	params:
+		output_dir=expand("{path}/output_demultiplex/",path=config["output_dir"])
+	   resources:
+		mem_mb= 1000,
+		runtime= 1,
+		cpus_per_task= 1
+	conda:
+		"../env/R.yaml"
+	shell:
+		"Rscript src/demultiplex/createFilesFromBarcodeFile.R {input.barcodes} {params.output_dir}"
 
 
 #We then do some snakemake magic to run process radtags for each run.
@@ -54,204 +98,249 @@ rule make_stacks_files:
 # TODO the hack directory should not be necesarry but I do not know how to include something from the config (in lines 78 and 101): lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
 
 rule process_radtags:
-    input:
-        R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
-        R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"]),
-        barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"])
-    output:
-        hackDir=directory(temp("demux_tmp_{run}")),
-        log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
-    params:
-        output_dir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["output_dir"]),
-        enz_R1=ENZ_R1,
-        enz_R2=ENZ_R2
-    conda:
-        "../env/stacks.yaml"
-    shell: #TODO Here we still need to take the restriction enzyms out of the config
-        """
-        process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 {params.enz_R1} --renz_2 {params.enz_R2} -r --barcode_dist_1 0 --barcode_dist_2 0 -c --inline-inline --threads {threads}
-        mkdir {output.hackDir}
-    	"""
+	input:
+		R1=expand("{path}/output_demultiplex/clone/{{run}}_R1.1.fq.gz",path=config["output_dir"]),
+		R2=expand("{path}/output_demultiplex/clone/{{run}}_R2.2.fq.gz",path=config["output_dir"]),
+		barcodes=expand("{path}/output_demultiplex/barcode_stacks{{run}}.tsv", path=config["output_dir"])
+	output:
+		hackDir=directory(temp("demux_tmp_{run}")),
+		log=expand("{path}/output_demultiplex/logs/{{run}}/process_radtags.clone.log",path=config["output_dir"])
+	params:
+		output_dir=expand("{path}/output_demultiplex/logs/{{run}}/",path=config["output_dir"]),
+		enz_R1=ENZ_R1,
+		enz_R2=ENZ_R2
+	threads:8
+	resources:
+		mem_mb= 10000,
+		runtime= 6*60,
+		cpus_per_task= 6
+	conda:
+		"../env/stacks.yaml"
+	shell: #TODO Here we still need to take the restriction enzyms out of the config
+		"""
+		process_radtags -1 {input.R1} -2 {input.R2} -o {params.output_dir} -b {input.barcodes} --renz_1 {params.enz_R1} --renz_2 {params.enz_R2} -r --barcode_dist_1 0 --barcode_dist_2 0 -c --inline-inline --threads {threads}
+		mkdir {output.hackDir}
+		"""
 
 #If there are no duplicates we simply move the read files from the demultiplex/logs/ directory to the demultiplex/samples folder.
 if DUPES==False:
-    rule move_samples:
-        input:
-            lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
-        output:
-            WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.1.fq.gz",path=config["output_dir"]),
-            WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.2.fq.gz",path=config["output_dir"]),
-            CrickR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.1.fq.gz",path=config["output_dir"]),
-            CrickR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.2.fq.gz",path=config["output_dir"])
-        params:
-            output_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"]),
-        shell:
-            """
-            mv {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz {output.WatsonR1}
-            mv {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz {output.WatsonR2}
-            mv {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz {output.CrickR1}
-            mv {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz {output.CrickR2}
-            """
+	rule move_samples:
+		input:
+			lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
+		output:
+			WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.1.fq.gz",path=config["output_dir"]),
+			WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.2.fq.gz",path=config["output_dir"]),
+			CrickR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.1.fq.gz",path=config["output_dir"]),
+			CrickR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.2.fq.gz",path=config["output_dir"])
+		params:
+			output_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"]),
+		resources:
+			mem_mb= 1000,
+			runtime= 5,
+			cpus_per_task= 1
+		shell:
+			"""
+			mv {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz {output.WatsonR1}
+			mv {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz {output.WatsonR2}
+			mv {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz {output.CrickR1}
+			mv {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz {output.CrickR2}
+			"""
 
 #If there are duplicates in the log file we cannot move the files. As two files with the same name in different runs should be catted
 #For whatever reason snakemake selects only one combination of run/sample from the dictionary if there are two or more? So by including the logs files as inputs we ensure all
 #instances of process_radtags are actually done running.
 #When they are done all samples with the same name are catted together and the files in the logs directory are removed.
 if DUPES==True:
-    rule cat_samples:
-        input:
-            lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
-            log=expand("{path}/output_demultiplex/logs/{run}/process_radtags.clone.log",path=config["output_dir"],run=RUN)
-        output:
-            WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.1.fq.gz",path=config["output_dir"]),
-            WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.2.fq.gz",path=config["output_dir"]),
-            CrickR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.1.fq.gz",path=config["output_dir"]),
-            CrickR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.2.fq.gz",path=config["output_dir"])
-        params:
-            output_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"])
-        shell:
-            """
-            cat {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz > {output.WatsonR1}
-            cat {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz > {output.WatsonR2}
-            cat {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz > {output.CrickR1}
-            cat {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz > {output.CrickR2}
-            rm {params.output_dir}/*/{wildcards.sample}-*.fq.gz
-            """
+	rule cat_samples:
+		input:
+			lambda w: f"demux_tmp_{SAMPLES[w.sample]}",
+			log=expand("{path}/output_demultiplex/logs/{run}/process_radtags.clone.log",path=config["output_dir"],run=RUN)
+		output:
+			WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.1.fq.gz",path=config["output_dir"]),
+			WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Watson.2.fq.gz",path=config["output_dir"]),
+			CrickR1=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.1.fq.gz",path=config["output_dir"]),
+			CrickR2=expand("{path}/output_demultiplex/clone-stacks/{{sample}}-Crick.2.fq.gz",path=config["output_dir"])
+		params:
+			output_dir=expand("{path}/output_demultiplex/logs/",path=config["output_dir"])
+		resources:
+			mem_mb= 1000,
+			runtime= 5,
+			cpus_per_task= 1
+		shell:
+			"""
+			cat {params.output_dir}/*/{wildcards.sample}-Watson.1.fq.gz > {output.WatsonR1}
+			cat {params.output_dir}/*/{wildcards.sample}-Watson.2.fq.gz > {output.WatsonR2}
+			cat {params.output_dir}/*/{wildcards.sample}-Crick.1.fq.gz > {output.CrickR1}
+			cat {params.output_dir}/*/{wildcards.sample}-Crick.2.fq.gz > {output.CrickR2}
+			rm {params.output_dir}/*/{wildcards.sample}-*.fq.gz
+			"""
 
 
 rule header_Watson_R1:
-    params:
-        sample="{sample}",
-        flowcell=flowCell,
-        lane=lane,
-        output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/demultiplex/", path=config["tmpdir"])
-    input:
-        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
-    output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
-    conda:
-        "../env/python3.yaml"
-    shell:
-         "zcat {params.output_dir}clone-stacks/{params.sample}-Watson.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/'| gzip -c   > {output.header}"
+	params:
+		sample="{sample}",
+		flowcell=flowCell,
+		lane=lane,
+		output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+		tmpdir=expand("{path}/demultiplex/", path=config["tmpdir"])
+	input:
+		output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+	output:
+		header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+
+	conda:
+		"../env/python3.yaml"
+	shell:
+		 "zcat {params.output_dir}clone-stacks/{params.sample}-Watson.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/'| gzip -c   > {output.header}"
 
 rule cat_watson_R1:
-    input:
-        output_WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
-    output:
-        outFile=expand("{path}/output_demultiplex/Watson_R1.fq.gz",  path=config["output_dir"])
-    params:
-        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
-    conda:
-        "../env/python3.yaml"
-    shell:
-       "cat {params.tmp}/*-Watson.1.fq.gz > {output.outFile}"
+	input:
+		output_WatsonR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
+	output:
+		outFile=expand("{path}/output_demultiplex/Watson_R1.fq.gz",  path=config["output_dir"])
+	params:
+		tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+	   "cat {params.tmp}/*-Watson.1.fq.gz > {output.outFile}"
 
 
 rule header_Watson_R2:
-    params:
-        sample="{sample}",
-        flowcell=flowCell,
-        lane=lane,
-        output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
-    input:
-        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
-
-    output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
-    conda:
-        "../env/python3.yaml"
-    shell:
-         "zcat {params.output_dir}clone-stacks/{params.sample}-Watson.2.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/' | gzip -c > {output.header}"
+	params:
+		sample="{sample}",
+		flowcell=flowCell,
+		lane=lane,
+		output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+		tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
+	input:
+		output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+	output:
+		header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Watson.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+		 "zcat {params.output_dir}clone-stacks/{params.sample}-Watson.2.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Watson/' | gzip -c > {output.header}"
 
 rule cat_watson_R2:
-    input:
-        output_WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
-    output:
-        outFile=expand("{path}/output_demultiplex/Watson_R2.fq.gz",  path=config["output_dir"])
-    params:
-        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
-    conda:
-        "../env/python3.yaml"
-    shell:
-       "cat {params.tmp}/*-Watson.2.fq.gz > {output.outFile}"
+	input:
+		output_WatsonR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Watson.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
+	output:
+		outFile=expand("{path}/output_demultiplex/Watson_R2.fq.gz",  path=config["output_dir"])
+	params:
+		tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+	   "cat {params.tmp}/*-Watson.2.fq.gz > {output.outFile}"
 
 
 
 rule header_Crick_R1:
-    params:
-        sample="{sample}",
-        flowcell=flowCell,
-        lane=lane,
-        output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
-    input:
-        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
-    output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
-    conda:
-        "../env/python3.yaml"
-    shell:
-         "zcat {params.output_dir}clone-stacks/{params.sample}-Crick.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
+	params:
+		sample="{sample}",
+		flowcell=flowCell,
+		lane=lane,
+		output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+		tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
+	input:
+		output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+	output:
+		header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.1.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+		 "zcat {params.output_dir}clone-stacks/{params.sample}-Crick.1.fq.gz | cut -f1 -d ' ' | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
 
 rule cat_crick_R1:
-    input:
-        output_CrickR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
-    output:
-        outFile=expand("{path}/output_demultiplex/Crick_R1.fq.gz",  path=config["output_dir"])
-    params:
-        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
-    conda:
-        "../env/python3.yaml"
-    shell:
-       "cat {params.tmp}/*-Crick.1.fq.gz > {output.outFile}"
+	input:
+		output_CrickR1=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.1.fq.gz",path=config["output_dir"],sample=SAMPLES),
+	output:
+		outFile=expand("{path}/output_demultiplex/Crick_R1.fq.gz",  path=config["output_dir"])
+	params:
+		tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+	   "cat {params.tmp}/*-Crick.1.fq.gz > {output.outFile}"
 
 
 
 rule header_Crick_R2:
-    params:
-        sample="{sample}",
-        flowcell=flowCell,
-        lane=lane,
-        output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
-        tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
-    input:
-        output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
-    output:
-        header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
-    conda:
-        "../env/python3.yaml"
-    shell:
-         "zcat {params.output_dir}clone-stacks/{params.sample}-Crick.2.fq.gz | cut -f1 -d ' '  | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
+	params:
+		sample="{sample}",
+		flowcell=flowCell,
+		lane=lane,
+		output_dir =expand("{path}/output_demultiplex/",  path=config["output_dir"]),
+		tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex")
+	input:
+		output_WatsonR1=expand("{path}/output_demultiplex/barcode_stacks.tsv",path=config["output_dir"])
+	output:
+		header=temp(expand("{tmp}/{dir}/samplesHeader/{{sample}}-Crick.2.fq.gz",tmp=config["tmpdir"],dir="demultiplex"))
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+		 "zcat {params.output_dir}clone-stacks/{params.sample}-Crick.2.fq.gz | cut -f1 -d ' '  | sed -e '/^@/ s/$/\tRG:Z:{params.flowcell}_{params.lane}_{params.sample}\tST:Z:Crick/' | gzip -c > {output.header}"
 
 rule cat_crick_R2:
-    input:
-        output_CrickR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
-    output:
-        outFile=expand("{path}/output_demultiplex/Crick_R2.fq.gz",  path=config["output_dir"])
-    params:
-        tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
-    conda:
-        "../env/python3.yaml"
-    shell:
-       "cat {params.tmp}/*-Crick.2.fq.gz > {output.outFile}"
+	input:
+		output_CrickR2=expand("{path}/output_demultiplex/clone-stacks/{sample}-Crick.2.fq.gz",path=config["output_dir"],sample=SAMPLES),
+	output:
+		outFile=expand("{path}/output_demultiplex/Crick_R2.fq.gz",  path=config["output_dir"])
+	params:
+		tmp=expand("{path}/{dir}", path=config["output_dir"],dir="output_demultiplex/clone-stacks"),
+	resources:
+		mem_mb= 1000,
+		runtime= 5,
+		cpus_per_task= 1
+	conda:
+		"../env/python3.yaml"
+	shell:
+	   "cat {params.tmp}/*-Crick.2.fq.gz > {output.outFile}"
 
 #rule remove_tmp_files:
-#    params:
-#          tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex"),
-#          output_dir= expand("{path}", path=config["output_dir"])
-#    input:
-#          outFile1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
-#          outFile2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"]),
-#          outFile3=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
-#          outFile4=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"])
-#    output:
-#          barcode=expand("{path}/output_demultiplex/barcode_stacks.tsv", path=config["output_dir"])
-#    shell:
-#        """mv {params.tmpdir}barcode_stacks.tsv {output.barcode}
-#        rm -r {params.tmpdir}
-#        """
+#	params:
+#		  tmpdir=expand("{path}/{dir}/", path=config["tmpdir"],dir="demultiplex"),
+#		  output_dir= expand("{path}", path=config["output_dir"])
+#	input:
+#		  outFile1=expand("{path}/output_demultiplex/Watson_R1.fq.gz", path=config["output_dir"]),
+#		  outFile2=expand("{path}/output_demultiplex/Watson_R2.fq.gz", path=config["output_dir"]),
+#		  outFile3=expand("{path}/output_demultiplex/Crick_R1.fq.gz", path=config["output_dir"]),
+#		  outFile4=expand("{path}/output_demultiplex/Crick_R2.fq.gz", path=config["output_dir"])
+#	output:
+#		  barcode=expand("{path}/output_demultiplex/barcode_stacks.tsv", path=config["output_dir"])
+#	shell:
+#		"""mv {params.tmpdir}barcode_stacks.tsv {output.barcode}
+#		rm -r {params.tmpdir}
+#		"""
 ###Add following lines to rule remove_tmp_files for debugging purposes
 ####mkdir {params.output_dir}rem
 ####mv {params.tmpdir}/clone-stacks/*.rem.*  {params.output_dir}/rem
