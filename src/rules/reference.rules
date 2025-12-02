@@ -86,7 +86,7 @@ rule gunzip:
 		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
 	threads: 1
 	resources:
-		mem_mb= 2000,
+		mem_mb= 20000,
 		runtime= 60,
 		cpus_per_task=1
 	shell:

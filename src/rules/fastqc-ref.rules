@@ -8,7 +8,7 @@ rule FastQCRef:
 		"../env/fastqc.yaml"
 	resources:
 		mem_mb= 10000,
-		runtime= 60,
+		runtime= 10,
 		cpus_per_task=8
 	params:
 		q="--quiet",
@@ -31,7 +31,7 @@ rule fastqc_trimmed:
 	threads: 8
 	resources:
 		mem_mb= 10000,
-		runtime= 60,
+		runtime= 10,
 		cpus_per_task=8
 	params:
 		q="--quiet",
