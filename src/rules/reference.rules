@@ -13,9 +13,9 @@ rule genome_prep_for_bismark_reference_bismark:
 	conda:
 		"../env/bismark.yaml"
 	shell:
-		 '''
-		 bismark_genome_preparation {params.refDir}
-		 '''
+		'''
+		bismark_genome_preparation {params.refDir}
+		'''
 
 #Align the trimmed reads to the reference clusters
 # --un outputs  unmapped reads to the output directory #Needed?
@@ -38,7 +38,7 @@ rule alignment_reference_bismark:
 	threads: 8
 	resources:
 		mem_mb= 20000,
-		runtime= 60,
+		runtime= 120,
 		cpus_per_task=8
 	shell:
 		"bismark --un --ambiguous --genome {params.refDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
@@ -86,7 +86,7 @@ rule gunzip:
 		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
 	threads: 1
 	resources:
-		mem_mb= 20000,
+		mem_mb= 2000,
 		runtime= 60,
 		cpus_per_task=1
 	shell:
@@ -96,9 +96,9 @@ rule gunzip:
 #Index reference
 rule faidx_ref:
 	input:
-		reference=expand("{path}/{genome}",path=config["output_dir"],genome=config["genome"])
+		reference=expand("{path}/{genome}",path=config["ref_dir"],genome=config["genome"])
 	output:
-		referenceFai=expand("{path}/{genome}.fai",path=config["output_dir"],genome=config["genome"])
+		referenceFai=expand("{path}/{genome}.fai",path=config["ref_dir"],genome=config["genome"])
 	conda:
 		"../env/samtools.yaml"
 	resources:
@@ -149,6 +149,10 @@ rule calmd_bam:
 	conda:
 		"../env/samtools.yaml"
 	threads: workflow.cores
+	resources:
+		mem_mb= 100000,
+		runtime= 360,
+		cpus_per_task=workflow.cores
 	shell:
 		"""samtools calmd -b {input.mergedBam} {input.reference}  -@ {threads}  > {output.alignmentCalmd}"""
 rule index_calmd:
