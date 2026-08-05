@@ -1,8 +1,8 @@
 # path to output directory
-output_dir: "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/output/"
+output_dir: "/your/output/dir"
 
 # input directory where raw reads are
-input_dir       : "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/raw/"
+input_dir       : "/your/input/dir"
 
 # name of sequence read files
 #Read1 : "RRBS_KD17072296_H53KHCCXY_L5_1.fq.gz"
@@ -12,19 +12,19 @@ input_dir       : "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/raw/
 cycles        : 150
 
 # barcode file(barcode file should be kept inside input directory) and enzymes will be included in barcode file
-barcodes: "barcodes_epiGBS_2.txt"
+barcodes: "barcodes.txt"
 
 # the pipeline produces some temporary files. Please indicate the tmp location on your server (in most cases /tmp)
-tmpdir        : "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/epiGBS/epiGBS2"
+tmpdir        : "/your/tmp/dir"
 
 # mode of running pipeline (set denovo, reference or legacy. PLEASE NOTE: legacy is not supported)
 mode: "reference"
 
 # genome directory (leaave it blank in denovo mode)
-ref_dir: "/lustre/nobackup/WUR/ESG/postu003/projects/lyrata/genome"
+ref_dir: "/when/mode/is/reference/your/reference/dir"
 
 # genome name (leaave it blank in denovo mode)
-genome: "lyrata.fa"
+genome: "reference.fa"
 
 # advanced users have the possibility to change different parameter, leave them blank or write "default" to run them in default mode
 
