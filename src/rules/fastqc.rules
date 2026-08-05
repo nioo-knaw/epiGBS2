@@ -70,7 +70,7 @@ rule Multiqc:
 	input:
 		before=expand("{path}/fastqc/", path=config["output_dir"]),
 		trimmed=expand("{path}/fastqc_trimmed/", path=config["output_dir"]),
-		demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
+		#demultiplexing=expand("{path}/log/demultiplexing.log", path=config["output_dir"]),
 		coverageuncompr=expand("{out}/methylation_calling/{sample}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"],sample=SAMPLES)
 	output:
 		report1=expand("{path}/multiQC_report.html", path=config["output_dir"])
@@ -79,8 +79,8 @@ rule Multiqc:
 		config="src/env/multiqc_config.yaml"
 	resources:
 		mem_mb= 10000,
-		runtime= 10,
+		runtime= 60,
 		cpus_per_task=1
 	conda:
 		"../env/multiqc.yaml"
-	shell: "multiqc  {params.dir} -c {params.config} --interactive --filename {output.report1} -f"
+	shell: "multiqc  {params.dir} --interactive --filename {output.report1} -f"

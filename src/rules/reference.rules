@@ -38,10 +38,10 @@ rule alignment_reference_bismark:
 	threads: 8
 	resources:
 		mem_mb= 20000,
-		runtime= 120,
+		runtime= lambda wildcards, attempt: attempt *15,
 		cpus_per_task=8
 	shell:
-		"bismark --un --ambiguous --genome {params.refDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
+		"bismark -X 1000 --non_directional --genome {params.refDir} -1 {input.R1merged} -2 {input.R2merged} -o {params.out}/alignment/ --rg_tag --rg_id {params.sample} --rg_sample {params.sample}"
 
 
 # Call methylation sites with bismark
@@ -71,7 +71,7 @@ rule methylation_calling_reference_bismark:
 		refDir=expand("{path}/",path=config["ref_dir"])
 	resources:
 		mem_mb= 20000,
-		runtime= 60,
+		runtime= lambda wildcards, attempt: attempt * 10,
 		cpus_per_task=2
 	conda:
 		"../env/bismark.yaml"
@@ -79,18 +79,18 @@ rule methylation_calling_reference_bismark:
 	shell:
 		"bismark_methylation_extractor -p --CX --no_overlap --scaffolds --report --bedGraph --cytosine_report --genome_folder {params.refDir} {input.alignment} -o {params.out}/methylation_calling/"
 
-rule gunzip:
+rule gunzipFilt:
 	input: 
 		calling=expand("{out}/methylation_calling/{{sample}}_trimmed_filt_merged.1_bismark_bt2_pe.CX_report.txt",out=config["output_dir"])
 	output:
 		coverageuncompr=expand("{out}/methylation_calling/{{sample}}_bismark_bt2_pe.CX_report.txt.gz",out=config["output_dir"])
 	threads: 1
 	resources:
-		mem_mb= 20000,
-		runtime= 60,
+		mem_mb= 2000,
+		runtime= 10,
 		cpus_per_task=1
 	shell:
-		"gzip -c {input.calling} > {output.coverageuncompr}"
+		"cat {input.calling} | grep -vP '0\t0' |  gzip -c  > {output.coverageuncompr}"
 
 ##SNP_calling
 #Index reference
@@ -134,7 +134,7 @@ rule index_merged_bam:
 		"../env/samtools.yaml"
 	resources:
 		mem_mb= 10000,
-		runtime= 10,
+		runtime= 30,
 		cpus_per_task=1	
 	shell:
 		"samtools index {input.mergedBam}"
@@ -224,19 +224,20 @@ rule call_SNPs_reference:
 		snpVCF=expand("{out}/snp_calling/snp.vcf.gz",out=config["output_dir"])
 	conda:
 		"../env/SNP_calling_epiDiverse.yaml"
-	threads: workflow.cores
+	threads: 16
 	resources:
-		mem_mb= 100000,
+		mem_mb= 1000000,
 		runtime= 2400,
-		cpus_per_task=workflow.cores
+		cpus_per_task=16
 	shell:
 		"""
 		freebayes-parallel <(fasta_generate_regions.py {input.refFai} 100000) {threads} -f {input.ref} {input.maskedBam} \
 		--no-partial-observations \
 		--report-genotype-likelihood-max \
 		--genotype-qualities \
-		--min-coverage 0 \
-		--min-base-quality 1 \
-		--min-mapping-quality 10 \
+		--min-coverage 5 \
+		--limit-coverage 200 \
+		--min-base-quality 10 \
+		--min-mapping-quality 30 \
 		--no-population-priors | bgzip -c > {output.snpVCF}
 		"""

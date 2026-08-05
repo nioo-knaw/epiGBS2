@@ -75,18 +75,18 @@ rule denovo_reference:
 #otherwise bismark can't call context at these sites and breaks
 rule genome_prep_for_bismark_denovo_bismark:
 	input:
-		 reference=expand("{path}/paramTest/{params}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"], params=paramspace.wildcard_pattern)
+		reference=expand("{path}/paramTest/{params}/output_denovo/consensus_cluster.renamed.fa", path=config["output_dir"], params=paramspace.wildcard_pattern)
 	output:
-		 refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
+		refNN=expand("{path}/paramTest/{params}/output_denovo/NNNNref/ref.fa",path=config["output_dir"], params=paramspace.wildcard_pattern)
 	params:
 		NNrefDir=expand("{path}/paramTest/{params}/output_denovo/NNNNref/",path=config["output_dir"], params=paramspace.wildcard_pattern)
 	conda:
 		"../env/bismark.yaml"
 	shell:
-		 '''
-		 cat {input.reference} | tr "\\n" "X" | sed "s/X>/\\n>/g" | sed 's/$/NNNN/' | sed "s/X/\\nNNNN/"| sed 's/X//g' > {params.NNrefDir}/ref.fa
-		 bismark_genome_preparation {params.NNrefDir}
-		 '''
+		'''
+		cat {input.reference} | tr "\\n" "X" | sed "s/X>/\\n>/g" | sed 's/$/NNNN/' | sed "s/X/\\nNNNN/"| sed 's/X//g' > {params.NNrefDir}/ref.fa
+		bismark_genome_preparation {params.NNrefDir}
+		'''
 
 #Align the trimmed reads to the denovo clusters
 # --un outputs  unmapped reads to the output directory #Needed?
